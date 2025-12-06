@@ -1,0 +1,29 @@
+{
+  "name": "DocTop - Encuentra tu Médico Especialista en México",
+  "short_name": "DocTop",
+  "description": "Plataforma que conecta pacientes con profesionales de la salud verificados en México. Encuentra médicos especializados cerca de ti.",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "theme_color": "#5a7a6f",
+  "background_color": "#f9faf8",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "lang": "es-MX",
+  "dir": "ltr",
+  "categories": ["healthcare", "medical", "health", "doctors"],
+  "prefer_related_applications": false
+}
