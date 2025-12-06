@@ -105,9 +105,20 @@ const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
 
-  /* ───── 8) Rewrites internos (mantengo los tuyos) ───── */
+  /* ───── 8) Redirects ───── */
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/conocenos',
+        permanent: false,
+      },
+    ];
+  },
+
+  /* ───── 9) Rewrites internos ───── */
   async rewrites() {
-    return [{ source: '/no-redirect', destination: '/' }];
+    return [{ source: '/no-redirect', destination: '/conocenos' }];
   },
 };
 
