@@ -1,0 +1,394 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Real Estate Corporate Color Palette - Inmobiliaria Branding */
+:root {
+  /* Base colors - clean modern real estate aesthetic */
+  --background: oklch(1.0 0 0); /* #FFFFFF - Pure white */
+  --foreground: oklch(0.18 0.04 260); /* #0B1B32 - Navy text */
+
+  /* Turquoise/Cyan - primary brand color #00F0D0 */
+  --primary: oklch(0.87 0.18 180);
+  --primary-foreground: oklch(0.18 0.04 260);
+
+  /* Light Blue - secondary actions and highlights #4AB7E6 */
+  --secondary: oklch(0.72 0.12 220);
+  --secondary-foreground: oklch(1.0 0 0);
+
+  /* Navy Blue - dark accent, headers, contrast #0B1B32 */
+  --accent: oklch(0.18 0.04 260);
+  --accent-foreground: oklch(1.0 0 0);
+
+  /* Emerald Green - success states */
+  --success: oklch(0.75 0.15 155);
+  --success-foreground: oklch(1.0 0 0);
+
+  /* Coral - error and destructive actions */
+  --destructive: oklch(0.70 0.18 15);
+  --destructive-foreground: oklch(1.0 0 0);
+
+  /* Light Cyan - tertiary elements */
+  --tertiary: oklch(0.90 0.10 190);
+  --tertiary-foreground: oklch(0.18 0.04 260);
+
+  /* Neutral tones - professional gray scale */
+  --muted: oklch(0.97 0.002 0); /* #F5F5F7 - Light gray background */
+  --muted-foreground: oklch(0.50 0.01 260); /* Medium gray text */
+
+  /* UI Elements - cards, popovers, borders */
+  --card: oklch(1.0 0 0); /* Pure white */
+  --card-foreground: oklch(0.18 0.04 260);
+  --popover: oklch(1.0 0 0);
+  --popover-foreground: oklch(0.18 0.04 260);
+  --border: oklch(0.93 0.002 0); /* #E8E8E8 - Light gray border */
+  --input: oklch(0.95 0.002 0); /* Light gray input */
+  --ring: oklch(0.87 0.18 180); /* Turquoise ring */
+
+  /* Charts - professional real estate data visualization */
+  --chart-1: oklch(0.87 0.18 180);
+  --chart-2: oklch(0.72 0.12 220);
+  --chart-3: oklch(0.18 0.04 260);
+  --chart-4: oklch(0.75 0.15 155);
+  --chart-5: oklch(0.70 0.15 280);
+
+  --radius: 0.75rem;
+
+  /* Sidebar - real estate theme */
+  --sidebar: oklch(0.18 0.04 260);
+  --sidebar-foreground: oklch(0.95 0.01 180);
+  --sidebar-primary: oklch(0.87 0.18 180);
+  --sidebar-primary-foreground: oklch(0.18 0.04 260);
+  --sidebar-accent: oklch(0.25 0.06 260);
+  --sidebar-accent-foreground: oklch(0.95 0.01 180);
+  --sidebar-border: oklch(0.30 0.05 260);
+  --sidebar-ring: oklch(0.87 0.18 180);
+}
+
+.dark {
+  --background: oklch(0.18 0.04 260);
+  --foreground: oklch(0.95 0.01 180);
+  --primary: oklch(0.87 0.18 180);
+  --primary-foreground: oklch(0.18 0.04 260);
+  --secondary: oklch(0.72 0.12 220);
+  --secondary-foreground: oklch(0.18 0.04 260);
+  --accent: oklch(0.87 0.18 180);
+  --accent-foreground: oklch(0.18 0.04 260);
+  --success: oklch(0.65 0.14 155);
+  --success-foreground: oklch(0.95 0.01 180);
+  --destructive: oklch(0.60 0.18 15);
+  --destructive-foreground: oklch(0.95 0.01 180);
+  --tertiary: oklch(0.30 0.08 190);
+  --tertiary-foreground: oklch(0.95 0.01 180);
+  --muted: oklch(0.25 0.03 260);
+  --muted-foreground: oklch(0.70 0.02 180);
+  --card: oklch(0.22 0.03 260);
+  --card-foreground: oklch(0.95 0.01 180);
+  --popover: oklch(0.22 0.03 260);
+  --popover-foreground: oklch(0.95 0.01 180);
+  --border: oklch(0.30 0.04 260);
+  --input: oklch(0.30 0.04 260);
+  --ring: oklch(0.87 0.18 180);
+  --chart-1: oklch(0.87 0.18 180);
+  --chart-2: oklch(0.72 0.12 220);
+  --chart-3: oklch(0.60 0.10 260);
+  --chart-4: oklch(0.65 0.14 155);
+  --chart-5: oklch(0.70 0.15 280);
+  --sidebar: oklch(0.15 0.04 260);
+  --sidebar-foreground: oklch(0.95 0.01 180);
+  --sidebar-primary: oklch(0.87 0.18 180);
+  --sidebar-primary-foreground: oklch(0.18 0.04 260);
+  --sidebar-accent: oklch(0.22 0.03 260);
+  --sidebar-accent-foreground: oklch(0.95 0.01 180);
+  --sidebar-border: oklch(0.30 0.04 260);
+  --sidebar-ring: oklch(0.87 0.18 180);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-tertiary: var(--tertiary);
+  --color-tertiary-foreground: var(--tertiary-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Professional fonts - Cormorant Garamond (serif) and Nunito (sans) */
+  --font-cormorant: "Cormorant Garamond", Georgia, serif;
+  --font-nunito: "Nunito", system-ui, sans-serif;
+  --font-serif: var(--font-cormorant);
+  --font-sans: var(--font-nunito);
+}
+
+@layer base {
+  html {
+    font-size: clamp(0.875rem, 1vw + 0.5rem, 1rem);
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    @apply text-foreground antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "kern" 1, "liga" 1;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* PWA Safe Area Support */
+  .safe-area-inset-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  .pt-safe {
+    padding-top: max(1rem, env(safe-area-inset-top, 0px));
+  }
+
+  /* Prevent zoom on input focus in iOS */
+  @supports (-webkit-touch-callout: none) {
+    input, select, textarea {
+      font-size: 16px !important;
+    }
+  }
+
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  /* Sans-serif typography for ALL text - professional real estate branding */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    /* Optimized rendering for headings */
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Optimized image rendering */
+  img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+
+  /* Enhanced blur effects quality */
+  [class*="blur"] {
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    will-change: filter;
+  }
+}
+
+@layer utilities {
+  /* Real Estate Gradients - Professional Theme */
+  .bg-real-estate-gradient {
+    background: linear-gradient(135deg, oklch(0.87 0.18 180) 0%, oklch(0.72 0.12 220) 100%);
+  }
+
+  .bg-turquoise-gradient {
+    background: linear-gradient(135deg, oklch(0.87 0.18 180) 0%, oklch(0.90 0.10 190) 100%);
+  }
+
+  .bg-navy-gradient {
+    background: linear-gradient(135deg, oklch(0.18 0.04 260) 0%, oklch(0.25 0.06 260) 100%);
+  }
+
+  .bg-ocean-gradient {
+    background: linear-gradient(135deg, oklch(0.18 0.04 260) 0%, oklch(0.72 0.12 220) 50%, oklch(0.87 0.18 180) 100%);
+  }
+
+  .text-real-estate-gradient {
+    background: linear-gradient(135deg, oklch(0.87 0.18 180) 0%, oklch(0.72 0.12 220) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-turquoise-gradient {
+    background: linear-gradient(135deg, oklch(0.87 0.18 180) 0%, oklch(0.90 0.10 190) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-ocean-gradient {
+    background: linear-gradient(135deg, oklch(0.18 0.04 260) 0%, oklch(0.72 0.12 220) 50%, oklch(0.87 0.18 180) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .bg-blue-gradient {
+    background: linear-gradient(135deg, oklch(0.72 0.12 220) 0%, oklch(0.80 0.10 210) 100%);
+  }
+
+  .bg-success-gradient {
+    background: linear-gradient(135deg, oklch(0.75 0.15 155) 0%, oklch(0.70 0.14 165) 100%);
+  }
+
+  /* Professional shadow effects */
+  .turquoise-shadow {
+    box-shadow: 0 10px 40px -10px oklch(0.87 0.18 180 / 0.30);
+    /* Enhanced rendering */
+    transform: translateZ(0);
+  }
+
+  .turquoise-glow {
+    box-shadow: 0 0 30px oklch(0.87 0.18 180 / 0.35);
+    /* Enhanced rendering */
+    transform: translateZ(0);
+  }
+
+  .blue-glow {
+    box-shadow: 0 0 30px oklch(0.72 0.12 220 / 0.35);
+    /* Enhanced rendering */
+    transform: translateZ(0);
+  }
+
+  .navy-shadow {
+    box-shadow: 0 4px 20px -5px oklch(0.18 0.04 260 / 0.40);
+    /* Enhanced rendering */
+    transform: translateZ(0);
+  }
+
+  .navy-glow {
+    box-shadow: 0 0 25px oklch(0.18 0.04 260 / 0.30);
+    /* Enhanced rendering */
+    transform: translateZ(0);
+  }
+
+  .success-glow {
+    box-shadow: 0 0 20px oklch(0.75 0.15 155 / 0.40);
+    /* Enhanced rendering */
+    transform: translateZ(0);
+  }
+
+  .error-glow {
+    box-shadow: 0 0 20px oklch(0.70 0.18 15 / 0.40);
+    /* Enhanced rendering */
+    transform: translateZ(0);
+  }
+
+  /* Corporate professional borders */
+  .border-turquoise {
+    border-color: oklch(0.87 0.18 180);
+  }
+
+  .border-blue {
+    border-color: oklch(0.72 0.12 220);
+  }
+
+  .border-navy {
+    border-color: oklch(0.18 0.04 260);
+  }
+
+  /* Text rendering optimization */
+  .text-crisp {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Blur effect optimization */
+  .blur-optimized {
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    will-change: filter;
+  }
+
+  /* Smooth transitions for real estate UI */
+  .transition-real-estate {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Professional hover states */
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px -10px oklch(0.87 0.18 180 / 0.35);
+  }
+
+  /* Corporate card styling */
+  .card-real-estate {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 2px 8px oklch(0.87 0.18 180 / 0.08);
+  }
+
+  /* Active state styling for real estate UI */
+  .active-state {
+    background: oklch(0.87 0.18 180);
+    color: oklch(0.18 0.04 260);
+    border-color: oklch(0.87 0.18 180);
+  }
+
+  /* Table header styling - navy blue */
+  .table-header {
+    background: oklch(0.18 0.04 260);
+    color: oklch(0.99 0.003 240);
+    font-weight: 600;
+  }
+
+  /* Glass morphism effect for modern real estate UI */
+  .glass-real-estate {
+    background: oklch(0.99 0.003 240 / 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid oklch(0.87 0.18 180 / 0.2);
+  }
+}
