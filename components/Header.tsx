@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Menu, X } from "lucide-react"
+import Image from "next/image"
 
 interface NavLinkProps {
   text: string
@@ -48,13 +49,14 @@ export default function Header({ userInitials = "SK" }: HeaderProps) {
           className="flex-shrink-0 cursor-pointer"
           onClick={() => (window.location.href = "/")}
         >
-          <span className="text-4xl font-semibold tracking-tight leading-none flex items-center gap-0 text-[#0B1B32]">
-            <span className="relative inline-block">
-              a
-              <div className="absolute top-[6px] left-[3px] w-[6px] h-[6px] bg-white rounded-full" />
-            </span>
-            loba
-          </span>
+          <Image
+            src="/aloba-logo.png"
+            alt="Aloba - Marketplace Inmobiliario"
+            width={120}
+            height={40}
+            className="h-10 w-auto"
+            priority
+          />
         </div>
 
         <div className="hidden md:flex items-center space-x-10 lg:space-x-14 absolute left-1/2 transform -translate-x-1/2">
