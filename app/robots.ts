@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next"
 
-const baseUrl = "https://doctop.space"
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://aloba.gt"
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/_next/"],
+        disallow: ["/api/", "/_next/", "/admin/"],
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,
