@@ -2,20 +2,20 @@ import type { MetadataRoute } from "next"
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "DocTop",
-    short_name: "DocTop",
+    name: "Aloba - Marketplace Inmobiliario",
+    short_name: "Aloba",
     description:
-      "Plataforma integral para profesionales de la salud. Gestiona tu práctica médica, conecta con pacientes y administra citas en línea.",
+      "Encuentra la propiedad perfecta para ti. Plataforma inmobiliaria con proyectos nuevos, herramientas inteligentes y asesoría personalizada en Guatemala.",
     start_url: "/",
-    display: "fullscreen",
-    display_override: ["fullscreen", "standalone", "minimal-ui"],
+    display: "standalone",
+    display_override: ["standalone", "minimal-ui"],
     orientation: "portrait-primary",
     background_color: "#FFFFFF",
-    theme_color: "#6B9EF2",
+    theme_color: "#00F0D0",
     scope: "/",
-    lang: "es-MX",
+    lang: "es-GT",
     dir: "ltr",
-    categories: ["healthcare", "medical", "business", "productivity"],
+    categories: ["real estate", "business", "lifestyle", "productivity"],
     prefer_related_applications: false,
     icons: [
       {
