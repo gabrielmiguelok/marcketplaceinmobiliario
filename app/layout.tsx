@@ -68,9 +68,9 @@ export const metadata: Metadata = {
     description: brandDescription,
     images: [
       {
-        url: `${baseUrl}/logo.png`,
+        url: `${baseUrl}/og.png`,
         width: 1200,
-        height: 1200,
+        height: 630,
         alt: "Aloba - Marketplace Inmobiliario",
       },
     ],
@@ -80,7 +80,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: brandName,
     description: brandDescription,
-    images: [`${baseUrl}/logo.png`],
+    images: [`${baseUrl}/og.png`],
   },
   alternates: {
     canonical: baseUrl,
