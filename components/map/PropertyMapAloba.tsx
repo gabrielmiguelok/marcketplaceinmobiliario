@@ -436,9 +436,9 @@ export default function PropertyMapAloba({
             },
           }}
         >
-          <Popup className="property-popup" minWidth={220} maxWidth={260}>
+          <Popup className="property-popup" minWidth={260} maxWidth={300}>
             <div className="overflow-hidden rounded-lg">
-              <div className="relative h-24 w-full">
+              <div className="relative h-28 w-full">
                 <img
                   src={imageUrl}
                   alt={inmueble.titulo}
@@ -446,28 +446,28 @@ export default function PropertyMapAloba({
                   onError={(e) => { (e.target as HTMLImageElement).src = fallbackImage }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                <div className="absolute top-1.5 left-1.5 flex gap-1">
-                  <span className="bg-[#00F0D0] text-[#0B1B32] text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                <div className="absolute top-2 left-2 flex gap-1.5">
+                  <span className="bg-[#00F0D0] text-[#0B1B32] text-[10px] font-bold px-2 py-0.5 rounded-full">
                     {inmueble.tipo === 'apartamento' ? 'Apto' : inmueble.tipo.charAt(0).toUpperCase() + inmueble.tipo.slice(1)}
                   </span>
-                </div>
-                <div className="absolute bottom-1.5 left-1.5 right-1.5 flex items-end justify-between">
-                  <span className="text-white font-bold text-sm drop-shadow-lg">
-                    {formatPrecio(inmueble.precio, inmueble.moneda)}
-                  </span>
-                  <span className="text-[9px] text-white/90 bg-black/40 px-1.5 py-0.5 rounded-full">
+                  <span className="text-[10px] text-white bg-black/50 px-2 py-0.5 rounded-full">
                     {inmueble.operacion === 'alquiler' ? 'Alquiler' : 'Venta'}
                   </span>
                 </div>
+                <div className="absolute bottom-2 left-2 right-2">
+                  <span className="text-white font-bold text-base drop-shadow-lg">
+                    {formatPrecio(inmueble.precio, inmueble.moneda)}
+                  </span>
+                </div>
               </div>
-              <div className="p-2 bg-white">
-                <h3 className="font-bold text-[#0B1B32] text-xs leading-tight line-clamp-1 mb-0.5">
+              <div className="p-2.5 bg-white">
+                <h3 className="font-bold text-[#0B1B32] text-sm leading-tight line-clamp-1 mb-1">
                   {inmueble.titulo}
                 </h3>
-                <p className="text-gray-500 text-[10px] mb-1.5">
-                  {inmueble.zona ? `Z${inmueble.zona} · ` : ''}{inmueble.ubicacion}
+                <p className="text-gray-500 text-xs mb-1.5">
+                  {inmueble.zona ? `Zona ${inmueble.zona} · ` : ''}{inmueble.ubicacion}
                 </p>
-                <div className="flex items-center gap-2 text-gray-400 text-[10px] mb-2">
+                <div className="flex items-center gap-3 text-gray-500 text-xs">
                   {inmueble.habitaciones && inmueble.habitaciones > 0 && (
                     <span>{inmueble.habitaciones} hab</span>
                   )}
@@ -478,15 +478,6 @@ export default function PropertyMapAloba({
                     <span>{inmueble.metros_cuadrados}m²</span>
                   )}
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    window.location.href = `/inmuebles/${inmueble.id}`
-                  }}
-                  className="w-full bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-semibold py-1.5 px-3 rounded-md text-xs transition-colors"
-                >
-                  Ver detalles
-                </button>
               </div>
             </div>
           </Popup>
