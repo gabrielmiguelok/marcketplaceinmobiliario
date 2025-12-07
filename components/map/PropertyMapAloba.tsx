@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useCallback, useState, useEffect, useMemo } from 'react'
+import { useRef, useCallback, useState, useEffect, useMemo, createRef, RefObject } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, Rectangle } from 'react-leaflet'
 import L from 'leaflet'
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon'
@@ -100,16 +100,51 @@ function createPropertyIcon(type: string, isSelected: boolean, isHovered: boolea
   return icon
 }
 
-function FlyToProperty({ inmueble }: { inmueble: MapInmueble | null }) {
+function FlyToProperty({ inmueble, zoom = 15, duration = 0.5 }: { inmueble: MapInmueble | null, zoom?: number, duration?: number }) {
   const map = useMap()
 
   useEffect(() => {
     if (inmueble && inmueble.latitud && inmueble.longitud) {
-      map.flyTo([inmueble.latitud, inmueble.longitud], 15, {
-        duration: 0.5,
+      map.flyTo([inmueble.latitud, inmueble.longitud], zoom, {
+        duration,
       })
     }
-  }, [inmueble, map])
+  }, [inmueble, map, zoom, duration])
+
+  return null
+}
+
+interface HoverHandlerProps {
+  hoveredId: number | null
+  markerRefs: Map<number, RefObject<L.Marker>>
+  inmuebles: MapInmueble[]
+}
+
+function HoverHandler({ hoveredId, markerRefs, inmuebles }: HoverHandlerProps) {
+  const map = useMap()
+  const lastHoveredRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (hoveredId && hoveredId !== lastHoveredRef.current) {
+      const markerRef = markerRefs.get(hoveredId)
+      const inmueble = inmuebles.find(i => i.id === hoveredId)
+
+      if (markerRef?.current && inmueble?.latitud && inmueble?.longitud) {
+        map.flyTo([inmueble.latitud, inmueble.longitud], Math.max(map.getZoom(), 14), {
+          duration: 0.3,
+        })
+
+        setTimeout(() => {
+          markerRef.current?.openPopup()
+        }, 300)
+      }
+      lastHoveredRef.current = hoveredId
+    } else if (!hoveredId && lastHoveredRef.current) {
+      const markerRef = markerRefs.get(lastHoveredRef.current)
+      markerRef?.current?.closePopup()
+      lastHoveredRef.current = null
+    }
+  }, [hoveredId, markerRefs, inmuebles, map])
 
   return null
 }
@@ -372,6 +407,14 @@ export default function PropertyMapAloba({
 
   const fallbackImage = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=400"
 
+  const markerRefs = useMemo(() => {
+    const refs = new Map<number, RefObject<L.Marker>>()
+    inmueblesWithCoords.forEach(inmueble => {
+      refs.set(inmueble.id, createRef<L.Marker>())
+    })
+    return refs
+  }, [inmueblesWithCoords])
+
   const markers = useMemo(() => (
     inmueblesWithCoords.map((inmueble) => {
       const imageUrl = getImageSrc(inmueble.imagen_url) || fallbackImage
@@ -381,6 +424,7 @@ export default function PropertyMapAloba({
       return (
         <Marker
           key={inmueble.id}
+          ref={markerRefs.get(inmueble.id)}
           position={[inmueble.latitud!, inmueble.longitud!]}
           icon={createPropertyIcon(inmueble.tipo, isSelected, isHovered)}
           zIndexOffset={isSelected ? 1000 : isHovered ? 500 : 0}
@@ -470,7 +514,7 @@ export default function PropertyMapAloba({
         </Marker>
       )
     })
-  ), [inmueblesWithCoords, selectedPropertyId, effectiveHoveredId, onPropertySelect, onMarkerHover, fallbackImage])
+  ), [inmueblesWithCoords, selectedPropertyId, effectiveHoveredId, onPropertySelect, onMarkerHover, fallbackImage, markerRefs])
 
   return (
     <div className="relative w-full h-full">
@@ -497,6 +541,12 @@ export default function PropertyMapAloba({
         />
 
         <FlyToProperty inmueble={selectedInmueble} />
+
+        <HoverHandler
+          hoveredId={hoveredPropertyIdFromGrid ?? null}
+          markerRefs={markerRefs}
+          inmuebles={inmueblesWithCoords}
+        />
 
         {savedSelections.map((bounds, index) => (
           <Rectangle
