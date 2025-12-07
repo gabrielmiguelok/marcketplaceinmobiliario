@@ -19,6 +19,7 @@ interface FiltersData {
   operaciones: FilterOption[]
   habitaciones: FilterOption[]
   rangosPrecios: { value: string; label: string; min: number; max: number | null; count?: number }[]
+  sinHabitaciones: number
 }
 
 interface SearchResult {
@@ -457,6 +458,7 @@ export default function HeroSearchBanner() {
 
   const getHabitacionesDisplay = () => {
     if (!habitaciones) return "Cualquiera"
+    if (habitaciones === "0") return "Otros"
     const found = filters?.habitaciones.find(h => h.value === habitaciones)
     return found ? found.label : `${habitaciones} hab`
   }
@@ -465,6 +467,22 @@ export default function HeroSearchBanner() {
     if (!rangoPrecio) return "Cualquier precio"
     const found = filters?.rangosPrecios.find(r => r.value === rangoPrecio)
     return found ? found.label : rangoPrecio
+  }
+
+  const getHabitacionesOptions = (): FilterOption[] => {
+    const options = filters?.habitaciones || []
+    if (filters?.sinHabitaciones && filters.sinHabitaciones > 0) {
+      return [
+        ...options,
+        {
+          value: "0",
+          label: "Otros",
+          subLabel: "Terrenos, locales, bodegas...",
+          count: filters.sinHabitaciones
+        }
+      ]
+    }
+    return options
   }
 
   const handleZonaSelect = (val: string) => {
@@ -513,7 +531,7 @@ export default function HeroSearchBanner() {
             isOpen={openFilter === "rooms"}
             onToggle={() => setOpenFilter(openFilter === "rooms" ? null : "rooms")}
             hasSeparator={true}
-            options={filters?.habitaciones || []}
+            options={getHabitacionesOptions()}
             onSelect={handleHabitacionesSelect}
             loading={loading}
             updating={updatingFilters}
