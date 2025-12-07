@@ -93,12 +93,16 @@ export default function ConocenosPage() {
     <div className="min-h-screen bg-white font-sans text-[#0B1B32] flex flex-col relative selection:bg-[#00F0D0] selection:text-[#0B1B32]">
       <Header activePage="conocenos" />
 
-      <div className="flex-grow mx-3 mb-3 md:mx-6 md:mb-6 rounded-[2.5rem] md:rounded-[3.5rem] relative overflow-hidden flex flex-col items-center justify-center min-h-[85vh] shadow-2xl z-0">
-        <div className="absolute inset-0 z-0">
+      <section
+        className="flex-grow mx-3 mb-3 md:mx-6 md:mb-6 rounded-[2.5rem] md:rounded-[3.5rem] relative overflow-hidden flex flex-col items-center justify-center min-h-[85vh] shadow-2xl z-0"
+        aria-label="Búsqueda de propiedades en Guatemala"
+      >
+        <div className="absolute inset-0 z-0" aria-hidden="true">
           <img
             src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=2070&auto=format&fit=crop"
-            alt="Guatemala City Real Estate"
+            alt="Vista panorámica de Ciudad de Guatemala con desarrollos inmobiliarios modernos"
             className="absolute inset-0 w-full h-full object-cover"
+            loading="eager"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#04080F]/90 via-[#0B1B32]/40 to-transparent"></div>
         </div>
@@ -166,13 +170,17 @@ export default function ConocenosPage() {
             </div>
 
             <div className="mt-2 lg:mt-0 lg:pl-2 w-full lg:w-auto">
-              <button className="w-full lg:w-auto bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-extrabold text-[14px] py-3 px-6 rounded-[1.5rem] transition-all duration-300 shadow-[0_10px_30px_-5px_rgba(0,240,208,0.4)] hover:shadow-[0_15px_35px_-5px_rgba(0,240,208,0.5)] hover:scale-[1.02] active:scale-[0.98] whitespace-nowrap flex items-center justify-center gap-2">
+              <button
+                type="button"
+                className="w-full lg:w-auto bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-extrabold text-[14px] py-3 px-6 rounded-[1.5rem] transition-all duration-300 shadow-[0_10px_30px_-5px_rgba(0,240,208,0.4)] hover:shadow-[0_15px_35px_-5px_rgba(0,240,208,0.5)] hover:scale-[1.02] active:scale-[0.98] whitespace-nowrap flex items-center justify-center gap-2"
+                aria-label="Buscar propiedades con los filtros seleccionados"
+              >
                 Buscar
               </button>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       <ProjectsCarouselSection />
 

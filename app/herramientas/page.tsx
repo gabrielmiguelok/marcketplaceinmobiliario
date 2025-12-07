@@ -15,15 +15,24 @@ export default function HerramientasPage() {
     <>
       <Header activePage="herramientas" />
 
-      <div className="fixed inset-0 -z-10 bg-white" />
+      <div className="fixed inset-0 -z-10 bg-white" aria-hidden="true" />
 
-      <main className="relative overflow-hidden">
-        <section id="inicio">
+      <div className="relative overflow-hidden">
+        <section
+          id="inicio"
+          aria-label={
+            flow === "none"
+              ? "Herramientas de búsqueda inmobiliaria"
+              : flow === "zone"
+                ? "Quiz de zona ideal"
+                : "Quiz de precalificación crediticia"
+          }
+        >
           {flow === "none" && <HeroSection onSelectFlow={setFlow} />}
           {flow === "zone" && <ZoneQuizSection onBack={() => setFlow("none")} />}
           {flow === "prequal" && <PrequalQuizSection onBack={() => setFlow("none")} />}
         </section>
-      </main>
+      </div>
     </>
   )
 }
