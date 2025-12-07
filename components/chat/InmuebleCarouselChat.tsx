@@ -4,7 +4,7 @@ import { useState, useRef } from "react"
 import { motion } from "framer-motion"
 import Image from "next/image"
 import Link from "next/link"
-import { MapPin, Bed, Bath, ChevronLeft, ChevronRight, Heart, Share2, Maximize } from "lucide-react"
+import { MapPin, Bed, Bath, ChevronLeft, ChevronRight, Heart, Share2, Maximize, Check } from "lucide-react"
 import type { InmuebleResult } from "@/hooks/useChatManager"
 
 interface InmuebleCarouselChatProps {
@@ -47,8 +47,30 @@ function getOperacionLabel(operacion: string): string {
   return operacion === "alquiler" ? "En Alquiler" : "En Venta"
 }
 
+function copyToClipboard(inmuebleId: number, e: React.MouseEvent) {
+  e.preventDefault()
+  e.stopPropagation()
+  const url = `${window.location.origin}/inmuebles/${inmuebleId}`
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = e.currentTarget as HTMLButtonElement
+    btn.classList.add('bg-green-500')
+    setTimeout(() => btn.classList.remove('bg-green-500'), 1500)
+  })
+}
+
 function InmuebleCardLarge({ inmueble, index }: { inmueble: InmuebleResult; index: number }) {
   const [imageError, setImageError] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const handleShare = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const url = `${window.location.origin}/inmuebles/${inmueble.id}`
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
   const imageUrl = imageError ? "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800" : getImageSrc(inmueble.imagen_url)
 
   const location = inmueble.zona
@@ -88,19 +110,16 @@ function InmuebleCardLarge({ inmueble, index }: { inmueble: InmuebleResult; inde
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={(e) => e.preventDefault()}
-              className="w-9 h-9 bg-[#00F0D0] rounded-full flex items-center justify-center text-[#0B1B32] hover:bg-[#00dbbe] transition-colors shadow-md active:scale-95"
-              aria-label="Compartir"
+              onClick={handleShare}
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all shadow-md active:scale-95 ${
+                copied
+                  ? 'bg-green-500 text-white'
+                  : 'bg-[#00F0D0] text-[#0B1B32] hover:bg-[#00dbbe]'
+              }`}
+              aria-label={copied ? "¡Enlace copiado!" : "Compartir"}
+              title={copied ? "¡Enlace copiado!" : "Copiar enlace"}
             >
-              <Share2 size={16} strokeWidth={2.5} />
-            </button>
-            <button
-              type="button"
-              onClick={(e) => e.preventDefault()}
-              className="w-9 h-9 bg-[#00F0D0] rounded-full flex items-center justify-center text-[#0B1B32] hover:bg-[#00dbbe] transition-colors shadow-md active:scale-95"
-              aria-label="Favorito"
-            >
-              <Heart size={16} strokeWidth={2.5} />
+              {copied ? <Check size={16} strokeWidth={2.5} /> : <Share2 size={16} strokeWidth={2.5} />}
             </button>
           </div>
         </div>
