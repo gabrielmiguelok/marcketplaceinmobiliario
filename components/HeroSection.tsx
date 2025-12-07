@@ -9,6 +9,7 @@ interface HeroSectionProps {
 export default function HeroSection({ onSelectFlow }: HeroSectionProps) {
   return (
     <main
+      role="banner"
       className="flex-grow flex flex-col items-center justify-center text-center px-4 md:px-6 py-8 min-h-[80vh] relative bg-white"
     >
       <style>{`
@@ -31,21 +32,27 @@ export default function HeroSection({ onSelectFlow }: HeroSectionProps) {
           Elige una herramienta para comenzar.
         </p>
 
-        <div className="flex flex-col md:flex-row items-center justify-center gap-6 pt-8">
-          <button
-            onClick={() => onSelectFlow("zone")}
-            className="bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-bold text-lg py-4 px-10 rounded-full transition-all duration-300 transform hover:scale-105 shadow-md w-full md:w-auto min-w-[250px]"
-          >
-            Encontrar la Zona
-          </button>
+        <nav aria-label="Herramientas de inversión inmobiliaria">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6 pt-8">
+            <button
+              type="button"
+              onClick={() => onSelectFlow("zone")}
+              aria-label="Iniciar herramienta para encontrar la zona ideal para tu inversión"
+              className="bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-bold text-lg py-4 px-10 rounded-full transition-all duration-300 transform hover:scale-105 shadow-md w-full md:w-auto min-w-[250px] focus:outline-none focus:ring-4 focus:ring-[#00F0D0]/50 focus:ring-offset-2"
+            >
+              Encontrar la Zona
+            </button>
 
-          <button
-            onClick={() => onSelectFlow("prequal")}
-            className="bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-bold text-lg py-4 px-10 rounded-full transition-all duration-300 transform hover:scale-105 shadow-md w-full md:w-auto min-w-[250px]"
-          >
-            Pre-Calificación
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => onSelectFlow("prequal")}
+              aria-label="Iniciar herramienta de pre-calificación para crédito inmobiliario"
+              className="bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-bold text-lg py-4 px-10 rounded-full transition-all duration-300 transform hover:scale-105 shadow-md w-full md:w-auto min-w-[250px] focus:outline-none focus:ring-4 focus:ring-[#00F0D0]/50 focus:ring-offset-2"
+            >
+              Pre-Calificación
+            </button>
+          </div>
+        </nav>
       </div>
     </main>
   )
