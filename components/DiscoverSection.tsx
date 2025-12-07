@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 
 const cn = (...classes: (string | undefined | null | false)[]) => classes.filter(Boolean).join(' ')
 
@@ -78,9 +78,18 @@ const CARDS: CardData[] = [
 export default function DiscoverSection() {
   const [expandedCard, setExpandedCard] = useState<string | null>(null)
 
-  const handleCardClick = (cardId: string) => {
+  const sectionRef = useRef<HTMLDivElement>(null)
+
+  const handleCardClick = (cardId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
     if (window.innerWidth < 768) {
       setExpandedCard(expandedCard === cardId ? null : cardId)
+    }
+  }
+
+  const handleOutsideClick = () => {
+    if (expandedCard) {
+      setExpandedCard(null)
     }
   }
 
@@ -110,14 +119,88 @@ export default function DiscoverSection() {
         </div>
 
         {/* Mobile: Grid 2x3 con tarjetas expandibles */}
-        <div className="md:hidden grid grid-cols-2 gap-3">
-          {CARDS.map((card) => {
+        <div
+          ref={sectionRef}
+          className="md:hidden grid grid-cols-2 gap-3"
+          onClick={handleOutsideClick}
+        >
+          {/* Primera tarjeta: Acceso exclusivo */}
+          {(() => {
+            const card = CARDS[0]
+            const isExpanded = expandedCard === card.id
+            return (
+              <div
+                key={card.id}
+                onClick={(e) => handleCardClick(card.id, e)}
+                className={cn(
+                  "relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 ease-out",
+                  card.bgColor,
+                  isExpanded ? "col-span-2 z-10" : "col-span-1"
+                )}
+              >
+                <div className={cn(
+                  "p-4 flex flex-col justify-between transition-all duration-300",
+                  isExpanded ? "min-h-[220px]" : "h-[140px]"
+                )}>
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className={cn(
+                        "font-bold leading-tight transition-all duration-300",
+                        card.textColor,
+                        isExpanded ? "text-xl mb-3" : "text-sm mb-1"
+                      )}>
+                        {card.title}
+                      </h3>
+                      {isExpanded && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setExpandedCard(null)
+                          }}
+                          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-white/20 hover:bg-white/30 transition-colors"
+                        >
+                          <IconX className="w-4 h-4 text-white" />
+                        </button>
+                      )}
+                    </div>
+                    <p className={cn(
+                      "font-medium leading-snug opacity-80 transition-all duration-300",
+                      card.textColor,
+                      isExpanded ? "text-sm" : "text-xs line-clamp-2"
+                    )}>
+                      {isExpanded ? card.fullDescription : card.description}
+                    </p>
+                  </div>
+                  {card.hasArrow && !isExpanded && (
+                    <div className="self-end mt-2">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-white border-2 border-white text-[#0B1B32]">
+                        <IconArrowUpRight className="w-4 h-4" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })()}
+
+          {/* Imagen en segunda posición */}
+          <div className="col-span-1 relative rounded-2xl overflow-hidden h-[140px]">
+            <img
+              src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1200"
+              alt="Reunión de negocios"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/10"></div>
+          </div>
+
+          {/* Resto de tarjetas (índice 1 en adelante) */}
+          {CARDS.slice(1).map((card) => {
             const isExpanded = expandedCard === card.id
 
             return (
               <div
                 key={card.id}
-                onClick={() => handleCardClick(card.id)}
+                onClick={(e) => handleCardClick(card.id, e)}
                 className={cn(
                   "relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 ease-out",
                   card.bgColor,
@@ -127,7 +210,7 @@ export default function DiscoverSection() {
               >
                 <div className={cn(
                   "p-4 flex flex-col justify-between transition-all duration-300",
-                  isExpanded ? "min-h-[280px]" : "h-[140px]"
+                  isExpanded ? "min-h-[220px]" : "h-[140px]"
                 )}>
                   <div className="flex-1">
                     <div className="flex items-start justify-between gap-2">
@@ -173,13 +256,6 @@ export default function DiscoverSection() {
                       </div>
                     </div>
                   )}
-
-                  {/* CTA button when expanded */}
-                  {isExpanded && (
-                    <button className="mt-4 bg-[#00F0D0] text-[#0B1B32] font-bold py-2.5 px-5 rounded-full text-sm w-full transition-transform active:scale-[0.98]">
-                      Registrarme gratis
-                    </button>
-                  )}
                 </div>
 
                 {/* Cutout effect for Personalización */}
@@ -194,16 +270,6 @@ export default function DiscoverSection() {
               </div>
             )
           })}
-
-          {/* Imagen - siempre visible */}
-          <div className="col-span-2 relative rounded-2xl overflow-hidden h-[160px]">
-            <img
-              src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1200"
-              alt="Reunión de negocios"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-black/10"></div>
-          </div>
         </div>
 
         {/* Desktop: Bento Grid original */}
