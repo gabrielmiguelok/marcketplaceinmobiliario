@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import InmuebleCardMap from '@/components/map/InmuebleCardMap'
-import { ChevronLeft, ChevronRight, MapPin, Loader2, X, ChevronDown, SlidersHorizontal, Bed, Bath, Car, Maximize, ExternalLink, ArrowLeft } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MapPin, Loader2, X, ChevronDown, Bed, Bath, Car, Maximize, ExternalLink, ArrowLeft } from 'lucide-react'
 
 function getImageSrc(url: string | null): string | null {
   if (!url) return null
@@ -139,7 +139,6 @@ export default function MapaInmueblesPage() {
   const [operacionFilter, setOperacionFilter] = useState('')
   const [zonaFilter, setZonaFilter] = useState('')
   const [precioMaxFilter, setPrecioMaxFilter] = useState('')
-  const [showMobileFilters, setShowMobileFilters] = useState(false)
 
   useEffect(() => {
     const fetchInmuebles = async () => {
@@ -308,75 +307,57 @@ export default function MapaInmueblesPage() {
               />
             </div>
 
-            <div className="flex-shrink-0 bg-white border-t border-gray-100 px-4 py-3">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-[#0B1B32]">
-                    {displayInmuebles.length} propiedades
+            <div className="flex-shrink-0 bg-white border-t border-gray-100 px-4 py-2.5">
+              <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className="text-xs font-bold text-[#0B1B32] whitespace-nowrap">
+                    {displayInmuebles.length}
                   </span>
                   {selectedIds.length > 0 && (
-                    <span className="text-[10px] bg-[#00F0D0]/20 text-[#0B1B32] px-2 py-0.5 rounded-full font-medium">
+                    <span className="text-[10px] bg-[#00F0D0]/20 text-[#0B1B32] px-2 py-0.5 rounded-full font-medium whitespace-nowrap">
                       {selectedIds.length} en zona
                     </span>
                   )}
                 </div>
-                <button
-                  onClick={() => setShowMobileFilters(!showMobileFilters)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    showMobileFilters || activeFiltersCount > 0 ? 'bg-[#00F0D0] text-[#0B1B32]' : 'bg-gray-100 text-gray-600'
-                  }`}
-                >
-                  <SlidersHorizontal size={12} />
-                  Filtros
-                  {activeFiltersCount > 0 && (
-                    <span className="w-4 h-4 bg-[#0B1B32] text-white text-[9px] rounded-full flex items-center justify-center">
-                      {activeFiltersCount}
-                    </span>
-                  )}
-                </button>
+                <div className="w-px h-5 bg-gray-200 flex-shrink-0" />
+                <FilterDropdown
+                  label="Tipo"
+                  value={tipoFilter}
+                  options={tipoOptions}
+                  onChange={setTipoFilter}
+                  compact
+                />
+                <FilterDropdown
+                  label="Operación"
+                  value={operacionFilter}
+                  options={operacionOptions}
+                  onChange={setOperacionFilter}
+                  compact
+                />
+                <FilterDropdown
+                  label="Zona"
+                  value={zonaFilter}
+                  options={zonaOptions}
+                  onChange={setZonaFilter}
+                  compact
+                />
+                <FilterDropdown
+                  label="Precio"
+                  value={precioMaxFilter}
+                  options={precioOptions}
+                  onChange={setPrecioMaxFilter}
+                  compact
+                />
+                {activeFiltersCount > 0 && (
+                  <button
+                    onClick={clearAllFilters}
+                    className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                  >
+                    <X size={10} />
+                    Limpiar
+                  </button>
+                )}
               </div>
-
-              {showMobileFilters && (
-                <div className="flex flex-wrap gap-2 pb-2">
-                  <FilterDropdown
-                    label="Tipo"
-                    value={tipoFilter}
-                    options={tipoOptions}
-                    onChange={setTipoFilter}
-                    compact
-                  />
-                  <FilterDropdown
-                    label="Operación"
-                    value={operacionFilter}
-                    options={operacionOptions}
-                    onChange={setOperacionFilter}
-                    compact
-                  />
-                  <FilterDropdown
-                    label="Zona"
-                    value={zonaFilter}
-                    options={zonaOptions}
-                    onChange={setZonaFilter}
-                    compact
-                  />
-                  <FilterDropdown
-                    label="Precio"
-                    value={precioMaxFilter}
-                    options={precioOptions}
-                    onChange={setPrecioMaxFilter}
-                    compact
-                  />
-                  {activeFiltersCount > 0 && (
-                    <button
-                      onClick={clearAllFilters}
-                      className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <X size={10} />
-                      Limpiar
-                    </button>
-                  )}
-                </div>
-              )}
             </div>
 
             <div className="flex-1 overflow-y-auto bg-gray-50/50">
