@@ -2,17 +2,15 @@ import type { MetadataRoute } from "next"
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Aloba - Marketplace Inmobiliario",
+    name: "Aloba",
     short_name: "Aloba",
-    description:
-      "Encuentra la propiedad perfecta para ti. Plataforma inmobiliaria con proyectos nuevos, herramientas inteligentes y asesoría personalizada en Guatemala.",
-    start_url: "/",
-    display: "standalone",
-    display_override: ["standalone", "minimal-ui"],
+    display: "fullscreen",
+    display_override: ["fullscreen", "standalone", "minimal-ui"],
     orientation: "portrait-primary",
     background_color: "#FFFFFF",
     theme_color: "#00F0D0",
     scope: "/",
+    start_url: "/",
     lang: "es-GT",
     dir: "ltr",
     categories: ["real estate", "business", "lifestyle", "productivity"],

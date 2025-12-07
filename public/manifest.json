@@ -1,5 +1,5 @@
 {
-  "name": "Aloba - Marketplace Inmobiliario",
+  "name": "Aloba",
   "short_name": "Aloba",
   "description": "Encuentra la propiedad perfecta para ti. Plataforma inmobiliaria con proyectos nuevos, herramientas inteligentes y asesoría personalizada en Guatemala.",
   "icons": [
@@ -24,8 +24,8 @@
   ],
   "theme_color": "#00F0D0",
   "background_color": "#FFFFFF",
-  "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone", "minimal-ui"],
   "orientation": "portrait-primary",
   "scope": "/",
   "start_url": "/",

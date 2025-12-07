@@ -25,7 +25,7 @@ const cormorant = Cormorant_Garamond({
   adjustFontFallback: true,
 })
 
-const brandName = "Aloba - Marketplace Inmobiliario"
+const brandName = "Aloba"
 const brandDescription =
   "Encuentra la propiedad perfecta para ti. Plataforma inmobiliaria con proyectos nuevos, herramientas inteligentes y asesoría personalizada."
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://aloba.gt"
@@ -91,7 +91,7 @@ export const metadata: Metadata = {
       { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: "/apple-touch-icon.png" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
   robots: {
     index: true,
