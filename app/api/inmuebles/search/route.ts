@@ -55,7 +55,9 @@ export async function GET(request: NextRequest) {
 
     if (habitaciones) {
       const habNum = parseInt(habitaciones)
-      if (habNum >= 4) {
+      if (habNum === 0) {
+        sql += ` AND (habitaciones = 0 OR habitaciones IS NULL)`
+      } else if (habNum >= 4) {
         sql += ` AND habitaciones >= 4`
       } else {
         sql += ` AND habitaciones = ?`
