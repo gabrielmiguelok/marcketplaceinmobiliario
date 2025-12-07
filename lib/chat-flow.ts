@@ -209,16 +209,19 @@ En Aloba encontrarás:
     assistantMessages: [
       `**Rangos de Precios** 💰
 
-Nuestros inmuebles están organizados por rangos:
-
+**En Venta:**
 • **Hasta $150,000** - Apartamentos pequeños, terrenos
 • **$150,000 - $200,000** - Apartamentos 2 habitaciones
-• **$200,000 - $250,000** - Casas y apartamentos amplios
-• **$250,000 - $300,000** - Propiedades premium
-• **$300,000 - $400,000** - Inmuebles de lujo
-• **$400,000+** - Exclusivos y de inversión
+• **$200,000 - $300,000** - Casas y apartamentos amplios
+• **$300,000 - $400,000** - Propiedades premium
+• **$400,000+** - Inmuebles de lujo
 
-Todos los precios están en **dólares americanos (USD)**.
+**En Alquiler (mensual):**
+• **Hasta $500** - Habitaciones, estudios
+• **$500 - $1,000** - Apartamentos 1-2 hab
+• **$1,000 - $2,000** - Apartamentos amplios
+• **$2,000 - $5,000** - Casas premium
+• **$5,000+** - Propiedades de lujo
 
 ¿Cuál es tu presupuesto?`,
     ],
@@ -377,37 +380,6 @@ Te responderemos lo antes posible.
         label: "Buscar inmuebles",
         icon: Search,
         nextStep: "BUSCAR_INMUEBLES",
-      },
-      {
-        key: "volver",
-        label: "Volver al menú",
-        icon: MessageCircle,
-        nextStep: "MAIN",
-      },
-    ],
-    viewMode: "business_qa",
-  },
-
-  QA_FOLLOW_UP: {
-    assistantMessages: [],
-    options: [
-      {
-        key: "buscar",
-        label: "Buscar inmuebles",
-        icon: Search,
-        nextStep: "BUSCAR_INMUEBLES",
-      },
-      {
-        key: "zonas",
-        label: "Explorar zonas",
-        icon: MapPin,
-        nextStep: "ZONAS",
-      },
-      {
-        key: "contacto",
-        label: "Contactar",
-        icon: MessageCircle,
-        nextStep: "CONTACTO",
       },
       {
         key: "volver",

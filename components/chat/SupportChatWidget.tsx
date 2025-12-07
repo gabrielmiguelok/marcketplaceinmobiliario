@@ -4,6 +4,7 @@ import React from "react"
 
 import { motion, AnimatePresence } from "framer-motion"
 import ReactMarkdown from "react-markdown"
+import remarkBreaks from "remark-breaks"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -82,19 +83,22 @@ const FormattedMessage = memo(({ text }: { text: string }) => {
   return (
     <div className="prose prose-sm max-w-none">
       <ReactMarkdown
+        remarkPlugins={[remarkBreaks]}
         components={{
-          p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed text-[15px] sm:text-sm">{children}</p>,
+          p: ({ children }) => <p className="mb-3 last:mb-0 leading-relaxed text-[15px] sm:text-sm">{children}</p>,
           strong: ({ children }) => <strong className="font-semibold text-[#0B1B32]">{children}</strong>,
-          ul: ({ children }) => <ul className="space-y-1.5 ml-4 mb-2">{children}</ul>,
+          ul: ({ children }) => <ul className="space-y-1.5 ml-4 mb-3 list-none">{children}</ul>,
+          ol: ({ children }) => <ol className="space-y-1.5 ml-4 mb-3 list-none counter-reset-item">{children}</ol>,
           li: ({ children }) => (
             <li className="flex items-start gap-2 text-[15px] sm:text-sm">
-              <span className="text-[#00F0D0] mt-1 flex-shrink-0">•</span>
+              <span className="text-[#00F0D0] mt-0.5 flex-shrink-0">•</span>
               <span className="flex-1 leading-relaxed">{children}</span>
             </li>
           ),
-          h1: ({ children }) => <h1 className="text-lg sm:text-base font-semibold mb-2 text-[#0B1B32]">{children}</h1>,
-          h2: ({ children }) => <h2 className="text-base sm:text-sm font-semibold mb-1.5 text-[#0B1B32]">{children}</h2>,
-          h3: ({ children }) => <h3 className="text-sm sm:text-xs font-semibold mb-1 text-[#0B1B32]">{children}</h3>,
+          h1: ({ children }) => <h1 className="text-lg sm:text-base font-semibold mb-2 mt-3 first:mt-0 text-[#0B1B32]">{children}</h1>,
+          h2: ({ children }) => <h2 className="text-base sm:text-sm font-semibold mb-1.5 mt-2 first:mt-0 text-[#0B1B32]">{children}</h2>,
+          h3: ({ children }) => <h3 className="text-sm sm:text-xs font-semibold mb-1 mt-2 first:mt-0 text-[#0B1B32]">{children}</h3>,
+          br: () => <br className="block h-2" />,
           a: ({ children, href }) => (
             <a
               href={href}

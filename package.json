@@ -54,6 +54,7 @@
     "react-hot-toast": "^2.6.0",
     "react-leaflet": "4.2.1",
     "react-markdown": "latest",
+    "remark-breaks": "^4.0.0",
     "remark-gfm": "latest",
     "sharp": "^0.34.5",
     "sonner": "latest",

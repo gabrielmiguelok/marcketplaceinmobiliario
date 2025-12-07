@@ -129,13 +129,20 @@ const ALOBA = {
 
   rangos_precios: {
     descripcion: "Rangos de precios en dólares americanos (USD)",
-    rangos: [
+    venta: [
       { rango: "0-150000", etiqueta: "Hasta $150K", descripcion: "Apartamentos pequeños, terrenos" },
       { rango: "150000-200000", etiqueta: "$150K - $200K", descripcion: "Apartamentos 2 habitaciones" },
       { rango: "200000-250000", etiqueta: "$200K - $250K", descripcion: "Casas y apartamentos amplios" },
       { rango: "250000-300000", etiqueta: "$250K - $300K", descripcion: "Propiedades premium" },
       { rango: "300000-400000", etiqueta: "$300K - $400K", descripcion: "Inmuebles de lujo" },
       { rango: "400000+", etiqueta: "$400K+", descripcion: "Exclusivos y de inversión" },
+    ],
+    alquiler: [
+      { rango: "0-500", etiqueta: "Hasta $500/mes", descripcion: "Habitaciones, estudios pequeños" },
+      { rango: "500-1000", etiqueta: "$500 - $1,000/mes", descripcion: "Apartamentos 1-2 habitaciones" },
+      { rango: "1000-2000", etiqueta: "$1,000 - $2,000/mes", descripcion: "Apartamentos amplios, casas pequeñas" },
+      { rango: "2000-5000", etiqueta: "$2,000 - $5,000/mes", descripcion: "Casas y apartamentos premium" },
+      { rango: "5000+", etiqueta: "$5,000+/mes", descripcion: "Propiedades de lujo, ejecutivas" },
     ],
   },
 
@@ -517,7 +524,7 @@ Sos el Asistente Virtual de Aloba, el marketplace inmobiliario líder en Guatema
 - Cómo funciona: Buscar, explorar, contactar, visitar
 - Tipos de inmuebles: Apartamentos, casas, terrenos, oficinas, locales, bodegas
 - Zonas: Las 18 zonas de Guatemala, especialmente Zona 10, 14, 15, 16
-- Rangos de precios: Desde $150K hasta $400K+ en USD
+- Rangos de precios: Venta desde $150K hasta $400K+ USD | Alquiler desde $500 hasta $5,000+/mes
 - Operaciones: Venta y alquiler
 - Nosotros: Marketplace inmobiliario transparente y eficiente
 - Contacto: WhatsApp +502 3000 0000, email contacto@marketplaceinmobiliario.com
