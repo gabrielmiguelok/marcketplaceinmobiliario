@@ -64,8 +64,15 @@ export default function WhyAlobaSection() {
     }
   }
 
+  const handleKeyDown = (event: React.KeyboardEvent, cardId: number) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
+      handleCardClick(cardId)
+    }
+  }
+
   return (
-    <section className="w-full py-8 md:py-20 bg-white">
+    <section className="w-full py-8 md:py-20 bg-white" role="region" aria-label="Por qué elegir Aloba">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8">
 
         {/* Bloque de Texto */}
@@ -91,9 +98,14 @@ export default function WhyAlobaSection() {
               const isExpanded = expandedCard === card.id
 
               return (
-                <div
+                <article
                   key={card.id}
+                  role="button"
+                  aria-expanded={isExpanded}
+                  aria-label={`${card.title}: ${card.description}`}
+                  tabIndex={0}
                   onClick={() => handleCardClick(card.id)}
+                  onKeyDown={(e) => handleKeyDown(e, card.id)}
                   className={cn(
                     card.bgColor,
                     "rounded-xl md:rounded-[2rem] p-3 md:p-8 flex flex-col justify-between relative group md:hover:shadow-xl transition-all duration-300 cursor-pointer md:cursor-default",
@@ -115,14 +127,17 @@ export default function WhyAlobaSection() {
                       {card.description}
                     </p>
                   </div>
-                  <div className={cn(
-                    card.badgeColor,
-                    "absolute rounded-full flex items-center justify-center text-[#0B1B32] font-bold shadow-sm",
-                    isExpanded ? "bottom-3 right-3 w-8 h-8 text-sm" : "bottom-2 right-2 md:bottom-5 md:right-5 w-6 h-6 md:w-10 md:h-10 text-xs md:text-lg"
-                  )}>
+                  <div
+                    className={cn(
+                      card.badgeColor,
+                      "absolute rounded-full flex items-center justify-center text-[#0B1B32] font-bold shadow-sm",
+                      isExpanded ? "bottom-3 right-3 w-8 h-8 text-sm" : "bottom-2 right-2 md:bottom-5 md:right-5 w-6 h-6 md:w-10 md:h-10 text-xs md:text-lg"
+                    )}
+                    aria-hidden="true"
+                  >
                     {card.id}
                   </div>
-                </div>
+                </article>
               )
             })}
 
@@ -130,9 +145,9 @@ export default function WhyAlobaSection() {
         </div>
 
         {/* Indicador táctil en mobile */}
-        <p className="text-center text-xs text-gray-400 mt-4 md:hidden">
+        <small className="block text-center text-xs text-gray-400 mt-4 md:hidden" role="note">
           Toca una tarjeta para expandirla
-        </p>
+        </small>
       </div>
     </section>
   )
