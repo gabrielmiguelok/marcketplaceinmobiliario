@@ -99,17 +99,56 @@ interface FilterDropdownProps {
 
 function FilterDropdown({ label, value, options, onChange, compact }: FilterDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 })
   const selectedLabel = options.find(o => o.value === value)?.label || label
 
+  const handleOpen = useCallback(() => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      setDropdownPosition({
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: Math.max(rect.width, 160)
+      })
+    }
+    setIsOpen(true)
+  }, [])
+
+  const handleClose = useCallback(() => {
+    setIsOpen(false)
+  }, [])
+
+  const handleSelect = useCallback((optionValue: string) => {
+    onChange(optionValue)
+    setIsOpen(false)
+  }, [onChange])
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleScroll = () => handleClose()
+    const handleResize = () => handleClose()
+
+    window.addEventListener('scroll', handleScroll, true)
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll, true)
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [isOpen, handleClose])
+
   return (
-    <div className="relative">
+    <div className="relative flex-shrink-0">
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        ref={buttonRef}
+        onClick={isOpen ? handleClose : handleOpen}
         className={`flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg hover:border-[#00F0D0] transition-colors ${
           compact ? 'px-2.5 py-1.5 text-xs' : 'px-3 py-2 text-sm'
-        } ${value ? 'border-[#00F0D0] bg-[#00F0D0]/5' : ''}`}
+        } ${value ? 'border-[#00F0D0] bg-[#00F0D0]/5' : ''} ${isOpen ? 'border-[#00F0D0] ring-2 ring-[#00F0D0]/20' : ''}`}
       >
-        <span className={`font-medium ${value ? 'text-[#0B1B32]' : 'text-gray-500'}`}>
+        <span className={`font-medium whitespace-nowrap ${value ? 'text-[#0B1B32]' : 'text-gray-500'}`}>
           {selectedLabel}
         </span>
         <ChevronDown size={compact ? 12 : 14} className={`text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -117,22 +156,41 @@ function FilterDropdown({ label, value, options, onChange, compact }: FilterDrop
 
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-[1100]" onClick={() => setIsOpen(false)} />
-          <div className="absolute top-full left-0 mt-1 w-full min-w-[140px] bg-white rounded-lg shadow-xl border border-gray-100 py-1 z-[1200] max-h-60 overflow-y-auto">
-            {options.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => {
-                  onChange(option.value)
-                  setIsOpen(false)
-                }}
-                className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 transition-colors ${
-                  value === option.value ? 'text-[#00F0D0] font-bold bg-[#00F0D0]/5' : 'text-gray-700'
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
+          <div
+            className="fixed inset-0 z-[9998]"
+            onClick={handleClose}
+            onTouchStart={handleClose}
+          />
+          <div
+            className="fixed bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-[9999] max-h-[50vh] overflow-y-auto"
+            style={{
+              top: dropdownPosition.top,
+              left: dropdownPosition.left,
+              minWidth: dropdownPosition.width,
+              maxWidth: '90vw'
+            }}
+          >
+            {options.length === 0 ? (
+              <div className="px-4 py-3 text-gray-400 text-sm text-center">
+                Sin opciones
+              </div>
+            ) : (
+              options.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => handleSelect(option.value)}
+                  onTouchEnd={(e) => {
+                    e.preventDefault()
+                    handleSelect(option.value)
+                  }}
+                  className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 active:bg-[#00F0D0]/10 transition-colors ${
+                    value === option.value ? 'text-[#00F0D0] font-bold bg-[#00F0D0]/5' : 'text-gray-700'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))
+            )}
           </div>
         </>
       )}
