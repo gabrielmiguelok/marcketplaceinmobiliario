@@ -139,10 +139,6 @@ function HoverHandler({ hoveredId, markerRefs, inmuebles }: HoverHandlerProps) {
         }, 300)
       }
       lastHoveredRef.current = hoveredId
-    } else if (!hoveredId && lastHoveredRef.current) {
-      const markerRef = markerRefs.get(lastHoveredRef.current)
-      markerRef?.current?.closePopup()
-      lastHoveredRef.current = null
     }
   }, [hoveredId, markerRefs, inmuebles, map])
 
@@ -440,63 +436,46 @@ export default function PropertyMapAloba({
             },
           }}
         >
-          <Popup className="property-popup" minWidth={280} maxWidth={320}>
+          <Popup className="property-popup" minWidth={220} maxWidth={260}>
             <div className="overflow-hidden rounded-lg">
-              <div className="relative h-36 w-full">
+              <div className="relative h-24 w-full">
                 <img
                   src={imageUrl}
                   alt={inmueble.titulo}
                   className="w-full h-full object-cover"
                   onError={(e) => { (e.target as HTMLImageElement).src = fallbackImage }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                <div className="absolute top-2 left-2 flex gap-1">
-                  <span className="bg-[#00F0D0] text-[#0B1B32] text-[10px] font-bold px-2 py-0.5 rounded-full">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                <div className="absolute top-1.5 left-1.5 flex gap-1">
+                  <span className="bg-[#00F0D0] text-[#0B1B32] text-[9px] font-bold px-1.5 py-0.5 rounded-full">
                     {inmueble.tipo === 'apartamento' ? 'Apto' : inmueble.tipo.charAt(0).toUpperCase() + inmueble.tipo.slice(1)}
                   </span>
-                  {inmueble.operacion && (
-                    <span className="bg-[#0B1B32] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                      {inmueble.operacion === 'alquiler' ? 'Alquiler' : 'Venta'}
-                    </span>
-                  )}
                 </div>
-                <div className="absolute bottom-2 left-2">
-                  <span className="text-white font-bold text-lg drop-shadow-lg">
+                <div className="absolute bottom-1.5 left-1.5 right-1.5 flex items-end justify-between">
+                  <span className="text-white font-bold text-sm drop-shadow-lg">
                     {formatPrecio(inmueble.precio, inmueble.moneda)}
+                  </span>
+                  <span className="text-[9px] text-white/90 bg-black/40 px-1.5 py-0.5 rounded-full">
+                    {inmueble.operacion === 'alquiler' ? 'Alquiler' : 'Venta'}
                   </span>
                 </div>
               </div>
-              <div className="p-3 bg-white">
-                <h3 className="font-bold text-[#0B1B32] text-sm leading-tight line-clamp-1 mb-1">
+              <div className="p-2 bg-white">
+                <h3 className="font-bold text-[#0B1B32] text-xs leading-tight line-clamp-1 mb-0.5">
                   {inmueble.titulo}
                 </h3>
-                <p className="text-gray-500 text-xs mb-2">
-                  {inmueble.zona ? `Zona ${inmueble.zona}, ` : ''}{inmueble.ubicacion}
+                <p className="text-gray-500 text-[10px] mb-1.5">
+                  {inmueble.zona ? `Z${inmueble.zona} · ` : ''}{inmueble.ubicacion}
                 </p>
-                <div className="flex items-center gap-3 text-gray-400 text-xs mb-3">
+                <div className="flex items-center gap-2 text-gray-400 text-[10px] mb-2">
                   {inmueble.habitaciones && inmueble.habitaciones > 0 && (
-                    <span className="flex items-center gap-1">
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                      </svg>
-                      {inmueble.habitaciones} hab
-                    </span>
+                    <span>{inmueble.habitaciones} hab</span>
                   )}
                   {inmueble.banos && inmueble.banos > 0 && (
-                    <span className="flex items-center gap-1">
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
-                      </svg>
-                      {inmueble.banos} baños
-                    </span>
+                    <span>{inmueble.banos} baños</span>
                   )}
                   {inmueble.metros_cuadrados && inmueble.metros_cuadrados > 0 && (
-                    <span className="flex items-center gap-1">
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                      </svg>
-                      {inmueble.metros_cuadrados}m²
-                    </span>
+                    <span>{inmueble.metros_cuadrados}m²</span>
                   )}
                 </div>
                 <button
@@ -504,7 +483,7 @@ export default function PropertyMapAloba({
                     e.stopPropagation()
                     window.location.href = `/inmuebles/${inmueble.id}`
                   }}
-                  className="w-full bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-semibold py-2 px-4 rounded-lg text-sm transition-colors"
+                  className="w-full bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-semibold py-1.5 px-3 rounded-md text-xs transition-colors"
                 >
                   Ver detalles
                 </button>
