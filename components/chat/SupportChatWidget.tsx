@@ -462,7 +462,7 @@ export function SupportChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="fixed inset-0 z-50 pointer-events-auto p-0 sm:inset-auto sm:bottom-24 sm:right-5 sm:w-full sm:max-w-[32rem] sm:h-[calc(100vh-7rem)] sm:max-h-[750px] sm:p-0"
+            className="fixed inset-0 z-[60] pointer-events-auto p-0 sm:inset-auto sm:bottom-24 sm:right-5 sm:w-full sm:max-w-[32rem] sm:h-[calc(100vh-7rem)] sm:max-h-[750px] sm:p-0"
           >
             <ChatInterface onClose={() => setIsOpen(false)} />
           </motion.div>
