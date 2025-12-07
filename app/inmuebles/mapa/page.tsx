@@ -95,9 +95,10 @@ interface FilterDropdownProps {
   options: { value: string; label: string }[]
   onChange: (value: string) => void
   compact?: boolean
+  updating?: boolean
 }
 
-function FilterDropdown({ label, value, options, onChange, compact }: FilterDropdownProps) {
+function FilterDropdown({ label, value, options, onChange, compact, updating }: FilterDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 })
@@ -146,12 +147,16 @@ function FilterDropdown({ label, value, options, onChange, compact }: FilterDrop
         onClick={isOpen ? handleClose : handleOpen}
         className={`flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg hover:border-[#00F0D0] transition-colors ${
           compact ? 'px-2.5 py-1.5 text-xs' : 'px-3 py-2 text-sm'
-        } ${value ? 'border-[#00F0D0] bg-[#00F0D0]/5' : ''} ${isOpen ? 'border-[#00F0D0] ring-2 ring-[#00F0D0]/20' : ''}`}
+        } ${value ? 'border-[#00F0D0] bg-[#00F0D0]/5' : ''} ${isOpen ? 'border-[#00F0D0] ring-2 ring-[#00F0D0]/20' : ''} ${updating ? 'opacity-70' : ''}`}
       >
         <span className={`font-medium whitespace-nowrap ${value ? 'text-[#0B1B32]' : 'text-gray-500'}`}>
           {selectedLabel}
         </span>
-        <ChevronDown size={compact ? 12 : 14} className={`text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        {updating ? (
+          <Loader2 size={compact ? 12 : 14} className="text-[#00F0D0] animate-spin" />
+        ) : (
+          <ChevronDown size={compact ? 12 : 14} className={`text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        )}
       </button>
 
       {isOpen && (
@@ -215,6 +220,7 @@ export default function MapaInmueblesPage() {
   const [precioMaxFilter, setPrecioMaxFilter] = useState('')
   const [filters, setFilters] = useState<FiltersData | null>(null)
   const [loadingFilters, setLoadingFilters] = useState(true)
+  const [updatingFilters, setUpdatingFilters] = useState(false)
 
   useEffect(() => {
     const fetchInmuebles = async () => {
@@ -233,22 +239,45 @@ export default function MapaInmueblesPage() {
     fetchInmuebles()
   }, [])
 
-  useEffect(() => {
-    const fetchFilters = async () => {
-      try {
-        const res = await fetch('/api/search-filters')
-        const data = await res.json()
-        if (data.success) {
-          setFilters(data.filters)
-        }
-      } catch (error) {
-        console.error('Error fetching filters:', error)
-      } finally {
+  const fetchFiltersWithParams = useCallback(async (isInitial = false) => {
+    if (!isInitial) {
+      setUpdatingFilters(true)
+    }
+
+    try {
+      const params = new URLSearchParams()
+      if (zonaFilter) params.set('zona', zonaFilter)
+      if (precioMaxFilter) {
+        const [min, max] = precioMaxFilter.split('-')
+        if (min) params.set('precio_min', min)
+        if (max) params.set('precio_max', max)
+      }
+
+      const res = await fetch(`/api/search-filters?${params.toString()}`)
+      const data = await res.json()
+      if (data.success) {
+        setFilters(data.filters)
+      }
+    } catch (error) {
+      console.error('Error fetching filters:', error)
+    } finally {
+      if (isInitial) {
         setLoadingFilters(false)
+      } else {
+        setUpdatingFilters(false)
       }
     }
-    fetchFilters()
+  }, [zonaFilter, precioMaxFilter])
+
+  useEffect(() => {
+    fetchFiltersWithParams(true)
   }, [])
+
+  useEffect(() => {
+    if (!loadingFilters) {
+      fetchFiltersWithParams(false)
+    }
+  }, [zonaFilter, precioMaxFilter])
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024)
@@ -408,6 +437,7 @@ export default function MapaInmueblesPage() {
                   options={tipoOptions}
                   onChange={setTipoFilter}
                   compact
+                  updating={updatingFilters}
                 />
                 <FilterDropdown
                   label="Operación"
@@ -415,6 +445,7 @@ export default function MapaInmueblesPage() {
                   options={operacionOptions}
                   onChange={setOperacionFilter}
                   compact
+                  updating={updatingFilters}
                 />
                 <FilterDropdown
                   label="Zona"
@@ -422,6 +453,7 @@ export default function MapaInmueblesPage() {
                   options={zonaOptions}
                   onChange={setZonaFilter}
                   compact
+                  updating={updatingFilters}
                 />
                 <FilterDropdown
                   label="Precio"
@@ -429,6 +461,7 @@ export default function MapaInmueblesPage() {
                   options={precioOptions}
                   onChange={setPrecioMaxFilter}
                   compact
+                  updating={updatingFilters}
                 />
                 {activeFiltersCount > 0 && (
                   <button
@@ -713,6 +746,7 @@ export default function MapaInmueblesPage() {
                     options={tipoOptions}
                     onChange={setTipoFilter}
                     compact
+                    updating={updatingFilters}
                   />
                   <FilterDropdown
                     label="Operación"
@@ -720,6 +754,7 @@ export default function MapaInmueblesPage() {
                     options={operacionOptions}
                     onChange={setOperacionFilter}
                     compact
+                    updating={updatingFilters}
                   />
                   <FilterDropdown
                     label="Zona"
@@ -727,6 +762,7 @@ export default function MapaInmueblesPage() {
                     options={zonaOptions}
                     onChange={setZonaFilter}
                     compact
+                    updating={updatingFilters}
                   />
                   <FilterDropdown
                     label="Precio"
@@ -734,6 +770,7 @@ export default function MapaInmueblesPage() {
                     options={precioOptions}
                     onChange={setPrecioMaxFilter}
                     compact
+                    updating={updatingFilters}
                   />
                   {activeFiltersCount > 0 && (
                     <button
