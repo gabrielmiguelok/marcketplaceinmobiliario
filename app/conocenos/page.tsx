@@ -16,6 +16,8 @@ export default function ConocenosPage() {
     <div className="min-h-screen bg-white font-sans text-[#0B1B32] flex flex-col relative selection:bg-[#00F0D0] selection:text-[#0B1B32]">
       <Header activePage="conocenos" />
 
+      <div className="h-20" />
+
       <section
         className="flex-grow mx-3 mb-3 md:mx-6 md:mb-6 rounded-[2.5rem] md:rounded-[3.5rem] relative overflow-hidden flex flex-col items-center justify-center min-h-[85vh] shadow-2xl z-0"
         aria-label="Búsqueda de propiedades en Guatemala"

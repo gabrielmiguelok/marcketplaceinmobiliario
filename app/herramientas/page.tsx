@@ -15,6 +15,8 @@ export default function HerramientasPage() {
     <>
       <Header activePage="herramientas" />
 
+      <div className="h-20" />
+
       <div className="fixed inset-0 -z-10 bg-white" aria-hidden="true" />
 
       <div className="relative overflow-hidden">
