@@ -108,6 +108,13 @@ public/patients-uploads/*
 !public/patients-uploads/.gitkeep
 public/doctors-uploads/*
 !public/doctors-uploads/.gitkeep
+public/inmuebles/*
+!public/inmuebles/.gitkeep
+
+# Environment files
+.env
+.env.local
+.env.*.local
 
 # Editor directories and files
 .vscode/*
