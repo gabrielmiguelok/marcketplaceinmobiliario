@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Aloba** - Real estate marketplace platform for Guatemala. A Next.js 14 application for finding properties, with interactive quiz-based property matching, user management, and Google OAuth authentication.
+**Aloba** - Real estate marketplace platform for Guatemala. A Next.js 14 application for finding properties, with interactive quiz-based property matching, infinite carousel of projects, and Google OAuth authentication.
 
-**URL**: https://aloba.gt
+**URL**: https://marketplaceinmobiliario.com
 
 ## Commands
 
@@ -29,9 +29,9 @@ pm2 logs marcketplaceinmobiliario
 - **React 18** with TypeScript
 - **Tailwind CSS 4** with OKLCH color model
 - **Radix UI + Shadcn/ui** (New York style)
+- **Embla Carousel** for infinite scroll carousels
 - **MariaDB/MySQL** with **mysql2/promise** connection pool
 - **Google OAuth2** for authentication
-- **CustomTable** component (TanStack Table + MUI)
 
 ## Architecture
 
@@ -46,7 +46,6 @@ API Routes → lib/auth.ts (session) → lib/db.ts (pool) → MariaDB
 - `lib/db.ts` - Database connection pool with `query()` and `transaction()` helpers
 - `lib/auth.ts` - Server-side auth: `getSession()`, `verifyAuth()`, `createSession()`
 - `lib/auth-client.ts` - Client-side auth utilities
-- `CustomTable/` - Full-featured data table component with inline editing, filters, export
 
 ### Database Access Pattern
 
@@ -89,17 +88,31 @@ const result = await transaction(async (conn) => {
 - Custom colors: `text-[#0B1B32]`, `bg-[#00F0D0]`
 - Gradients: `.bg-real-estate-gradient`, `.bg-turquoise-gradient`
 
-## Main Components
+## Main Pages
 
-### Landing Page (`/`)
-- `Header.tsx` - Navigation with "aloba" logo, responsive menu
-- `HeroSection.tsx` - Hero with two tool buttons: "Encontrar la Zona" and "Pre-Calificación"
-- `ZoneQuizSection.tsx` - 6-question quiz for zone matching (intro → questions → results)
-- `PrequalQuizSection.tsx` - 8-question quiz for credit pre-qualification (intro → questions → results)
+### `/conocenos` (Landing)
+Full landing page with modular section components:
+
+```
+app/conocenos/page.tsx
+├── Header (with activePage prop for navigation highlighting)
+├── Hero section (inline - search filters with dropdown menus)
+├── ProjectsCarouselSection - Infinite auto-scroll carousel (Embla)
+├── StatsBannerSection - Stats banner + developer logos
+├── WhyAlobaSection - 3 feature cards with mobile expansion
+├── DiscoverSection - Bento grid with expandable cards
+├── TestimonialsSection - Auto-scroll testimonial carousel
+└── Footer - CTA + links + social
+```
+
+### `/herramientas` (Tools)
+- `HeroSection` - Tool selection with two buttons
+- `ZoneQuizSection` - 6-question quiz for zone matching (intro → questions → results)
+- `PrequalQuizSection` - 8-question quiz for credit pre-qualification (intro → questions → results)
 
 ### Quiz Flow Architecture
 ```
-app/page.tsx (state: FlowType = "none" | "zone" | "prequal")
+app/herramientas/page.tsx (state: FlowType = "none" | "zone" | "prequal")
 ├── HeroSection (flow === "none") → onSelectFlow callback
 ├── ZoneQuizSection (flow === "zone") → onBack callback
 └── PrequalQuizSection (flow === "prequal") → onBack callback
@@ -107,20 +120,45 @@ app/page.tsx (state: FlowType = "none" | "zone" | "prequal")
 
 Each quiz component manages its own step state (0 = intro, 1-N = questions, N+1 = results).
 
-### CustomTable
-Located in `CustomTable/`. Features: inline editing, column filters, sorting, pagination, column resize, Excel export.
+## Component Patterns
+
+### Carousels (Embla)
+Both `ProjectsCarouselSection` and `TestimonialsSection` use Embla Carousel with auto-scroll:
 
 ```typescript
-import CustomTable from "@/CustomTable"
+import useEmblaCarousel from "embla-carousel-react"
+import AutoScroll from "embla-carousel-auto-scroll"
 
-<CustomTable
-  data={data}
-  columnsDef={columnsDef}
-  pageSize={50}
-  loading={isLoading}
-  showFiltersToolbar={true}
-  onRefresh={handleRefresh}
-/>
+const [emblaRef] = useEmblaCarousel({ loop: true }, [AutoScroll({ speed: 1 })])
+```
+
+### Mobile Expandable Cards
+Components like `DiscoverSection` and `WhyAlobaSection` use a pattern for mobile-only card expansion:
+
+```typescript
+const [expandedCard, setExpandedCard] = useState<string | null>(null)
+
+const handleCardClick = (cardId: string, e: React.MouseEvent) => {
+  e.stopPropagation() // Prevent bubbling
+  if (window.innerWidth < 768) {
+    setExpandedCard(expandedCard === cardId ? null : cardId)
+  }
+}
+
+// Close on outside click
+const handleOutsideClick = () => {
+  if (expandedCard) setExpandedCard(null)
+}
+```
+
+Cards use `col-span-2` when expanded in a 2-column grid for full-width display.
+
+### Local Utility: cn()
+Many components define a local `cn` helper instead of importing from utils:
+
+```typescript
+const cn = (...classes: (string | undefined | null | false)[]) =>
+  classes.filter(Boolean).join(" ")
 ```
 
 ## Environment Variables
@@ -131,12 +169,12 @@ DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
 
 # Auth
 AUTH_JWD_BYTES=64
-COOKIE_DOMAIN=aloba.gt
+COOKIE_DOMAIN=marketplaceinmobiliario.com
 JWT_SECRET=***
 GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
 
 # App
-NEXT_PUBLIC_BASE_URL=https://aloba.gt
+NEXT_PUBLIC_BASE_URL=https://marketplaceinmobiliario.com
 NEXT_PUBLIC_GA_ID=G-***
 ```
 
@@ -145,3 +183,4 @@ NEXT_PUBLIC_GA_ID=G-***
 - **Port**: 1212
 - **Cookie**: `doutopAuth` (httpOnly)
 - **Google OAuth callback**: `/api/auth/google`
+- **Navigation**: Uses `next/link` for client-side routing
