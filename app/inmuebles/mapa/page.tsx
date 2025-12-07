@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import InmuebleCardMap from '@/components/map/InmuebleCardMap'
-import { ChevronLeft, ChevronRight, Map, Grid, MapPin, Loader2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Map, Grid, MapPin, Loader2, Search, X, ChevronDown, SlidersHorizontal } from 'lucide-react'
 
 const PropertyMapAloba = dynamic(() => import('@/components/map/PropertyMapAloba'), {
   ssr: false,
@@ -44,8 +44,60 @@ interface Inmueble {
 
 const ITEMS_PER_PAGE = 6
 
+interface FilterDropdownProps {
+  label: string
+  value: string
+  options: { value: string; label: string }[]
+  onChange: (value: string) => void
+  compact?: boolean
+}
+
+function FilterDropdown({ label, value, options, onChange, compact }: FilterDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const selectedLabel = options.find(o => o.value === value)?.label || label
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg hover:border-[#00F0D0] transition-colors ${
+          compact ? 'px-2.5 py-1.5 text-xs' : 'px-3 py-2 text-sm'
+        } ${value ? 'border-[#00F0D0] bg-[#00F0D0]/5' : ''}`}
+      >
+        <span className={`font-medium ${value ? 'text-[#0B1B32]' : 'text-gray-500'}`}>
+          {selectedLabel}
+        </span>
+        <ChevronDown size={compact ? 12 : 14} className={`text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-[1100]" onClick={() => setIsOpen(false)} />
+          <div className="absolute top-full left-0 mt-1 w-full min-w-[140px] bg-white rounded-lg shadow-xl border border-gray-100 py-1 z-[1200] max-h-60 overflow-y-auto">
+            {options.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => {
+                  onChange(option.value)
+                  setIsOpen(false)
+                }}
+                className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 transition-colors ${
+                  value === option.value ? 'text-[#00F0D0] font-bold bg-[#00F0D0]/5' : 'text-gray-700'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 export default function MapaInmueblesPage() {
   const router = useRouter()
+  const gridRef = useRef<HTMLDivElement>(null)
   const [inmuebles, setInmuebles] = useState<Inmueble[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedIds, setSelectedIds] = useState<number[]>([])
@@ -54,6 +106,12 @@ export default function MapaInmueblesPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [isMobile, setIsMobile] = useState(false)
   const [showMap, setShowMap] = useState(true)
+
+  const [tipoFilter, setTipoFilter] = useState('')
+  const [operacionFilter, setOperacionFilter] = useState('')
+  const [zonaFilter, setZonaFilter] = useState('')
+  const [precioMaxFilter, setPrecioMaxFilter] = useState('')
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
 
   useEffect(() => {
     const fetchInmuebles = async () => {
@@ -88,6 +146,10 @@ export default function MapaInmueblesPage() {
     setHoveredPropertyId(id)
   }, [])
 
+  const handleMarkerHover = useCallback((id: number | null) => {
+    setHoveredPropertyId(id)
+  }, [])
+
   const handlePropertyClick = useCallback((id: number) => {
     setSelectedPropertyId(id)
     if (isMobile) {
@@ -99,10 +161,80 @@ export default function MapaInmueblesPage() {
     router.push(`/inmuebles/${id}`)
   }, [router])
 
+  const zonas = useMemo(() => {
+    const uniqueZonas = [...new Set(inmuebles.map(i => i.zona).filter(Boolean))].sort((a, b) => {
+      const numA = parseInt(a) || 999
+      const numB = parseInt(b) || 999
+      return numA - numB
+    })
+    return uniqueZonas
+  }, [inmuebles])
+
+  const tipoOptions = [
+    { value: '', label: 'Tipo' },
+    { value: 'apartamento', label: 'Apartamento' },
+    { value: 'casa', label: 'Casa' },
+    { value: 'terreno', label: 'Terreno' },
+    { value: 'oficina', label: 'Oficina' },
+    { value: 'local', label: 'Local' },
+    { value: 'bodega', label: 'Bodega' },
+  ]
+
+  const operacionOptions = [
+    { value: '', label: 'Operación' },
+    { value: 'venta', label: 'Venta' },
+    { value: 'alquiler', label: 'Alquiler' },
+  ]
+
+  const zonaOptions = useMemo(() => [
+    { value: '', label: 'Zona' },
+    ...zonas.map(z => ({ value: z, label: `Zona ${z}` }))
+  ], [zonas])
+
+  const precioOptions = [
+    { value: '', label: 'Precio' },
+    { value: '100000', label: 'Hasta $100k' },
+    { value: '200000', label: 'Hasta $200k' },
+    { value: '300000', label: 'Hasta $300k' },
+    { value: '500000', label: 'Hasta $500k' },
+    { value: '1000000', label: 'Hasta $1M' },
+  ]
+
+  const activeFiltersCount = [tipoFilter, operacionFilter, zonaFilter, precioMaxFilter].filter(Boolean).length
+
+  const clearAllFilters = useCallback(() => {
+    setTipoFilter('')
+    setOperacionFilter('')
+    setZonaFilter('')
+    setPrecioMaxFilter('')
+  }, [])
+
+  const filteredInmuebles = useMemo(() => {
+    return inmuebles.filter(inmueble => {
+      const matchesTipo = tipoFilter === '' || inmueble.tipo === tipoFilter
+      const matchesOperacion = operacionFilter === '' || inmueble.operacion === operacionFilter
+      const matchesZona = zonaFilter === '' || inmueble.zona === zonaFilter
+      const matchesPrecio = precioMaxFilter === '' || inmueble.precio <= parseFloat(precioMaxFilter)
+      return matchesTipo && matchesOperacion && matchesZona && matchesPrecio
+    })
+  }, [inmuebles, tipoFilter, operacionFilter, zonaFilter, precioMaxFilter])
+
   const displayInmuebles = useMemo(() => {
-    if (selectedIds.length === 0) return inmuebles
-    return inmuebles.filter(i => selectedIds.includes(i.id))
-  }, [inmuebles, selectedIds])
+    if (selectedIds.length === 0) return filteredInmuebles
+    return filteredInmuebles.filter(i => selectedIds.includes(i.id))
+  }, [filteredInmuebles, selectedIds])
+
+  const handleMapPropertySelect = useCallback((id: number) => {
+    setSelectedPropertyId(id)
+    const indexInDisplay = displayInmuebles.findIndex(i => i.id === id)
+    if (indexInDisplay !== -1) {
+      const targetPage = Math.floor(indexInDisplay / ITEMS_PER_PAGE) + 1
+      setCurrentPage(targetPage)
+    }
+    if (isMobile) {
+      setShowMap(false)
+    }
+  }, [displayInmuebles, isMobile])
 
   const totalPages = Math.ceil(displayInmuebles.length / ITEMS_PER_PAGE)
 
@@ -133,37 +265,94 @@ export default function MapaInmueblesPage() {
 
       <main className="flex-1 pt-20 flex flex-col lg:flex-row overflow-hidden">
         {isMobile && (
-          <div className="flex-shrink-0 px-4 py-3 border-b border-gray-100 bg-white flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-[#0B1B32]">
-                {displayInmuebles.length} propiedades
-              </span>
-              {selectedIds.length > 0 && (
-                <span className="text-xs bg-[#00F0D0]/20 text-[#0B1B32] px-2.5 py-1 rounded-full font-medium">
-                  {selectedIds.length} en zona
+          <div className="flex-shrink-0 border-b border-gray-100 bg-white">
+            <div className="px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-[#0B1B32]">
+                  {displayInmuebles.length} propiedades
                 </span>
-              )}
+                {selectedIds.length > 0 && (
+                  <span className="text-xs bg-[#00F0D0]/20 text-[#0B1B32] px-2.5 py-1 rounded-full font-medium">
+                    {selectedIds.length} en zona
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowMobileFilters(!showMobileFilters)}
+                  className={`flex items-center gap-1 px-2.5 py-2 rounded-xl text-sm font-medium transition-all ${
+                    showMobileFilters || activeFiltersCount > 0 ? 'bg-[#00F0D0] text-[#0B1B32]' : 'bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  <SlidersHorizontal size={14} />
+                  {activeFiltersCount > 0 && (
+                    <span className="w-4 h-4 bg-[#0B1B32] text-white text-[10px] rounded-full flex items-center justify-center">
+                      {activeFiltersCount}
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={() => setShowMap(false)}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                    !showMap ? 'bg-[#00F0D0] text-[#0B1B32]' : 'bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  <Grid size={16} />
+                  Lista
+                </button>
+                <button
+                  onClick={() => setShowMap(true)}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                    showMap ? 'bg-[#00F0D0] text-[#0B1B32]' : 'bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  <Map size={16} />
+                  Mapa
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowMap(false)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
-                  !showMap ? 'bg-[#00F0D0] text-[#0B1B32]' : 'bg-gray-100 text-gray-600'
-                }`}
-              >
-                <Grid size={16} />
-                Lista
-              </button>
-              <button
-                onClick={() => setShowMap(true)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
-                  showMap ? 'bg-[#00F0D0] text-[#0B1B32]' : 'bg-gray-100 text-gray-600'
-                }`}
-              >
-                <Map size={16} />
-                Mapa
-              </button>
-            </div>
+
+            {showMobileFilters && (
+              <div className="px-4 pb-3 flex flex-wrap gap-2">
+                <FilterDropdown
+                  label="Tipo"
+                  value={tipoFilter}
+                  options={tipoOptions}
+                  onChange={setTipoFilter}
+                  compact
+                />
+                <FilterDropdown
+                  label="Operación"
+                  value={operacionFilter}
+                  options={operacionOptions}
+                  onChange={setOperacionFilter}
+                  compact
+                />
+                <FilterDropdown
+                  label="Zona"
+                  value={zonaFilter}
+                  options={zonaOptions}
+                  onChange={setZonaFilter}
+                  compact
+                />
+                <FilterDropdown
+                  label="Precio"
+                  value={precioMaxFilter}
+                  options={precioOptions}
+                  onChange={setPrecioMaxFilter}
+                  compact
+                />
+                {activeFiltersCount > 0 && (
+                  <button
+                    onClick={clearAllFilters}
+                    className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    <X size={12} />
+                    Limpiar
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -171,10 +360,12 @@ export default function MapaInmueblesPage() {
           showMap ? (
             <div className="flex-1 relative">
               <PropertyMapAloba
-                inmuebles={inmuebles}
+                inmuebles={filteredInmuebles}
                 onSelectionChange={handleSelectionChange}
                 selectedPropertyId={selectedPropertyId}
-                onPropertySelect={handlePropertyClick}
+                hoveredPropertyIdFromGrid={hoveredPropertyId}
+                onPropertySelect={handleMapPropertySelect}
+                onMarkerHover={handleMarkerHover}
               />
             </div>
           ) : (
@@ -252,22 +443,38 @@ export default function MapaInmueblesPage() {
               </div>
 
               {totalPages > 1 && (
-                <div className="flex-shrink-0 px-5 py-4 border-t border-gray-100 bg-white">
-                  <div className="flex items-center justify-between">
+                <div className="flex-shrink-0 px-5 py-3 border-t border-gray-100 bg-white">
+                  <div className="flex items-center justify-center gap-1">
                     <button
                       onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
-                      className="flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                     >
                       <ChevronLeft size={16} />
-                      Anterior
                     </button>
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+
+                    {currentPage > 2 && (
+                      <>
+                        <button
+                          onClick={() => setCurrentPage(1)}
+                          className="w-8 h-8 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-all"
+                        >
+                          1
+                        </button>
+                        {currentPage > 3 && (
+                          <span className="w-6 text-center text-gray-400 text-xs">...</span>
+                        )}
+                      </>
+                    )}
+
+                    {Array.from({ length: 5 }, (_, i) => {
+                      const page = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i
+                      if (page > totalPages) return null
+                      return (
                         <button
                           key={page}
                           onClick={() => setCurrentPage(page)}
-                          className={`w-8 h-8 rounded-lg text-sm font-medium transition-all ${
+                          className={`w-8 h-8 rounded-lg text-xs font-medium transition-all ${
                             currentPage === page
                               ? 'bg-[#00F0D0] text-[#0B1B32]'
                               : 'text-gray-600 hover:bg-gray-100'
@@ -275,14 +482,28 @@ export default function MapaInmueblesPage() {
                         >
                           {page}
                         </button>
-                      ))}
-                    </div>
+                      )
+                    })}
+
+                    {currentPage < totalPages - 1 && totalPages > 5 && (
+                      <>
+                        {currentPage < totalPages - 2 && (
+                          <span className="w-6 text-center text-gray-400 text-xs">...</span>
+                        )}
+                        <button
+                          onClick={() => setCurrentPage(totalPages)}
+                          className="w-8 h-8 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-all"
+                        >
+                          {totalPages}
+                        </button>
+                      </>
+                    )}
+
                     <button
                       onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                       disabled={currentPage === totalPages}
-                      className="flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                     >
-                      Siguiente
                       <ChevronRight size={16} />
                     </button>
                   </div>
@@ -290,17 +511,82 @@ export default function MapaInmueblesPage() {
               )}
             </div>
 
-            <div className="flex-1 relative">
-              <PropertyMapAloba
-                inmuebles={inmuebles}
-                onSelectionChange={handleSelectionChange}
-                selectedPropertyId={selectedPropertyId}
-                onPropertySelect={handlePropertyClick}
-              />
+            <div className="flex-1 flex flex-col relative">
+              <div className="flex-shrink-0 px-4 py-3 bg-white border-b border-gray-100 flex items-center gap-2 flex-wrap z-[1000]">
+                <div className="flex items-center gap-2 flex-wrap flex-1">
+                  <FilterDropdown
+                    label="Tipo"
+                    value={tipoFilter}
+                    options={tipoOptions}
+                    onChange={setTipoFilter}
+                    compact
+                  />
+                  <FilterDropdown
+                    label="Operación"
+                    value={operacionFilter}
+                    options={operacionOptions}
+                    onChange={setOperacionFilter}
+                    compact
+                  />
+                  <FilterDropdown
+                    label="Zona"
+                    value={zonaFilter}
+                    options={zonaOptions}
+                    onChange={setZonaFilter}
+                    compact
+                  />
+                  <FilterDropdown
+                    label="Precio"
+                    value={precioMaxFilter}
+                    options={precioOptions}
+                    onChange={setPrecioMaxFilter}
+                    compact
+                  />
+                  {activeFiltersCount > 0 && (
+                    <button
+                      onClick={clearAllFilters}
+                      className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <X size={12} />
+                      Limpiar
+                    </button>
+                  )}
+                </div>
+                <span className="text-xs text-gray-400">
+                  {filteredInmuebles.filter(i => i.latitud && i.longitud).length} en mapa
+                </span>
+              </div>
+
+              <div className="flex-1 relative">
+                <PropertyMapAloba
+                  inmuebles={filteredInmuebles}
+                  onSelectionChange={handleSelectionChange}
+                  selectedPropertyId={selectedPropertyId}
+                  hoveredPropertyIdFromGrid={hoveredPropertyId}
+                  onPropertySelect={handleMapPropertySelect}
+                  onMarkerHover={handleMarkerHover}
+                />
+              </div>
             </div>
           </>
         )}
       </main>
+
+      <style jsx global>{`
+        .property-popup .leaflet-popup-content-wrapper {
+          padding: 0;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+        .property-popup .leaflet-popup-content {
+          margin: 0;
+          width: auto !important;
+        }
+        .property-popup .leaflet-popup-tip {
+          background: white;
+        }
+      `}</style>
     </div>
   )
 }
