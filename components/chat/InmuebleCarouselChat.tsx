@@ -4,7 +4,7 @@ import { useState, useRef } from "react"
 import { motion } from "framer-motion"
 import Image from "next/image"
 import Link from "next/link"
-import { MapPin, Bed, Bath, Car, ChevronLeft, ChevronRight, ExternalLink, Home, Maximize } from "lucide-react"
+import { MapPin, Bed, Bath, ChevronLeft, ChevronRight, Heart, Share2, Maximize } from "lucide-react"
 import type { InmuebleResult } from "@/hooks/useChatManager"
 
 interface InmuebleCarouselChatProps {
@@ -43,162 +43,181 @@ function getTipoLabel(tipo: string): string {
   return tipos[tipo] || tipo
 }
 
-function InmuebleCardFeatured({ inmueble }: { inmueble: InmuebleResult }) {
+function getOperacionLabel(operacion: string): string {
+  return operacion === "alquiler" ? "En Alquiler" : "En Venta"
+}
+
+function InmuebleCardLarge({ inmueble, index }: { inmueble: InmuebleResult; index: number }) {
   const [imageError, setImageError] = useState(false)
   const imageUrl = imageError ? "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800" : getImageSrc(inmueble.imagen_url)
 
+  const location = inmueble.zona
+    ? `Zona ${inmueble.zona}, ${inmueble.departamento || 'Guatemala'}`
+    : inmueble.ubicacion || inmueble.departamento || 'Guatemala'
+
   return (
-    <Link
-      href={`/inmuebles/${inmueble.id}`}
-      target="_blank"
-      className="block group w-full"
-    >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.98 }}
-        transition={{ duration: 0.2 }}
-        className="bg-white rounded-xl border border-[#00F0D0]/20 p-4 sm:p-4 transition-all duration-200 hover:shadow-lg hover:border-[#00F0D0]/40 active:bg-[#00F0D0]/5"
+    <Link href={`/inmuebles/${inmueble.id}`} target="_blank" className="block">
+      <motion.article
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: index * 0.1 }}
+        whileHover={{ y: -4 }}
+        className="relative group w-full h-[320px] rounded-2xl overflow-hidden shadow-lg transition-all duration-300 hover:shadow-xl cursor-pointer bg-white border border-gray-100"
       >
-        <div className="flex items-start gap-4 sm:gap-4">
-          <div className="relative w-18 h-18 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-gradient-to-br from-[#00F0D0]/10 to-[#0B1B32]/10 ring-2 ring-[#00F0D0]/20 shadow-md group-hover:ring-[#00F0D0]/40 transition-all flex-shrink-0" style={{ width: '72px', height: '72px' }}>
-            <Image
-              src={imageUrl}
-              alt={inmueble.titulo}
-              fill
-              sizes="72px"
-              className="object-cover"
-              onError={() => setImageError(true)}
-            />
-            <div className="absolute top-1 left-1">
-              <span className="bg-[#00F0D0] text-[#0B1B32] text-[9px] font-bold px-1.5 py-0.5 rounded">
-                {getTipoLabel(inmueble.tipo)}
-              </span>
-            </div>
+        <Image
+          src={imageUrl}
+          alt={inmueble.titulo}
+          fill
+          sizes="(max-width: 768px) 100vw, 400px"
+          className="object-cover transition-transform duration-700 group-hover:scale-105"
+          onError={() => setImageError(true)}
+        />
+
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent h-32 pointer-events-none" />
+
+        <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-10">
+          <div className="flex flex-col gap-2">
+            <span className="bg-[#00F0D0] text-[#0B1B32] text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
+              {getTipoLabel(inmueble.tipo)}
+            </span>
+            <span className="bg-white/95 backdrop-blur-sm text-[#0B1B32] text-xs font-semibold px-3 py-1.5 rounded-full shadow-sm">
+              {getOperacionLabel(inmueble.operacion)}
+            </span>
           </div>
 
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <h4 className="font-semibold text-[15px] sm:text-sm text-[#0B1B32] group-hover:text-[#00F0D0] transition-colors truncate">
-                  {inmueble.titulo}
-                </h4>
-                <p className="text-[#00F0D0] font-bold text-base sm:text-sm mt-0.5">
-                  {formatPrecio(inmueble.precio, inmueble.moneda)}
-                </p>
-              </div>
-              <div className="flex items-center gap-1.5 sm:gap-1 text-sm sm:text-xs text-[#0B1B32] font-medium opacity-70 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                <span>Ver</span>
-                <ExternalLink className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
-              </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={(e) => e.preventDefault()}
+              className="w-9 h-9 bg-[#00F0D0] rounded-full flex items-center justify-center text-[#0B1B32] hover:bg-[#00dbbe] transition-colors shadow-md active:scale-95"
+              aria-label="Compartir"
+            >
+              <Share2 size={16} strokeWidth={2.5} />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => e.preventDefault()}
+              className="w-9 h-9 bg-[#00F0D0] rounded-full flex items-center justify-center text-[#0B1B32] hover:bg-[#00dbbe] transition-colors shadow-md active:scale-95"
+              aria-label="Favorito"
+            >
+              <Heart size={16} strokeWidth={2.5} />
+            </button>
+          </div>
+        </div>
+
+        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-[#0B1B32] via-[#0B1B32]/95 to-transparent pt-12 pb-5 px-5">
+          <h3 className="text-white text-lg font-bold mb-1.5 line-clamp-1">{inmueble.titulo}</h3>
+
+          <p className="text-gray-300 text-sm font-medium mb-2.5 flex items-center gap-1.5">
+            <MapPin size={14} className="text-[#00F0D0]" />
+            {location}
+          </p>
+
+          <div className="flex items-center justify-between">
+            <div className="text-[#00F0D0] font-bold text-xl">
+              {formatPrecio(inmueble.precio, inmueble.moneda)}
             </div>
 
-            {(inmueble.zona || inmueble.ubicacion) && (
-              <p className="text-sm sm:text-xs text-gray-500 mt-2 sm:mt-1.5 flex items-center gap-1.5 sm:gap-1 truncate">
-                <MapPin className="w-3.5 h-3.5 sm:w-3 sm:h-3 flex-shrink-0 text-gray-400" />
-                {inmueble.zona ? `Zona ${inmueble.zona}` : inmueble.ubicacion}
-              </p>
-            )}
-
-            <div className="flex items-center gap-2 mt-2.5 sm:mt-2 flex-wrap">
+            <div className="flex items-center gap-3 text-white/80 text-sm">
               {inmueble.habitaciones !== null && inmueble.habitaciones > 0 && (
-                <span className="inline-flex items-center gap-1 text-xs sm:text-[10px] bg-[#00F0D0]/10 text-[#0B1B32] px-2.5 py-1 sm:px-2 sm:py-0.5 rounded-full font-medium">
-                  <Bed className="w-3 h-3 sm:w-2.5 sm:h-2.5" />
+                <span className="flex items-center gap-1">
+                  <Bed size={14} />
                   {inmueble.habitaciones}
                 </span>
               )}
               {inmueble.banos !== null && inmueble.banos > 0 && (
-                <span className="inline-flex items-center gap-1 text-xs sm:text-[10px] bg-[#00F0D0]/10 text-[#0B1B32] px-2.5 py-1 sm:px-2 sm:py-0.5 rounded-full font-medium">
-                  <Bath className="w-3 h-3 sm:w-2.5 sm:h-2.5" />
+                <span className="flex items-center gap-1">
+                  <Bath size={14} />
                   {inmueble.banos}
                 </span>
               )}
               {inmueble.metros_cuadrados !== null && inmueble.metros_cuadrados > 0 && (
-                <span className="inline-flex items-center gap-1 text-xs sm:text-[10px] bg-gray-100 text-gray-600 px-2.5 py-1 sm:px-2 sm:py-0.5 rounded-full font-medium">
-                  <Maximize className="w-3 h-3 sm:w-2.5 sm:h-2.5" />
+                <span className="flex items-center gap-1">
+                  <Maximize size={14} />
                   {inmueble.metros_cuadrados}m²
                 </span>
               )}
             </div>
           </div>
         </div>
-      </motion.div>
+      </motion.article>
     </Link>
   )
 }
 
-function InmuebleCardMini({ inmueble }: { inmueble: InmuebleResult }) {
+function InmuebleCardCarousel({ inmueble, index }: { inmueble: InmuebleResult; index: number }) {
   const [imageError, setImageError] = useState(false)
   const imageUrl = imageError ? "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800" : getImageSrc(inmueble.imagen_url)
 
+  const location = inmueble.zona
+    ? `Zona ${inmueble.zona}`
+    : inmueble.ubicacion?.split(',')[0] || 'Guatemala'
+
   return (
-    <Link
-      href={`/inmuebles/${inmueble.id}`}
-      target="_blank"
-      className="block group flex-shrink-0"
-    >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        whileHover={{ scale: 1.02, y: -2 }}
+    <Link href={`/inmuebles/${inmueble.id}`} target="_blank" className="block flex-shrink-0">
+      <motion.article
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3, delay: index * 0.05 }}
+        whileHover={{ y: -3, scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        transition={{ duration: 0.2 }}
-        className="w-[160px] sm:w-[140px] bg-white rounded-xl border border-[#00F0D0]/20 p-4 sm:p-3 transition-all duration-200 hover:shadow-lg hover:border-[#00F0D0]/40 active:bg-[#00F0D0]/5"
+        className="relative group w-[220px] h-[280px] rounded-2xl overflow-hidden shadow-lg transition-all duration-300 hover:shadow-xl cursor-pointer bg-white border border-gray-100"
       >
-        <div className="flex flex-col items-center text-center">
-          <div className="relative w-full h-20 sm:h-16 rounded-lg overflow-hidden mb-2.5 sm:mb-2 bg-gradient-to-br from-[#00F0D0]/10 to-[#0B1B32]/10 shadow-md group-hover:shadow-lg transition-all">
-            <Image
-              src={imageUrl}
-              alt={inmueble.titulo}
-              fill
-              sizes="160px"
-              className="object-cover"
-              onError={() => setImageError(true)}
-            />
-            <div className="absolute top-1 left-1">
-              <span className="bg-[#00F0D0] text-[#0B1B32] text-[8px] font-bold px-1.5 py-0.5 rounded">
-                {getTipoLabel(inmueble.tipo)}
-              </span>
-            </div>
-          </div>
+        <Image
+          src={imageUrl}
+          alt={inmueble.titulo}
+          fill
+          sizes="220px"
+          className="object-cover transition-transform duration-500 group-hover:scale-110"
+          onError={() => setImageError(true)}
+        />
 
-          <h4 className="font-semibold text-sm sm:text-xs text-[#0B1B32] group-hover:text-[#00F0D0] transition-colors line-clamp-1 w-full">
-            {inmueble.titulo}
-          </h4>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent h-20 pointer-events-none" />
 
-          <p className="text-[#00F0D0] font-bold text-sm sm:text-xs mt-1 sm:mt-0.5">
-            {formatPrecio(inmueble.precio, inmueble.moneda)}
+        <div className="absolute top-3 left-3 right-3 flex justify-between items-start z-10">
+          <span className="bg-[#00F0D0] text-[#0B1B32] text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm">
+            {getTipoLabel(inmueble.tipo)}
+          </span>
+          <button
+            type="button"
+            onClick={(e) => e.preventDefault()}
+            className="w-7 h-7 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-[#0B1B32] hover:bg-[#00F0D0] transition-colors shadow-md active:scale-95"
+            aria-label="Favorito"
+          >
+            <Heart size={13} strokeWidth={2.5} />
+          </button>
+        </div>
+
+        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-[#0B1B32] via-[#0B1B32]/90 to-transparent pt-10 pb-4 px-4">
+          <h3 className="text-white text-sm font-bold mb-1 line-clamp-1">{inmueble.titulo}</h3>
+
+          <p className="text-gray-300 text-xs mb-2 flex items-center gap-1">
+            <MapPin size={11} className="text-[#00F0D0]" />
+            {location}
           </p>
 
-          {(inmueble.zona || inmueble.ubicacion) && (
-            <p className="text-xs sm:text-[10px] text-gray-400 line-clamp-1 mt-1 sm:mt-0.5 flex items-center gap-1 sm:gap-0.5 justify-center">
-              <MapPin className="w-3 h-3 sm:w-2.5 sm:h-2.5 flex-shrink-0" />
-              <span className="truncate">{inmueble.zona ? `Zona ${inmueble.zona}` : inmueble.ubicacion}</span>
-            </p>
-          )}
+          <div className="flex items-center justify-between">
+            <div className="text-[#00F0D0] font-bold text-base">
+              {formatPrecio(inmueble.precio, inmueble.moneda)}
+            </div>
 
-          <div className="flex items-center gap-2 sm:gap-1.5 mt-2.5 sm:mt-2 text-[11px] sm:text-[9px] text-gray-500">
-            {inmueble.habitaciones !== null && inmueble.habitaciones > 0 && (
-              <span className="bg-[#00F0D0]/10 text-[#0B1B32] px-2 py-0.5 sm:px-1.5 rounded-full font-medium flex items-center gap-0.5">
-                <Bed className="w-2.5 h-2.5" />
-                {inmueble.habitaciones}
-              </span>
-            )}
-            {inmueble.banos !== null && inmueble.banos > 0 && (
-              <span className="bg-[#00F0D0]/10 text-[#0B1B32] px-2 py-0.5 sm:px-1.5 rounded-full font-medium flex items-center gap-0.5">
-                <Bath className="w-2.5 h-2.5" />
-                {inmueble.banos}
-              </span>
-            )}
-          </div>
-
-          <div className="mt-2.5 sm:mt-2 flex items-center gap-1 text-xs sm:text-[10px] text-[#0B1B32] font-medium sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-            <span>Ver detalles</span>
-            <ExternalLink className="w-3 h-3 sm:w-2.5 sm:h-2.5" />
+            <div className="flex items-center gap-2 text-white/70 text-xs">
+              {inmueble.habitaciones !== null && inmueble.habitaciones > 0 && (
+                <span className="flex items-center gap-0.5">
+                  <Bed size={11} />
+                  {inmueble.habitaciones}
+                </span>
+              )}
+              {inmueble.banos !== null && inmueble.banos > 0 && (
+                <span className="flex items-center gap-0.5">
+                  <Bath size={11} />
+                  {inmueble.banos}
+                </span>
+              )}
+            </div>
           </div>
         </div>
-      </motion.div>
+      </motion.article>
     </Link>
   )
 }
@@ -217,7 +236,7 @@ export default function InmuebleCarouselChat({ inmuebles, searchTerms }: Inmuebl
 
   const scroll = (direction: "left" | "right") => {
     if (!scrollRef.current) return
-    const scrollAmount = 160
+    const scrollAmount = 240
     scrollRef.current.scrollBy({
       left: direction === "left" ? -scrollAmount : scrollAmount,
       behavior: "smooth",
@@ -236,11 +255,11 @@ export default function InmuebleCarouselChat({ inmuebles, searchTerms }: Inmuebl
       transition={{ duration: 0.3, delay: 0.1 }}
       className="w-full"
     >
-      <div className="bg-gradient-to-br from-[#00F0D0]/5 to-[#0B1B32]/5 rounded-xl border border-[#00F0D0]/20 p-4 sm:p-3 shadow-sm">
-        <div className="flex items-center justify-between mb-3 sm:mb-2">
-          <div className="flex items-center gap-2.5 sm:gap-2">
-            <div className="w-2 h-2 sm:w-1.5 sm:h-1.5 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-sm sm:text-xs font-medium text-gray-600">
+      <div className="bg-gradient-to-br from-[#00F0D0]/5 to-[#0B1B32]/5 rounded-2xl border border-[#00F0D0]/20 p-4 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-sm font-semibold text-[#0B1B32]">
               {inmuebles.length === 1
                 ? "Encontré esta propiedad para ti"
                 : `${inmuebles.length} propiedades encontradas`}
@@ -248,64 +267,51 @@ export default function InmuebleCarouselChat({ inmuebles, searchTerms }: Inmuebl
           </div>
 
           {!isFewInmuebles && (
-            <div className="flex items-center gap-1.5 sm:gap-1">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => scroll("left")}
                 disabled={!canScrollLeft}
-                className="h-8 w-8 sm:h-6 sm:w-6 flex items-center justify-center rounded-full bg-white border border-[#00F0D0]/20 text-[#0B1B32] hover:bg-[#00F0D0]/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:bg-[#00F0D0]/20"
+                className="h-8 w-8 flex items-center justify-center rounded-full bg-white border border-[#00F0D0]/30 text-[#0B1B32] hover:bg-[#00F0D0]/10 hover:border-[#00F0D0] disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
               >
-                <ChevronLeft className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                <ChevronLeft className="w-4 h-4" />
               </button>
               <button
                 onClick={() => scroll("right")}
                 disabled={!canScrollRight}
-                className="h-8 w-8 sm:h-6 sm:w-6 flex items-center justify-center rounded-full bg-white border border-[#00F0D0]/20 text-[#0B1B32] hover:bg-[#00F0D0]/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:bg-[#00F0D0]/20"
+                className="h-8 w-8 flex items-center justify-center rounded-full bg-white border border-[#00F0D0]/30 text-[#0B1B32] hover:bg-[#00F0D0]/10 hover:border-[#00F0D0] disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
               >
-                <ChevronRight className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           )}
         </div>
 
         {isFewInmuebles ? (
-          <div className="space-y-3 sm:space-y-2">
+          <div className="space-y-4">
             {inmuebles.map((inmueble, index) => (
-              <motion.div
-                key={inmueble.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-              >
-                <InmuebleCardFeatured inmueble={inmueble} />
-              </motion.div>
+              <InmuebleCardLarge key={inmueble.id} inmueble={inmueble} index={index} />
             ))}
           </div>
         ) : (
           <div
             ref={scrollRef}
             onScroll={checkScroll}
-            className="flex gap-3 sm:gap-2 overflow-x-auto pb-1 scrollbar-hide"
+            className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {inmuebles.map((inmueble, index) => (
-              <motion.div
-                key={inmueble.id}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-              >
-                <InmuebleCardMini inmueble={inmueble} />
-              </motion.div>
+              <InmuebleCardCarousel key={inmueble.id} inmueble={inmueble} index={index} />
             ))}
           </div>
         )}
 
         {searchTerms && searchTerms.length > 0 && (
-          <div className="mt-3 sm:mt-2 flex flex-wrap gap-1.5 sm:gap-1">
+          <div className="mt-4 pt-3 border-t border-[#00F0D0]/10 flex flex-wrap gap-2">
+            <span className="text-xs text-gray-500">Filtros aplicados:</span>
             {searchTerms.map((term, i) => (
               <span
                 key={i}
-                className="text-xs sm:text-[9px] px-2 py-0.5 sm:px-1.5 bg-[#00F0D0]/10 text-[#0B1B32] rounded-full"
+                className="text-xs px-2.5 py-1 bg-[#00F0D0]/15 text-[#0B1B32] rounded-full font-medium"
               >
                 {term}
               </span>
