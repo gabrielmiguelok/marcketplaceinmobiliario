@@ -198,303 +198,184 @@ function norm(t: string) {
     .trim()
 }
 
-const PROPERTY_TYPES: Array<{ patterns: RegExp[]; value: string; label: string }> = [
-  { patterns: [/\b(apartamento|apartamentos|apto|aptos|depa|depas|departamento|departamentos|piso|pisos)\b/], value: "apartamento", label: "Apartamento" },
-  { patterns: [/\b(casa|casas|vivienda|viviendas|residencia|residencias|chalet|chalets)\b/], value: "casa", label: "Casa" },
-  { patterns: [/\b(terreno|terrenos|lote|lotes|parcela|parcelas|finca|fincas)\b/], value: "terreno", label: "Terreno" },
-  { patterns: [/\b(oficina|oficinas|corporativo|coworking)\b/], value: "oficina", label: "Oficina" },
-  { patterns: [/\b(local|locales|comercial|comerciales|tienda|tiendas|negocio|negocios)\b/], value: "local", label: "Local" },
-  { patterns: [/\b(bodega|bodegas|almacen|almacenes|galpon|galpones)\b/], value: "bodega", label: "Bodega" },
-]
-
-const ZONE_ALIASES: Record<string, string> = {
-  "centro historico": "1",
-  "centro civico": "4",
-  "zona viva": "10",
-  "oakland": "10",
-  "las americas": "14",
-  "la villa": "14",
-  "vista hermosa": "15",
-  "acatan": "16",
-  "cayala": "16",
-}
-
-const OPERATION_PATTERNS: Array<{ patterns: RegExp[]; value: string; label: string }> = [
-  { patterns: [/\b(comprar|compra|venta|vender|adquirir|inversion|invertir)\b/], value: "venta", label: "En venta" },
-  { patterns: [/\b(alquilar|alquiler|renta|rentar|arrendar|arrendamiento|arrendar)\b/], value: "alquiler", label: "En alquiler" },
-]
-
-const HABITACIONES_PATTERNS: Array<{ pattern: RegExp; value: number }> = [
-  { pattern: /\b(studio|estudio|loft)\b/, value: 1 },
-  { pattern: /\buna?\s*(habitacion|habitaciones|cuarto|cuartos|recamara|recamaras)\b/, value: 1 },
-  { pattern: /\b1\s*(habitacion|habitaciones|cuarto|cuartos|recamara|recamaras)\b/, value: 1 },
-  { pattern: /\bdos\s*(habitacion|habitaciones|cuarto|cuartos|recamara|recamaras)\b/, value: 2 },
-  { pattern: /\b2\s*(habitacion|habitaciones|cuarto|cuartos|recamara|recamaras)\b/, value: 2 },
-  { pattern: /\btres\s*(habitacion|habitaciones|cuarto|cuartos|recamara|recamaras)\b/, value: 3 },
-  { pattern: /\b3\s*(habitacion|habitaciones|cuarto|cuartos|recamara|recamaras)\b/, value: 3 },
-  { pattern: /\bcuatro\s*(habitacion|habitaciones|cuarto|cuartos|recamara|recamaras)\b/, value: 4 },
-  { pattern: /\b4\s*(habitacion|habitaciones|cuarto|cuartos|recamara|recamaras)\b/, value: 4 },
-  { pattern: /\b(\d+)\s*(habitacion|habitaciones|cuarto|cuartos|recamara|recamaras)\b/, value: -1 },
-]
-
-const SEARCH_PATTERNS = [
-  /\b(busco|buscar|necesito|quiero|interesa|muestrame|mostrar|ver)\b/i,
-  /\b(apartamento|casa|terreno|oficina|local|bodega|inmueble|propiedad)\b/i,
-  /\bzona\s*\d+/i,
-  /\bz\s*\d+/i,
-  /\d+\s*(habitacion|cuarto|recamara)/i,
-  /\$\s*\d+/i,
-  /\d+\s*(mil|k)\b/i,
-]
-
-const PROPERTY_INTENT_WORDS = [
-  "buscar", "busco", "necesito", "quiero", "interesa", "muestrame",
-  "apartamento", "casa", "terreno", "oficina", "local", "bodega",
-  "inmueble", "propiedad", "vivienda",
-  "comprar", "alquilar", "rentar", "venta", "alquiler",
-  "habitacion", "habitaciones", "cuarto", "cuartos", "recamara",
-  "zona", "ubicacion", "precio", "presupuesto",
-]
-
 interface SearchFilters {
   tipo?: string
   zona?: string
   operacion?: string
   habitaciones?: number
+  banos?: number
   precioMin?: number
   precioMax?: number
 }
 
-function detectZone(text: string): { zona: string; label: string } | null {
-  const normalized = norm(text)
-
-  for (const [alias, zoneNum] of Object.entries(ZONE_ALIASES)) {
-    if (normalized.includes(alias)) {
-      return { zona: zoneNum, label: `Zona ${zoneNum}` }
+const SEARCH_TOOL: OpenAI.Chat.Completions.ChatCompletionTool = {
+  type: "function",
+  function: {
+    name: "buscar_inmuebles",
+    description: "Busca inmuebles en la base de datos según los criterios del usuario. Usa esta función cuando el usuario quiera buscar, ver, encontrar propiedades o mencione características de inmuebles que desea.",
+    parameters: {
+      type: "object",
+      properties: {
+        debe_buscar: {
+          type: "boolean",
+          description: "true si el usuario está buscando/pidiendo ver propiedades. false si solo hace preguntas generales o saluda."
+        },
+        tipo: {
+          type: "string",
+          enum: ["apartamento", "casa", "terreno", "oficina", "local", "bodega"],
+          description: "SOLO incluir si el usuario EXPLÍCITAMENTE menciona el tipo. NO asumir tipo por defecto. 'apartamento' si dice: apartamento, depa, piso, studio, apto. 'casa' si dice: casa, vivienda, residencia, chalet. Si solo menciona habitaciones o zona SIN tipo específico, NO incluir este campo."
+        },
+        zona: {
+          type: "string",
+          description: "Número de zona (1-18). Zona 10 = zona viva, oakland. Zona 14 = las américas. Zona 15 = vista hermosa. Zona 16 = cayalá, acatán."
+        },
+        operacion: {
+          type: "string",
+          enum: ["venta", "alquiler"],
+          description: "SOLO incluir si el usuario lo menciona. venta = comprar, adquirir, invertir. alquiler = rentar, arrendar. Si no especifica, NO incluir."
+        },
+        habitaciones: {
+          type: "number",
+          description: "Número de habitaciones/cuartos/recámaras que busca. SOLO si lo menciona explícitamente."
+        },
+        banos: {
+          type: "number",
+          description: "Número de baños que busca. SOLO si lo menciona explícitamente."
+        },
+        precio_minimo: {
+          type: "number",
+          description: "Precio mínimo en USD. Convierte: 150k=150000, 200mil=200000."
+        },
+        precio_maximo: {
+          type: "number",
+          description: "Precio máximo en USD. 'hasta 150k' = precio_maximo 150000. 'que no pase de 200mil' = precio_maximo 200000."
+        },
+        terminos_busqueda: {
+          type: "array",
+          items: { type: "string" },
+          description: "Lista de términos clave que el usuario REALMENTE mencionó (ej: ['Zona 10', '2 habitaciones', 'Hasta $150,000']). Solo incluir lo que explícitamente dijo."
+        }
+      },
+      required: ["debe_buscar"]
     }
   }
-
-  const zonePatterns = [
-    /\bzona\s*(\d{1,2})\b/i,
-    /\bz\s*(\d{1,2})\b/i,
-    /\bz(\d{1,2})\b/i,
-    /\ben\s+la\s+(\d{1,2})\b/i,
-  ]
-
-  for (const pattern of zonePatterns) {
-    const match = text.match(pattern)
-    if (match && match[1]) {
-      const zoneNum = match[1]
-      const validZones = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18"]
-      if (validZones.includes(zoneNum)) {
-        return { zona: zoneNum, label: `Zona ${zoneNum}` }
-      }
-    }
-  }
-
-  return null
 }
 
-function detectPropertyType(text: string): { tipo: string; label: string } | null {
-  const normalized = norm(text)
+async function extractSearchFilters(userMessage: string, conversationContext: string): Promise<{
+  isSearch: boolean
+  filters: SearchFilters
+  searchTerms: string[]
+}> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: MODEL,
+      messages: [
+        {
+          role: "system",
+          content: `Sos un extractor de intención de búsqueda de inmuebles en Guatemala.
+Analizá el mensaje del usuario y determiná si quiere buscar propiedades.
 
-  for (const typeInfo of PROPERTY_TYPES) {
-    for (const pattern of typeInfo.patterns) {
-      if (pattern.test(normalized)) {
-        return { tipo: typeInfo.value, label: typeInfo.label }
+REGLA CRÍTICA: Solo extraé los filtros que el usuario EXPLÍCITAMENTE menciona.
+- NO asumas tipo de inmueble si no lo dice (ej: "algo en zona 10" → NO pongas tipo)
+- NO asumas operación si no la menciona
+- Si dice "casa" o "apartamento" explícitamente, SÍ incluí el tipo
+- Si solo dice "2 habitaciones en zona 10" sin mencionar tipo → NO incluyas tipo
+
+Interpretá sinónimos y errores de tipeo:
+- "150k", "150mil", "ciento cincuenta mil" = 150000
+- "z10", "zona viva", "oakland" = zona "10"
+- "que salga hasta", "que no pase de", "máximo" = precio_maximo
+- "desde", "mínimo", "a partir de" = precio_minimo
+
+Contexto de la conversación: ${conversationContext}`
+        },
+        { role: "user", content: userMessage }
+      ],
+      tools: [SEARCH_TOOL],
+      tool_choice: { type: "function", function: { name: "buscar_inmuebles" } },
+      temperature: 0.1,
+      max_tokens: 500
+    })
+
+    const toolCall = response.choices[0]?.message?.tool_calls?.[0]
+    if (toolCall?.function?.arguments) {
+      const args = JSON.parse(toolCall.function.arguments)
+
+      console.log("[CHAT] AI extracted filters:", args)
+
+      const filters: SearchFilters = {}
+      if (args.tipo) filters.tipo = args.tipo
+      if (args.zona) filters.zona = args.zona
+      if (args.operacion) filters.operacion = args.operacion
+      if (args.habitaciones) filters.habitaciones = args.habitaciones
+      if (args.banos) filters.banos = args.banos
+      if (args.precio_minimo) filters.precioMin = args.precio_minimo
+      if (args.precio_maximo) filters.precioMax = args.precio_maximo
+
+      return {
+        isSearch: args.debe_buscar === true,
+        filters,
+        searchTerms: args.terminos_busqueda || []
       }
     }
-  }
 
-  return null
+    return { isSearch: false, filters: {}, searchTerms: [] }
+  } catch (error) {
+    console.error("[CHAT] Error extracting search filters:", error)
+    return { isSearch: false, filters: {}, searchTerms: [] }
+  }
 }
 
-function detectOperation(text: string): { operacion: string; label: string } | null {
-  const normalized = norm(text)
-
-  for (const opInfo of OPERATION_PATTERNS) {
-    for (const pattern of opInfo.patterns) {
-      if (pattern.test(normalized)) {
-        return { operacion: opInfo.value, label: opInfo.label }
-      }
-    }
-  }
-
-  return null
-}
-
-function detectHabitaciones(text: string): { habitaciones: number; label: string } | null {
-  const normalized = norm(text)
-
-  for (const habInfo of HABITACIONES_PATTERNS) {
-    const match = normalized.match(habInfo.pattern)
-    if (match) {
-      let value = habInfo.value
-      if (value === -1 && match[1]) {
-        value = parseInt(match[1])
-      }
-      if (value > 0 && value <= 10) {
-        return { habitaciones: value, label: `${value} habitación${value > 1 ? 'es' : ''}` }
-      }
-    }
-  }
-
-  return null
-}
-
-function detectPriceRange(text: string): { precioMin?: number; precioMax?: number; label?: string } {
-  const normalized = norm(text)
-  const result: { precioMin?: number; precioMax?: number; label?: string } = {}
-
-  const pricePatterns = [
-    /\$\s*([\d,]+)\s*(?:mil|k)?/gi,
-    /([\d,]+)\s*(?:mil|k)\b/gi,
-    /([\d,]+)\s*(?:dolares|usd)/gi,
-    /(?:presupuesto|budget)\s*(?:de)?\s*\$?\s*([\d,]+)/gi,
-  ]
-
-  const prices: number[] = []
-
-  for (const pattern of pricePatterns) {
-    let match
-    while ((match = pattern.exec(text)) !== null) {
-      let numStr = match[1].replace(/,/g, '')
-      let value = parseInt(numStr)
-
-      if (match[0].toLowerCase().includes('k') || match[0].toLowerCase().includes('mil')) {
-        value *= 1000
-      }
-
-      if (value > 0 && value < 100) {
-        value *= 1000
-      }
-
-      if (value > 100 && value < 1000) {
-        value *= 1000
-      }
-
-      if (value >= 10000 && value <= 50000000) {
-        prices.push(value)
-      }
-    }
-  }
-
-  if (prices.length > 0) {
-    const hasHasta = /\b(hasta|menos de|maximo|max|menor a|menor que)\b/.test(normalized)
-    const hasDesde = /\b(desde|minimo|min|mayor a|mayor que|mas de)\b/.test(normalized)
-
-    if (hasHasta) {
-      result.precioMax = Math.max(...prices)
-      result.label = `Hasta $${result.precioMax.toLocaleString()}`
-    } else if (hasDesde) {
-      result.precioMin = Math.min(...prices)
-      result.label = `Desde $${result.precioMin.toLocaleString()}`
-    } else if (prices.length === 1) {
-      result.precioMin = Math.floor(prices[0] * 0.8)
-      result.precioMax = Math.ceil(prices[0] * 1.2)
-      result.label = `~$${prices[0].toLocaleString()}`
-    } else if (prices.length >= 2) {
-      result.precioMin = Math.min(...prices)
-      result.precioMax = Math.max(...prices)
-      result.label = `$${result.precioMin.toLocaleString()} - $${result.precioMax.toLocaleString()}`
-    }
-  }
-
-  return result
-}
-
-function detectSearchIntent(text: string): { isSearch: boolean; filters: SearchFilters; searchTerms: string[] } {
-  const normalized = norm(text)
-  const filters: SearchFilters = {}
-  const searchTerms: string[] = []
-
-  const typeResult = detectPropertyType(text)
-  if (typeResult) {
-    filters.tipo = typeResult.tipo
-    searchTerms.push(typeResult.label)
-  }
-
-  const zoneResult = detectZone(text)
-  if (zoneResult) {
-    filters.zona = zoneResult.zona
-    searchTerms.push(zoneResult.label)
-  }
-
-  const opResult = detectOperation(text)
-  if (opResult) {
-    filters.operacion = opResult.operacion
-    searchTerms.push(opResult.label)
-  }
-
-  const habResult = detectHabitaciones(text)
-  if (habResult) {
-    filters.habitaciones = habResult.habitaciones
-    searchTerms.push(habResult.label)
-  }
-
-  const priceResult = detectPriceRange(text)
-  if (priceResult.precioMin) filters.precioMin = priceResult.precioMin
-  if (priceResult.precioMax) filters.precioMax = priceResult.precioMax
-  if (priceResult.label) searchTerms.push(priceResult.label)
-
-  const matchesPattern = SEARCH_PATTERNS.some(pattern => pattern.test(text))
-  const intentCount = PROPERTY_INTENT_WORDS.filter(word => normalized.includes(word)).length
-
-  const hasFilters = Object.keys(filters).length > 0
-  const isSearch = hasFilters || (matchesPattern && intentCount >= 1) || intentCount >= 2
-
-  console.log("[CHAT] detectSearchIntent:", {
-    originalText: text.substring(0, 80),
-    filters,
-    searchTerms,
-    matchesPattern,
-    intentCount,
-    isSearch
-  })
-
-  return { isSearch, filters, searchTerms: [...new Set(searchTerms)] }
-}
-
-async function searchInmuebles(filters: SearchFilters, limit: number = 6): Promise<InmuebleResult[]> {
+async function searchInmuebles(filters: SearchFilters, limit: number = 12): Promise<InmuebleResult[]> {
   try {
     const conditions: string[] = ["estado = 'disponible'"]
     const params: (string | number)[] = []
+    const orderParts: string[] = []
 
-    if (filters.tipo) {
+    // Casa y apartamento son intercambiables (ambos son residenciales)
+    const residentialTypes = ["casa", "apartamento"]
+    if (filters.tipo && residentialTypes.includes(filters.tipo)) {
+      // Incluir ambos tipos residenciales, priorizar el pedido
+      conditions.push("tipo IN ('casa', 'apartamento')")
+      orderParts.push(`(tipo = '${filters.tipo}') DESC`)
+    } else if (filters.tipo) {
+      // Otros tipos (terreno, oficina, local, bodega) sí filtrar exacto
       conditions.push("tipo = ?")
       params.push(filters.tipo)
     }
 
     if (filters.zona) {
-      conditions.push("zona = ?")
-      params.push(filters.zona)
+      orderParts.push(`(zona = '${filters.zona}') DESC`)
     }
 
     if (filters.operacion) {
-      conditions.push("operacion = ?")
-      params.push(filters.operacion)
+      orderParts.push(`(operacion = '${filters.operacion}') DESC`)
     }
 
     if (filters.habitaciones) {
-      if (filters.habitaciones >= 4) {
-        conditions.push("habitaciones >= 4")
-      } else {
-        conditions.push("habitaciones = ?")
-        params.push(filters.habitaciones)
-      }
-    }
-
-    if (filters.precioMin) {
-      conditions.push("precio >= ?")
-      params.push(filters.precioMin)
+      orderParts.push(`(habitaciones = ${filters.habitaciones}) DESC`)
+      orderParts.push(`ABS(COALESCE(habitaciones, 0) - ${filters.habitaciones}) ASC`)
     }
 
     if (filters.precioMax) {
+      const maxWithMargin = Math.round(filters.precioMax * 1.2)
       conditions.push("precio <= ?")
-      params.push(filters.precioMax)
+      params.push(maxWithMargin)
+      orderParts.push(`(precio <= ${filters.precioMax}) DESC`)
     }
 
+    if (filters.precioMin) {
+      const minWithMargin = Math.round(filters.precioMin * 0.8)
+      conditions.push("precio >= ?")
+      params.push(minWithMargin)
+    }
+
+    orderParts.push("destacado DESC")
+    orderParts.push("created_at DESC")
+
     params.push(limit)
+
+    const orderBy = orderParts.length > 0 ? orderParts.join(", ") : "destacado DESC, created_at DESC"
 
     const sql = `
       SELECT id, titulo, tipo, operacion, precio, moneda, ubicacion, zona,
@@ -502,30 +383,86 @@ async function searchInmuebles(filters: SearchFilters, limit: number = 6): Promi
              imagen_url, destacado
       FROM inmuebles
       WHERE ${conditions.join(" AND ")}
-      ORDER BY destacado DESC, created_at DESC
+      ORDER BY ${orderBy}
       LIMIT ?
     `
 
-    const inmuebles = await query<InmuebleResult>(sql, params)
+    console.log("[CHAT] SQL Query:", sql)
+    console.log("[CHAT] SQL Params:", params)
 
-    if (inmuebles.length === 0 && Object.keys(filters).length > 1) {
-      const fallbackSql = `
-        SELECT id, titulo, tipo, operacion, precio, moneda, ubicacion, zona,
-               departamento, metros_cuadrados, habitaciones, banos, parqueos,
-               imagen_url, destacado
-        FROM inmuebles
-        WHERE estado = 'disponible'
-        ORDER BY destacado DESC, created_at DESC
-        LIMIT ?
-      `
-      return await query<InmuebleResult>(fallbackSql, [limit])
-    }
+    const inmuebles = await query<InmuebleResult>(sql, params)
+    console.log("[CHAT] Found inmuebles (flexible):", inmuebles.length)
 
     return inmuebles
   } catch (error) {
     console.error("[CHAT] Error searching inmuebles:", error)
     return []
   }
+}
+
+function filterRelevantInmuebles(
+  inmuebles: InmuebleResult[],
+  filters: SearchFilters
+): InmuebleResult[] {
+  if (inmuebles.length === 0) return []
+  if (inmuebles.length <= 6) return inmuebles
+
+  // Scoring simple basado en coincidencias
+  const scored = inmuebles.map(inmueble => {
+    let score = 0
+
+    // Casa y apartamento son equivalentes (residenciales)
+    const residentialTypes = ["casa", "apartamento"]
+    if (filters.tipo) {
+      if (filters.tipo === inmueble.tipo) {
+        score += 10 // Coincidencia exacta
+      } else if (residentialTypes.includes(filters.tipo) && residentialTypes.includes(inmueble.tipo)) {
+        score += 8 // Casa/apartamento son intercambiables
+      }
+    }
+
+    // Zona exacta
+    if (filters.zona && inmueble.zona === filters.zona) {
+      score += 10
+    }
+
+    // Habitaciones (exacto o +1)
+    if (filters.habitaciones && inmueble.habitaciones) {
+      if (inmueble.habitaciones === filters.habitaciones) {
+        score += 8
+      } else if (inmueble.habitaciones === filters.habitaciones + 1) {
+        score += 5
+      } else if (Math.abs(inmueble.habitaciones - filters.habitaciones) <= 1) {
+        score += 3
+      }
+    }
+
+    // Precio dentro del rango
+    if (filters.precioMax && inmueble.precio <= filters.precioMax) {
+      score += 8
+    } else if (filters.precioMax && inmueble.precio <= filters.precioMax * 1.15) {
+      score += 4 // Hasta 15% más caro
+    }
+
+    // Operación
+    if (filters.operacion && inmueble.operacion === filters.operacion) {
+      score += 5
+    }
+
+    // Destacado como bonus
+    if (inmueble.destacado) {
+      score += 2
+    }
+
+    return { inmueble, score }
+  })
+
+  // Ordenar por score y tomar los mejores 6
+  scored.sort((a, b) => b.score - a.score)
+  const filtered = scored.slice(0, 6).map(s => s.inmueble)
+
+  console.log("[CHAT] Score filtered:", inmuebles.length, "->", filtered.length)
+  return filtered
 }
 
 function pickCanonSubset(lastUser: string) {
@@ -768,31 +705,54 @@ export async function POST(request: NextRequest) {
     const wantStream = wantStreamQuery || !!options?.stream
 
     const lastUserMsg = messages[messages.length - 1]?.content || ""
-    const { isSearch, filters, searchTerms } = detectSearchIntent(lastUserMsg)
 
-    console.log("[CHAT] Search detection:", { isSearch, filters, searchTerms, lastUserMsg: lastUserMsg.substring(0, 50) })
+    const conversationContext = messages.slice(-4).map(m => `${m.role}: ${m.content}`).join("\n")
+    const { isSearch, filters, searchTerms } = await extractSearchFilters(lastUserMsg, conversationContext)
+
+    console.log("[CHAT] AI Search detection:", { isSearch, filters, searchTerms, lastUserMsg: lastUserMsg.substring(0, 80) })
 
     let inmuebles: InmuebleResult[] = []
     let searchContext = ""
 
-    if (isSearch) {
-      inmuebles = await searchInmuebles(filters, 6)
-      console.log("[CHAT] Inmuebles found:", inmuebles.length)
+    if (isSearch && Object.keys(filters).length > 0) {
+      const allInmuebles = await searchInmuebles(filters, 15)
+      inmuebles = filterRelevantInmuebles(allInmuebles, filters)
+      console.log("[CHAT] Inmuebles found:", allInmuebles.length, "-> filtered:", inmuebles.length)
+
+      const appliedFilters: string[] = []
+      if (filters.tipo) appliedFilters.push(`Tipo: ${filters.tipo}`)
+      if (filters.zona) appliedFilters.push(`Zona: ${filters.zona}`)
+      if (filters.operacion) appliedFilters.push(`Operación: ${filters.operacion}`)
+      if (filters.habitaciones) appliedFilters.push(`Habitaciones: ${filters.habitaciones}`)
+      if (filters.banos) appliedFilters.push(`Baños: ${filters.banos}`)
+      if (filters.precioMin) appliedFilters.push(`Precio mín: $${filters.precioMin.toLocaleString()}`)
+      if (filters.precioMax) appliedFilters.push(`Precio máx: $${filters.precioMax.toLocaleString()}`)
 
       if (inmuebles.length > 0) {
         const displayHint = inmuebles.length === 1
-          ? "Menciona que encontraste esta propiedad y que puede ver los detalles debajo."
+          ? "Menciona que encontraste esta propiedad que coincide con lo que busca y que puede ver los detalles debajo."
           : inmuebles.length === 2
-            ? "Menciona que encontraste estas propiedades y que puede explorarlas debajo."
-            : "Menciona que encontraste estas propiedades y que puede explorar las opciones en el carrusel debajo."
+            ? "Menciona que encontraste estas propiedades que coinciden con su búsqueda y que puede explorarlas debajo."
+            : `Menciona que encontraste ${inmuebles.length} propiedades que coinciden con su búsqueda y que puede explorar las opciones en el carrusel debajo.`
 
-        searchContext = `\n\n[RESULTADOS DE BÚSQUEDA - ${inmuebles.length} propiedad${inmuebles.length > 1 ? 'es' : ''} encontrada${inmuebles.length > 1 ? 's' : ''}]
-Las siguientes propiedades están disponibles:
-${inmuebles.map((i, idx) => `${idx + 1}. ${i.titulo} - ${formatPrecio(i.precio, i.moneda)} (${i.zona ? `Zona ${i.zona}` : i.ubicacion || 'Guatemala'})`).join("\n")}
+        searchContext = `\n\n[RESULTADOS DE BÚSQUEDA]
+Filtros aplicados: ${appliedFilters.join(", ")}
+Se encontraron ${inmuebles.length} propiedad(es):
+${inmuebles.map((i, idx) => `${idx + 1}. ${i.titulo} - ${formatPrecio(i.precio, i.moneda)} - ${i.tipo} - ${i.habitaciones || 0} hab - ${i.zona ? `Zona ${i.zona}` : i.ubicacion || 'Guatemala'}`).join("\n")}
 
-IMPORTANTE: ${displayHint} NO inventes información adicional sobre estas propiedades.`
+IMPORTANTE: ${displayHint} Estas propiedades YA coinciden con los filtros del usuario. NO digas que no hay resultados si ves propiedades listadas arriba.`
       } else {
-        searchContext = "\n\n[SIN RESULTADOS] No se encontraron propiedades con esos criterios. Sugiere al usuario ampliar la búsqueda o contactar por WhatsApp para opciones personalizadas."
+        searchContext = `\n\n[SIN RESULTADOS]
+Filtros buscados: ${appliedFilters.join(", ")}
+No se encontraron propiedades con TODOS esos criterios exactos.
+
+IMPORTANTE: Informá al usuario que no encontraste propiedades con esos criterios específicos (mencioná los filtros). Sugerí:
+1. Ampliar el rango de precio
+2. Considerar otras zonas cercanas
+3. Ajustar el número de habitaciones
+4. Contactar por WhatsApp (+502 3000 0000) para opciones personalizadas
+
+NO muestres ni menciones un carrusel porque no hay resultados.`
       }
     }
 
