@@ -4,6 +4,11 @@ import { useState, useEffect, useRef } from "react"
 import { ChevronDown, Check } from "lucide-react"
 import Header from "@/components/Header"
 import ProjectsCarouselSection from "@/components/ProjectsCarouselSection"
+import StatsBannerSection from "@/components/StatsBannerSection"
+import WhyAlobaSection from "@/components/WhyAlobaSection"
+import DiscoverSection from "@/components/DiscoverSection"
+import TestimonialsSection from "@/components/TestimonialsSection"
+import Footer from "@/components/Footer"
 
 const cn = (...classes: (string | undefined | null | false)[]) => classes.filter(Boolean).join(" ")
 
@@ -170,6 +175,16 @@ export default function ConocenosPage() {
       </div>
 
       <ProjectsCarouselSection />
+
+      <StatsBannerSection />
+
+      <WhyAlobaSection />
+
+      <DiscoverSection />
+
+      <TestimonialsSection />
+
+      <Footer />
     </div>
   )
 }
