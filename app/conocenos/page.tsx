@@ -8,6 +8,8 @@ import WhyAlobaSection from "@/components/WhyAlobaSection"
 import DiscoverSection from "@/components/DiscoverSection"
 import TestimonialsSection from "@/components/TestimonialsSection"
 import Footer from "@/components/Footer"
+import { WhatsAppButton } from "@/components/whatsapp-button"
+import { SupportChatWidget } from "@/components/chat/SupportChatWidget"
 
 export default function ConocenosPage() {
   return (
@@ -53,6 +55,9 @@ export default function ConocenosPage() {
       <TestimonialsSection />
 
       <Footer />
+
+      <WhatsAppButton />
+      <SupportChatWidget />
     </div>
   )
 }

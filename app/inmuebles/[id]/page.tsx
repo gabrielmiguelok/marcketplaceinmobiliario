@@ -4,6 +4,7 @@ import { getInmuebleById, formatPrecio } from "@/lib/services/inmuebles-service"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import InmuebleDetailClient from "./InmuebleDetailClient"
+import { WhatsAppButton } from "@/components/whatsapp-button"
 
 interface Props {
   params: Promise<{ id: string }>
@@ -240,6 +241,7 @@ export default async function InmuebleDetailPage({ params }: Props) {
       </main>
 
       <Footer />
+      <WhatsAppButton />
     </div>
   )
 }

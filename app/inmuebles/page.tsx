@@ -4,6 +4,8 @@ import Footer from "@/components/Footer"
 import InmueblesGrid from "@/components/InmueblesGrid"
 import { MapPin } from "lucide-react"
 import Link from "next/link"
+import { WhatsAppButton } from "@/components/whatsapp-button"
+import { SupportChatWidget } from "@/components/chat/SupportChatWidget"
 
 export const dynamic = 'force-dynamic'
 
@@ -72,6 +74,8 @@ export default async function InmueblesPage({ searchParams }: Props) {
       </main>
 
       <Footer />
+      <WhatsAppButton />
+      <SupportChatWidget />
     </div>
   )
 }
