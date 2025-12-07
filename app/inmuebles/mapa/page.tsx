@@ -37,6 +37,22 @@ const tipoLabels: Record<string, string> = {
   bodega: 'Bodega',
 }
 
+interface FilterOption {
+  value: string
+  label: string
+  subLabel?: string | null
+  count?: number
+}
+
+interface FiltersData {
+  zonas: FilterOption[]
+  tipos: FilterOption[]
+  operaciones: FilterOption[]
+  habitaciones: FilterOption[]
+  rangosPrecios: { value: string; label: string; min: number; max: number | null; count?: number }[]
+  sinHabitaciones: number
+}
+
 const PropertyMapAloba = dynamic(() => import('@/components/map/PropertyMapAloba'), {
   ssr: false,
   loading: () => (
@@ -139,6 +155,8 @@ export default function MapaInmueblesPage() {
   const [operacionFilter, setOperacionFilter] = useState('')
   const [zonaFilter, setZonaFilter] = useState('')
   const [precioMaxFilter, setPrecioMaxFilter] = useState('')
+  const [filters, setFilters] = useState<FiltersData | null>(null)
+  const [loadingFilters, setLoadingFilters] = useState(true)
 
   useEffect(() => {
     const fetchInmuebles = async () => {
@@ -155,6 +173,23 @@ export default function MapaInmueblesPage() {
       }
     }
     fetchInmuebles()
+  }, [])
+
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const res = await fetch('/api/search-filters')
+        const data = await res.json()
+        if (data.success) {
+          setFilters(data.filters)
+        }
+      } catch (error) {
+        console.error('Error fetching filters:', error)
+      } finally {
+        setLoadingFilters(false)
+      }
+    }
+    fetchFilters()
   }, [])
 
   useEffect(() => {
@@ -189,44 +224,25 @@ export default function MapaInmueblesPage() {
     }
   }, [selectedPropertyId, router])
 
-  const zonas = useMemo(() => {
-    const uniqueZonas = [...new Set(inmuebles.map(i => i.zona).filter(Boolean))].sort((a, b) => {
-      const numA = parseInt(a) || 999
-      const numB = parseInt(b) || 999
-      return numA - numB
-    })
-    return uniqueZonas
-  }, [inmuebles])
-
-  const tipoOptions = [
+  const tipoOptions = useMemo(() => [
     { value: '', label: 'Tipo' },
-    { value: 'apartamento', label: 'Apartamento' },
-    { value: 'casa', label: 'Casa' },
-    { value: 'terreno', label: 'Terreno' },
-    { value: 'oficina', label: 'Oficina' },
-    { value: 'local', label: 'Local' },
-    { value: 'bodega', label: 'Bodega' },
-  ]
+    ...(filters?.tipos || []).map(t => ({ value: t.value, label: t.label }))
+  ], [filters])
 
-  const operacionOptions = [
+  const operacionOptions = useMemo(() => [
     { value: '', label: 'Operación' },
-    { value: 'venta', label: 'Venta' },
-    { value: 'alquiler', label: 'Alquiler' },
-  ]
+    ...(filters?.operaciones || []).map(o => ({ value: o.value, label: o.label }))
+  ], [filters])
 
   const zonaOptions = useMemo(() => [
     { value: '', label: 'Zona' },
-    ...zonas.map(z => ({ value: z, label: `Zona ${z}` }))
-  ], [zonas])
+    ...(filters?.zonas || []).map(z => ({ value: z.value, label: z.label }))
+  ], [filters])
 
-  const precioOptions = [
+  const precioOptions = useMemo(() => [
     { value: '', label: 'Precio' },
-    { value: '100000', label: 'Hasta $100k' },
-    { value: '200000', label: 'Hasta $200k' },
-    { value: '300000', label: 'Hasta $300k' },
-    { value: '500000', label: 'Hasta $500k' },
-    { value: '1000000', label: 'Hasta $1M' },
-  ]
+    ...(filters?.rangosPrecios || []).map(r => ({ value: r.value, label: r.label }))
+  ], [filters])
 
   const activeFiltersCount = [tipoFilter, operacionFilter, zonaFilter, precioMaxFilter].filter(Boolean).length
 
@@ -242,7 +258,15 @@ export default function MapaInmueblesPage() {
       const matchesTipo = tipoFilter === '' || inmueble.tipo === tipoFilter
       const matchesOperacion = operacionFilter === '' || inmueble.operacion === operacionFilter
       const matchesZona = zonaFilter === '' || inmueble.zona === zonaFilter
-      const matchesPrecio = precioMaxFilter === '' || inmueble.precio <= parseFloat(precioMaxFilter)
+
+      let matchesPrecio = true
+      if (precioMaxFilter) {
+        const [minStr, maxStr] = precioMaxFilter.split('-')
+        const min = minStr ? parseFloat(minStr) : 0
+        const max = maxStr ? parseFloat(maxStr) : Infinity
+        matchesPrecio = inmueble.precio >= min && inmueble.precio <= max
+      }
+
       return matchesTipo && matchesOperacion && matchesZona && matchesPrecio
     })
   }, [inmuebles, tipoFilter, operacionFilter, zonaFilter, precioMaxFilter])
