@@ -1,7 +1,9 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Heart, Share2, MapPin, Bed, Bath, Car, Maximize, Search, X, SlidersHorizontal, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Heart, Share2, MapPin, Bed, Bath, Car, Maximize, Search, X, SlidersHorizontal, ChevronDown, ChevronLeft, ChevronRight, Check } from "lucide-react"
+import toast from "react-hot-toast"
 
 const ITEMS_PER_PAGE = 12
 
@@ -40,6 +42,7 @@ interface Inmueble {
 
 interface InmuebleCardProps {
   inmueble: Inmueble
+  onClick: () => void
 }
 
 function formatPrecio(precio: number, moneda: string): string {
@@ -49,7 +52,10 @@ function formatPrecio(precio: number, moneda: string): string {
   return `Q${precio.toLocaleString('es-GT')}`
 }
 
-function InmuebleCard({ inmueble }: InmuebleCardProps) {
+function InmuebleCard({ inmueble, onClick }: InmuebleCardProps) {
+  const [copied, setCopied] = useState(false)
+  const [liked, setLiked] = useState(false)
+
   const fallbackImage = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800"
   const imageUrl = getImageSrc(inmueble.imagen_url) || fallbackImage
 
@@ -62,11 +68,31 @@ function InmuebleCard({ inmueble }: InmuebleCardProps) {
     bodega: 'Bodega',
   }
 
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const url = `${window.location.origin}/inmuebles/${inmueble.id}`
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      toast.success("Enlace copiado al portapapeles")
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      toast.error("No se pudo copiar el enlace")
+    }
+  }
+
+  const handleLike = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setLiked(!liked)
+    toast.success(liked ? "Removido de favoritos" : "Agregado a favoritos")
+  }
+
   return (
     <article
       className="relative group w-full h-[480px] rounded-[2rem] overflow-hidden shadow-lg transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer bg-white border border-gray-100"
       itemScope
       itemType="https://schema.org/RealEstateListing"
+      onClick={onClick}
     >
       <img
         src={imageUrl}
@@ -93,17 +119,21 @@ function InmuebleCard({ inmueble }: InmuebleCardProps) {
         <div className="flex gap-2">
           <button
             type="button"
+            onClick={handleShare}
             className="w-10 h-10 bg-[#00F0D0] rounded-full flex items-center justify-center text-[#0B1B32] hover:bg-[#00dbbe] transition-colors shadow-md active:scale-95"
             aria-label={`Compartir ${inmueble.titulo}`}
           >
-            <Share2 size={18} strokeWidth={2.5} />
+            {copied ? <Check size={18} strokeWidth={2.5} className="text-green-600" /> : <Share2 size={18} strokeWidth={2.5} />}
           </button>
           <button
             type="button"
-            className="w-10 h-10 bg-[#00F0D0] rounded-full flex items-center justify-center text-[#0B1B32] hover:bg-[#00dbbe] transition-colors shadow-md active:scale-95"
+            onClick={handleLike}
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors shadow-md active:scale-95 ${
+              liked ? "bg-red-500 text-white" : "bg-[#00F0D0] text-[#0B1B32] hover:bg-[#00dbbe]"
+            }`}
             aria-label={`Guardar ${inmueble.titulo} en favoritos`}
           >
-            <Heart size={18} strokeWidth={2.5} />
+            <Heart size={18} strokeWidth={2.5} fill={liked ? "currentColor" : "none"} />
           </button>
         </div>
       </div>
@@ -277,15 +307,29 @@ function Pagination({ currentPage, totalPages, onPageChange }: PaginationProps) 
   )
 }
 
-interface InmueblesGridProps {
-  inmuebles: Inmueble[]
+interface InitialFilters {
+  zona?: string
+  habitaciones?: string
+  precioMin?: string
+  precioMax?: string
+  tipo?: string
+  operacion?: string
 }
 
-export default function InmueblesGrid({ inmuebles }: InmueblesGridProps) {
+interface InmueblesGridProps {
+  inmuebles: Inmueble[]
+  initialFilters?: InitialFilters
+}
+
+export default function InmueblesGrid({ inmuebles, initialFilters }: InmueblesGridProps) {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
-  const [tipoFilter, setTipoFilter] = useState('')
-  const [operacionFilter, setOperacionFilter] = useState('')
-  const [zonaFilter, setZonaFilter] = useState('')
+  const [tipoFilter, setTipoFilter] = useState(initialFilters?.tipo || '')
+  const [operacionFilter, setOperacionFilter] = useState(initialFilters?.operacion || '')
+  const [zonaFilter, setZonaFilter] = useState(initialFilters?.zona || '')
+  const [habitacionesFilter, setHabitacionesFilter] = useState(initialFilters?.habitaciones || '')
+  const [precioMinFilter, setPrecioMinFilter] = useState(initialFilters?.precioMin || '')
+  const [precioMaxFilter, setPrecioMaxFilter] = useState(initialFilters?.precioMax || '')
   const [showFilters, setShowFilters] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [mobileItemsToShow, setMobileItemsToShow] = useState(ITEMS_PER_PAGE)
@@ -314,9 +358,15 @@ export default function InmueblesGrid({ inmuebles }: InmueblesGridProps) {
       const matchesOperacion = operacionFilter === '' || inmueble.operacion === operacionFilter
       const matchesZona = zonaFilter === '' || inmueble.zona === zonaFilter
 
-      return matchesSearch && matchesTipo && matchesOperacion && matchesZona
+      const matchesHabitaciones = habitacionesFilter === '' ||
+        (habitacionesFilter === '4' ? inmueble.habitaciones >= 4 : inmueble.habitaciones === parseInt(habitacionesFilter))
+
+      const matchesPrecioMin = precioMinFilter === '' || inmueble.precio >= parseFloat(precioMinFilter)
+      const matchesPrecioMax = precioMaxFilter === '' || inmueble.precio <= parseFloat(precioMaxFilter)
+
+      return matchesSearch && matchesTipo && matchesOperacion && matchesZona && matchesHabitaciones && matchesPrecioMin && matchesPrecioMax
     })
-  }, [inmuebles, searchQuery, tipoFilter, operacionFilter, zonaFilter])
+  }, [inmuebles, searchQuery, tipoFilter, operacionFilter, zonaFilter, habitacionesFilter, precioMinFilter, precioMaxFilter])
 
   const totalPages = Math.ceil(filteredInmuebles.length / ITEMS_PER_PAGE)
 
@@ -341,13 +391,16 @@ export default function InmueblesGrid({ inmuebles }: InmueblesGridProps) {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const activeFiltersCount = [tipoFilter, operacionFilter, zonaFilter].filter(Boolean).length
+  const activeFiltersCount = [tipoFilter, operacionFilter, zonaFilter, habitacionesFilter, precioMinFilter, precioMaxFilter].filter(Boolean).length
 
   const clearAllFilters = () => {
     setSearchQuery('')
     setTipoFilter('')
     setOperacionFilter('')
     setZonaFilter('')
+    setHabitacionesFilter('')
+    setPrecioMinFilter('')
+    setPrecioMaxFilter('')
   }
 
   const tipoOptions = [
@@ -541,13 +594,13 @@ export default function InmueblesGrid({ inmuebles }: InmueblesGridProps) {
         <>
           <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {paginatedInmuebles.map((inmueble) => (
-              <InmuebleCard key={inmueble.id} inmueble={inmueble} />
+              <InmuebleCard key={inmueble.id} inmueble={inmueble} onClick={() => router.push(`/inmuebles/${inmueble.id}`)} />
             ))}
           </div>
 
           <div className="md:hidden grid grid-cols-1 gap-6">
             {mobileInmuebles.map((inmueble) => (
-              <InmuebleCard key={inmueble.id} inmueble={inmueble} />
+              <InmuebleCard key={inmueble.id} inmueble={inmueble} onClick={() => router.push(`/inmuebles/${inmueble.id}`)} />
             ))}
           </div>
 
