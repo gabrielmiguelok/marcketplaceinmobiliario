@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Menu, X } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 
 interface NavLinkProps {
   text: string
@@ -12,14 +13,14 @@ interface NavLinkProps {
 
 function NavLink({ text, isActive = false, href = "#" }: NavLinkProps) {
   return (
-    <a
+    <Link
       href={href}
       className={`text-[#0B1B32] hover:text-[#00F0D0] transition-colors duration-200 text-[15px] ${
         isActive ? "font-bold" : "font-medium"
       }`}
     >
       {text}
-    </a>
+    </Link>
   )
 }
 
@@ -48,10 +49,7 @@ export default function Header({ userInitials = "SK", activePage = null }: Heade
   return (
     <>
       <nav className="w-full max-w-[1400px] mx-auto px-6 py-6 flex items-center justify-between relative z-50 bg-white">
-        <div
-          className="flex-shrink-0 cursor-pointer"
-          onClick={() => (window.location.href = "/")}
-        >
+        <Link href="/" className="flex-shrink-0">
           <Image
             src="/aloba-logo.png"
             alt="Aloba - Marketplace Inmobiliario"
@@ -60,7 +58,7 @@ export default function Header({ userInitials = "SK", activePage = null }: Heade
             className="h-10 w-auto"
             priority
           />
-        </div>
+        </Link>
 
         <div className="hidden md:flex items-center space-x-10 lg:space-x-14 absolute left-1/2 transform -translate-x-1/2">
           <NavLink text="Proyectos nuevos" href="/proyectos" isActive={activePage === "proyectos"} />
