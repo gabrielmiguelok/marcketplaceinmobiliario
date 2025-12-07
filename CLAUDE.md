@@ -39,6 +39,8 @@ sudo mysql -u root -e "SELECT * FROM aloba_db.inmuebles LIMIT 5"
 - **Google OAuth2** for authentication
 - **react-hot-toast** for notifications
 - **OpenAI GPT-4o-mini** for AI chat with function calling
+- **react-leaflet 4.2.1** + **Leaflet** for interactive maps
+- **@turf/boolean-point-in-polygon** for polygon-based filtering
 
 ## Architecture
 
@@ -205,6 +207,15 @@ app/conocenos/page.tsx
 - `ZoneQuizSection` - 6-question quiz for zone matching
 - `PrequalQuizSection` - 8-question quiz for credit pre-qualification
 
+### `/inmuebles/mapa` (Map View)
+- Split layout: 520px property grid (left), interactive map (right)
+- Grid of 2x3 with pagination (6 items per page)
+- Polygon drawing to filter properties by geographic area
+- Mobile toggle between map and list views
+- Key files:
+  - `components/map/PropertyMapAloba.tsx` - Leaflet map with polygon selection
+  - `components/map/InmuebleCardMap.tsx` - Compact property card for grid
+
 ### `/admin/inmuebles` (Admin Panel)
 - CustomTable-based CRUD with inline editing
 - Image upload with preview modal
@@ -257,3 +268,4 @@ OPENAI_API_KEY=sk-...
 - **Toast notifications**: Use `react-hot-toast` (never `alert()`)
 - **Cache invalidation**: Use `revalidatePath()` after mutations
 - **SEO**: Property pages have dynamic metadata with OpenGraph images
+- **Map coords**: Properties need `latitud` and `longitud` fields for map display

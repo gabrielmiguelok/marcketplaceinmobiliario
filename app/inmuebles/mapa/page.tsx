@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import InmuebleCardMap from '@/components/map/InmuebleCardMap'
-import { ChevronLeft, ChevronRight, Map, Grid, MapPin, Loader2, Search, X, ChevronDown, SlidersHorizontal } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MapPin, Loader2, X, ChevronDown, SlidersHorizontal } from 'lucide-react'
 
 const PropertyMapAloba = dynamic(() => import('@/components/map/PropertyMapAloba'), {
   ssr: false,
@@ -105,7 +105,6 @@ export default function MapaInmueblesPage() {
   const [selectedPropertyId, setSelectedPropertyId] = useState<number | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [isMobile, setIsMobile] = useState(false)
-  const [showMap, setShowMap] = useState(true)
 
   const [tipoFilter, setTipoFilter] = useState('')
   const [operacionFilter, setOperacionFilter] = useState('')
@@ -231,10 +230,7 @@ export default function MapaInmueblesPage() {
       const targetPage = Math.floor(indexInDisplay / ITEMS_PER_PAGE) + 1
       setCurrentPage(targetPage)
     }
-    if (isMobile) {
-      setShowMap(false)
-    }
-  }, [displayInmuebles, isMobile])
+  }, [displayInmuebles])
 
   const totalPages = Math.ceil(displayInmuebles.length / ITEMS_PER_PAGE)
 
@@ -264,101 +260,9 @@ export default function MapaInmueblesPage() {
       <Header activePage="inmuebles" />
 
       <main className="flex-1 pt-20 flex flex-col lg:flex-row overflow-hidden">
-        {isMobile && (
-          <div className="flex-shrink-0 border-b border-gray-100 bg-white">
-            <div className="px-4 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-[#0B1B32]">
-                  {displayInmuebles.length} propiedades
-                </span>
-                {selectedIds.length > 0 && (
-                  <span className="text-xs bg-[#00F0D0]/20 text-[#0B1B32] px-2.5 py-1 rounded-full font-medium">
-                    {selectedIds.length} en zona
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowMobileFilters(!showMobileFilters)}
-                  className={`flex items-center gap-1 px-2.5 py-2 rounded-xl text-sm font-medium transition-all ${
-                    showMobileFilters || activeFiltersCount > 0 ? 'bg-[#00F0D0] text-[#0B1B32]' : 'bg-gray-100 text-gray-600'
-                  }`}
-                >
-                  <SlidersHorizontal size={14} />
-                  {activeFiltersCount > 0 && (
-                    <span className="w-4 h-4 bg-[#0B1B32] text-white text-[10px] rounded-full flex items-center justify-center">
-                      {activeFiltersCount}
-                    </span>
-                  )}
-                </button>
-                <button
-                  onClick={() => setShowMap(false)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
-                    !showMap ? 'bg-[#00F0D0] text-[#0B1B32]' : 'bg-gray-100 text-gray-600'
-                  }`}
-                >
-                  <Grid size={16} />
-                  Lista
-                </button>
-                <button
-                  onClick={() => setShowMap(true)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
-                    showMap ? 'bg-[#00F0D0] text-[#0B1B32]' : 'bg-gray-100 text-gray-600'
-                  }`}
-                >
-                  <Map size={16} />
-                  Mapa
-                </button>
-              </div>
-            </div>
-
-            {showMobileFilters && (
-              <div className="px-4 pb-3 flex flex-wrap gap-2">
-                <FilterDropdown
-                  label="Tipo"
-                  value={tipoFilter}
-                  options={tipoOptions}
-                  onChange={setTipoFilter}
-                  compact
-                />
-                <FilterDropdown
-                  label="Operación"
-                  value={operacionFilter}
-                  options={operacionOptions}
-                  onChange={setOperacionFilter}
-                  compact
-                />
-                <FilterDropdown
-                  label="Zona"
-                  value={zonaFilter}
-                  options={zonaOptions}
-                  onChange={setZonaFilter}
-                  compact
-                />
-                <FilterDropdown
-                  label="Precio"
-                  value={precioMaxFilter}
-                  options={precioOptions}
-                  onChange={setPrecioMaxFilter}
-                  compact
-                />
-                {activeFiltersCount > 0 && (
-                  <button
-                    onClick={clearAllFilters}
-                    className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <X size={12} />
-                    Limpiar
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
         {isMobile ? (
-          showMap ? (
-            <div className="flex-1 relative">
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="h-[45vh] min-h-[280px] max-h-[400px] relative flex-shrink-0">
               <PropertyMapAloba
                 inmuebles={filteredInmuebles}
                 onSelectionChange={handleSelectionChange}
@@ -368,22 +272,121 @@ export default function MapaInmueblesPage() {
                 onMarkerHover={handleMarkerHover}
               />
             </div>
-          ) : (
-            <div className="flex-1 overflow-y-auto p-4">
-              <div className="grid grid-cols-2 gap-3">
-                {displayInmuebles.map((inmueble) => (
-                  <InmuebleCardMap
-                    key={inmueble.id}
-                    inmueble={inmueble}
-                    isSelected={selectedPropertyId === inmueble.id}
-                    isHovered={hoveredPropertyId === inmueble.id}
-                    onHover={handlePropertyHover}
-                    onClick={handleViewProperty}
+
+            <div className="flex-shrink-0 bg-white border-t border-gray-100 px-4 py-3">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-[#0B1B32]">
+                    {displayInmuebles.length} propiedades
+                  </span>
+                  {selectedIds.length > 0 && (
+                    <span className="text-[10px] bg-[#00F0D0]/20 text-[#0B1B32] px-2 py-0.5 rounded-full font-medium">
+                      {selectedIds.length} en zona
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => setShowMobileFilters(!showMobileFilters)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    showMobileFilters || activeFiltersCount > 0 ? 'bg-[#00F0D0] text-[#0B1B32]' : 'bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  <SlidersHorizontal size={12} />
+                  Filtros
+                  {activeFiltersCount > 0 && (
+                    <span className="w-4 h-4 bg-[#0B1B32] text-white text-[9px] rounded-full flex items-center justify-center">
+                      {activeFiltersCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {showMobileFilters && (
+                <div className="flex flex-wrap gap-2 pb-2">
+                  <FilterDropdown
+                    label="Tipo"
+                    value={tipoFilter}
+                    options={tipoOptions}
+                    onChange={setTipoFilter}
+                    compact
                   />
-                ))}
+                  <FilterDropdown
+                    label="Operación"
+                    value={operacionFilter}
+                    options={operacionOptions}
+                    onChange={setOperacionFilter}
+                    compact
+                  />
+                  <FilterDropdown
+                    label="Zona"
+                    value={zonaFilter}
+                    options={zonaOptions}
+                    onChange={setZonaFilter}
+                    compact
+                  />
+                  <FilterDropdown
+                    label="Precio"
+                    value={precioMaxFilter}
+                    options={precioOptions}
+                    onChange={setPrecioMaxFilter}
+                    compact
+                  />
+                  {activeFiltersCount > 0 && (
+                    <button
+                      onClick={clearAllFilters}
+                      className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <X size={10} />
+                      Limpiar
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex-1 overflow-y-auto bg-gray-50/50">
+              <div className="px-4 py-3">
+                <div className="overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                  <div className="flex gap-3" style={{ width: 'max-content' }}>
+                    {displayInmuebles.slice(0, 20).map((inmueble) => (
+                      <div
+                        key={inmueble.id}
+                        className="w-[260px] flex-shrink-0"
+                      >
+                        <InmuebleCardMap
+                          inmueble={inmueble}
+                          isSelected={selectedPropertyId === inmueble.id}
+                          isHovered={hoveredPropertyId === inmueble.id}
+                          onHover={handlePropertyHover}
+                          onClick={handleViewProperty}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {displayInmuebles.length > 20 && (
+                  <div className="mt-3 text-center">
+                    <Link
+                      href="/inmuebles"
+                      className="inline-flex items-center gap-1 text-sm text-[#00F0D0] hover:text-[#00dbbe] font-medium"
+                    >
+                      Ver todas las propiedades
+                      <ChevronRight size={14} />
+                    </Link>
+                  </div>
+                )}
+
+                {displayInmuebles.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+                    <MapPin className="w-10 h-10 text-gray-300 mb-2" />
+                    <p className="text-sm font-medium">No hay propiedades</p>
+                    <p className="text-xs text-gray-400">Dibuja una zona en el mapa</p>
+                  </div>
+                )}
               </div>
             </div>
-          )
+          </div>
         ) : (
           <>
             <div className="w-[520px] xl:w-[580px] flex-shrink-0 border-r border-gray-100 flex flex-col bg-gray-50/50">
@@ -585,6 +588,13 @@ export default function MapaInmueblesPage() {
         }
         .property-popup .leaflet-popup-tip {
           background: white;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
         }
       `}</style>
     </div>
