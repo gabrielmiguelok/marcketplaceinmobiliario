@@ -7,7 +7,19 @@ import Link from "next/link"
 
 export const dynamic = 'force-dynamic'
 
-export default async function InmueblesPage() {
+interface Props {
+  searchParams: Promise<{
+    zona?: string
+    habitaciones?: string
+    precio_min?: string
+    precio_max?: string
+    tipo?: string
+    operacion?: string
+  }>
+}
+
+export default async function InmueblesPage({ searchParams }: Props) {
+  const params = await searchParams
   const inmuebles = await getInmuebles()
 
   return (
@@ -44,7 +56,17 @@ export default async function InmueblesPage() {
               </Link>
             </div>
           ) : (
-            <InmueblesGrid inmuebles={inmuebles as any} />
+            <InmueblesGrid
+              inmuebles={inmuebles as any}
+              initialFilters={{
+                zona: params.zona || "",
+                habitaciones: params.habitaciones || "",
+                precioMin: params.precio_min || "",
+                precioMax: params.precio_max || "",
+                tipo: params.tipo || "",
+                operacion: params.operacion || ""
+              }}
+            />
           )}
         </div>
       </main>
