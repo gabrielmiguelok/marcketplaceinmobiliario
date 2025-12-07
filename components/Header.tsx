@@ -9,7 +9,7 @@ import {
   SheetClose,
 } from "@/components/ui/sheet"
 import Link from "next/link"
-import { Menu, Home, Building2, Wrench, Info, ChevronRight } from "lucide-react"
+import { Menu, Home, Building2, Wrench, Info, ChevronRight, Map } from "lucide-react"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 
@@ -181,17 +181,30 @@ export default function Header({ userInitials = "SK", activePage = null }: Heade
                           </button>
                         </div>
 
-                        <SheetClose asChild>
-                          <Button
-                            asChild
-                            className="w-full bg-[#00F0D0] text-[#0B1B32] hover:bg-[#00dbbe] rounded-full font-semibold shadow-md"
-                          >
-                            <Link href="/inmuebles" className="flex items-center justify-center gap-2">
-                              <Building2 className="w-4 h-4" />
-                              Ver Inmuebles
-                            </Link>
-                          </Button>
-                        </SheetClose>
+                        <div className="flex gap-2">
+                          <SheetClose asChild>
+                            <Button
+                              asChild
+                              className="flex-1 bg-[#00F0D0] text-[#0B1B32] hover:bg-[#00dbbe] rounded-full font-semibold shadow-md"
+                            >
+                              <Link href="/inmuebles" className="flex items-center justify-center gap-2">
+                                <Building2 className="w-4 h-4" />
+                                Inmuebles
+                              </Link>
+                            </Button>
+                          </SheetClose>
+                          <SheetClose asChild>
+                            <Button
+                              asChild
+                              className="flex-1 bg-[#0B1B32] text-white hover:bg-[#0B1B32]/90 rounded-full font-semibold shadow-md"
+                            >
+                              <Link href="/inmuebles/mapa" className="flex items-center justify-center gap-2">
+                                <Map className="w-4 h-4" />
+                                Mapa
+                              </Link>
+                            </Button>
+                          </SheetClose>
+                        </div>
                       </div>
                     </div>
                   </SheetContent>
