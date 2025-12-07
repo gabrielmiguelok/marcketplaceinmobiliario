@@ -84,21 +84,21 @@ interface TestimonialCardProps {
 }
 
 const TestimonialCard = ({ quote, author, role }: TestimonialCardProps) => (
-  <div className="flex flex-col h-[280px] md:h-[300px] w-[280px] md:w-[360px] flex-shrink-0 mx-2 md:mx-4 relative select-none">
+  <figure className="flex flex-col h-[280px] md:h-[300px] w-[280px] md:w-[360px] flex-shrink-0 mx-2 md:mx-4 relative select-none" role="group">
     <div className="absolute inset-0 bg-white rounded-[1.5rem] md:rounded-[2rem]"></div>
     <div className="absolute bottom-0 left-0 w-[35%] h-[40px] md:h-[45px] bg-[#0B1B32] rounded-tr-[1rem] md:rounded-tr-[1.5rem] z-10"></div>
     <div className="relative z-20 h-full flex flex-col justify-between p-6 md:p-8">
-      <div className="mb-4">
+      <blockquote className="mb-4">
         <p className="text-[#0B1B32] font-bold text-base md:text-[20px] leading-snug">
           &quot;{quote}&quot;
         </p>
-      </div>
-      <div className="flex flex-col items-end text-right mt-auto pb-1">
-        <span className="text-[#0B1B32] font-bold text-base md:text-lg">{author}</span>
+      </blockquote>
+      <figcaption className="flex flex-col items-end text-right mt-auto pb-1">
+        <cite className="text-[#0B1B32] font-bold text-base md:text-lg not-italic">{author}</cite>
         <span className="text-[#00F0D0] font-bold text-xs md:text-sm">{role}</span>
-      </div>
+      </figcaption>
     </div>
-  </div>
+  </figure>
 )
 
 export default function TestimonialsSection() {
@@ -183,7 +183,7 @@ export default function TestimonialsSection() {
   }, [isAutoScrolling])
 
   return (
-    <section className="w-full py-12 md:py-24 bg-white">
+    <section className="w-full py-12 md:py-24 bg-white" role="region" aria-label="Testimonios de nuestra comunidad">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8">
         <div className="bg-[#0B1B32] rounded-[2rem] md:rounded-[3rem] py-12 md:py-24 relative overflow-hidden shadow-2xl flex flex-col items-center">
 
@@ -198,7 +198,7 @@ export default function TestimonialsSection() {
           </div>
 
           {/* Carrusel */}
-          <div className="w-full relative overflow-hidden">
+          <div className="w-full relative overflow-hidden" aria-roledescription="carrusel">
             <div className="absolute left-0 top-0 bottom-0 w-8 md:w-12 bg-gradient-to-r from-[#0B1B32] to-transparent z-20 pointer-events-none"></div>
             <div className="absolute right-0 top-0 bottom-0 w-8 md:w-12 bg-gradient-to-l from-[#0B1B32] to-transparent z-20 pointer-events-none"></div>
 
@@ -213,6 +213,7 @@ export default function TestimonialsSection() {
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
+              aria-live="polite"
             >
               {[...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS].map((item, index) => (
                 <TestimonialCard
@@ -228,13 +229,17 @@ export default function TestimonialsSection() {
           {/* Controles */}
           <div className="flex gap-3 md:gap-4 mt-8 md:mt-14 z-20">
             <button
+              type="button"
               onClick={() => scrollTo('left')}
+              aria-label="Testimonio anterior"
               className="w-12 h-12 md:w-14 md:h-14 rounded-full border-2 border-white text-white flex items-center justify-center hover:bg-white hover:text-[#0B1B32] transition-all duration-300 group active:scale-95"
             >
               <IconArrowLeft className="w-5 h-5 md:w-6 md:h-6 group-hover:-translate-x-0.5 transition-transform" />
             </button>
             <button
+              type="button"
               onClick={() => scrollTo('right')}
+              aria-label="Testimonio siguiente"
               className="w-12 h-12 md:w-14 md:h-14 rounded-full border-2 border-white text-white flex items-center justify-center hover:bg-white hover:text-[#0B1B32] transition-all duration-300 group active:scale-95"
             >
               <IconArrowRight className="w-5 h-5 md:w-6 md:h-6 group-hover:translate-x-0.5 transition-transform" />
