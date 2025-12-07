@@ -5,7 +5,7 @@ import { cookies } from "next/headers"
 export const dynamic = "force-dynamic"
 
 export async function GET(request: NextRequest) {
-  const cookieName = "doutopAuth"
+  const cookieName = "alobaAuth"
 
   try {
     const cookieStore = await cookies()
@@ -55,13 +55,6 @@ export async function GET(request: NextRequest) {
         locale: user.locale,
         role: user.role,
         estado: (user as any).estado || 'pendiente',
-        usuario: (user as any).usuario,
-        telefono: (user as any).telefono,
-        especialidad: (user as any).especialidad,
-        bio: (user as any).bio,
-        cedulaProfesional: (user as any).cedula_profesional,
-        direccionConsultorio: (user as any).direccion_consultorio,
-        fechaNacimiento: (user as any).fecha_nacimiento,
         createdAt: user.created_at,
         updatedAt: user.updated_at,
         lastLogin: user.last_login,

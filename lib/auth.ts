@@ -1,6 +1,6 @@
 /**
  * FILE: lib/auth.ts
- * Doutop - Authentication library
+ * Aloba - Authentication library
  */
 
 import { cookies } from "next/headers"
@@ -17,22 +17,16 @@ export interface User {
   picture: string | null
   locale: string | null
   jwd: string | null
-  role: 'admin' | 'doctor' | 'paciente' | 'user' | null
-  estado: 'pendiente' | 'confirmado' | null
-  usuario: string | null
-  bio: string | null
+  role: string | null
+  estado: string | null
   created_at: Date
   updated_at: Date
   last_login: Date | null
   telefono: string | null
-  especialidad: string | null
-  cedula_profesional: string | null
-  direccion_consultorio: string | null
-  fecha_nacimiento: Date | null
 }
 
 const TOKEN_BYTES = Number(process.env.AUTH_JWD_BYTES) || 64
-const COOKIE_NAME = "doutopAuth"
+const COOKIE_NAME = "alobaAuth"
 const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || "localhost"
 
 const JWT_SECRET = process.env.JWT_SECRET || "default-dev-secret"
@@ -45,7 +39,7 @@ export async function findUserByEmail(email: string): Promise<User | null> {
   try {
     const db = await getConnection()
     const [rows] = await db.query(
-      `SELECT id, email, google_id, first_name, last_name, full_name, picture, locale, jwd, role, estado, usuario, bio, created_at, updated_at, last_login, telefono, especialidad, cedula_profesional, direccion_consultorio, fecha_nacimiento
+      `SELECT id, email, google_id, first_name, last_name, full_name, picture, locale, jwd, role, estado, created_at, updated_at, last_login, telefono
        FROM users
        WHERE email = ?`,
       [email.toLowerCase()],
@@ -66,7 +60,7 @@ export async function findUserByJwd(jwd: string): Promise<User | null> {
   try {
     const db = await getConnection()
     const [rows] = await db.query(
-      `SELECT id, email, google_id, first_name, last_name, full_name, picture, locale, jwd, role, estado, usuario, bio, created_at, updated_at, last_login, telefono, especialidad, cedula_profesional, direccion_consultorio, fecha_nacimiento
+      `SELECT id, email, google_id, first_name, last_name, full_name, picture, locale, jwd, role, estado, created_at, updated_at, last_login, telefono
        FROM users
        WHERE jwd = ?`,
       [jwd],
@@ -247,7 +241,7 @@ export async function getUserById(userId: number): Promise<User | null> {
   try {
     const db = await getConnection()
     const [rows] = await db.query(
-      `SELECT id, email, google_id, first_name, last_name, full_name, picture, locale, jwd, role, estado, usuario, bio, created_at, updated_at, last_login, telefono, especialidad, cedula_profesional, direccion_consultorio, fecha_nacimiento
+      `SELECT id, email, google_id, first_name, last_name, full_name, picture, locale, jwd, role, estado, created_at, updated_at, last_login, telefono
        FROM users WHERE id = ?`,
       [userId],
     )

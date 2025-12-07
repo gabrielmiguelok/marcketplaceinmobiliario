@@ -9,7 +9,7 @@ export async function POST() {
 
     const response = NextResponse.json({ success: true, message: "Sesión cerrada" })
 
-    response.cookies.set("doutopAuth", "", {
+    response.cookies.set("alobaAuth", "", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

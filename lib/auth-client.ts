@@ -1,6 +1,6 @@
 /**
  * FILE: lib/auth-client.ts
- * Sistema de Control - Client-side authentication utilities
+ * Aloba - Client-side authentication utilities
  */
 
 let isRedirecting = false
@@ -17,7 +17,7 @@ export function clearAllCookies() {
     const name = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim()
 
     const domains = [window.location.hostname, `.${window.location.hostname}`, "localhost"]
-    const paths = ["/", "/api", "/login", "/sistema-control"]
+    const paths = ["/", "/api", "/login", "/admin"]
 
     domains.forEach((domain) => {
       paths.forEach((path) => {
