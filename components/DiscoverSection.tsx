@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 
 const cn = (...classes: (string | undefined | null | false)[]) => classes.filter(Boolean).join(' ')
 
@@ -27,9 +27,6 @@ interface CardData {
   textColor: string
   hasArrow?: boolean
   hasCutout?: boolean
-  isImage?: boolean
-  imageUrl?: string
-  colSpan?: string
 }
 
 const CARDS: CardData[] = [
@@ -43,17 +40,6 @@ const CARDS: CardData[] = [
     hasArrow: true
   },
   {
-    id: "imagen",
-    title: "",
-    description: "",
-    fullDescription: "",
-    bgColor: "",
-    textColor: "",
-    isImage: true,
-    imageUrl: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1200",
-    colSpan: "lg:col-span-2"
-  },
-  {
     id: "comunidad",
     title: "Comunidad",
     description: "Únete a una red confiable y accede a información exclusiva del mercado.",
@@ -65,7 +51,7 @@ const CARDS: CardData[] = [
   {
     id: "clasificado",
     title: "No somos un clasificado.",
-    description: "Tampoco somos una agencia. Somos una plataforma de conexión, educación y decisión.",
+    description: "Somos una plataforma de conexión y decisión.",
     fullDescription: "Aloba es diferente. No publicamos anuncios sin verificar ni cobramos comisiones. Somos tu aliado para conectar directamente con desarrolladores, educarte sobre el mercado y ayudarte a tomar la mejor decisión de inversión.",
     bgColor: "bg-[#D1FAE5]",
     textColor: "text-[#0B1B32]"
@@ -73,7 +59,7 @@ const CARDS: CardData[] = [
   {
     id: "personalizacion",
     title: "Personalización",
-    description: "Guarda, compara y recibe alertas personalizadas en un solo lugar.",
+    description: "Guarda, compara y recibe alertas personalizadas.",
     fullDescription: "Tu experiencia, a tu medida. Guarda tus proyectos favoritos, compáralos lado a lado, configura alertas de precio y recibe notificaciones cuando aparezcan propiedades que coincidan con tus criterios.",
     bgColor: "bg-[#0B1B32]",
     textColor: "text-white",
@@ -85,28 +71,16 @@ const CARDS: CardData[] = [
     description: "Diseñado para compradores, inversionistas y profesionales.",
     fullDescription: "Ya seas un comprador primerizo buscando tu primer hogar, un inversionista experimentado diversificando su portafolio, o un profesional del sector buscando herramientas, aloba tiene algo para ti. Información real, verificada y transparente.",
     bgColor: "bg-[#F3F4F6]",
-    textColor: "text-[#0B1B32]",
-    colSpan: "lg:col-span-2"
+    textColor: "text-[#0B1B32]"
   }
 ]
 
 export default function DiscoverSection() {
-  const [selectedCard, setSelectedCard] = useState<CardData | null>(null)
+  const [expandedCard, setExpandedCard] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (selectedCard) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
-    }
-    return () => {
-      document.body.style.overflow = 'unset'
-    }
-  }, [selectedCard])
-
-  const handleCardClick = (card: CardData) => {
-    if (!card.isImage && window.innerWidth < 768) {
-      setSelectedCard(card)
+  const handleCardClick = (cardId: string) => {
+    if (window.innerWidth < 768) {
+      setExpandedCard(expandedCard === cardId ? null : cardId)
     }
   }
 
@@ -135,53 +109,101 @@ export default function DiscoverSection() {
           </div>
         </div>
 
-        {/* Mobile: Scroll horizontal con tarjetas tipo desktop */}
-        <div className="md:hidden">
-          <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide -mx-4 px-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {CARDS.filter(c => !c.isImage).map((card) => (
+        {/* Mobile: Grid 2x3 con tarjetas expandibles */}
+        <div className="md:hidden grid grid-cols-2 gap-3">
+          {CARDS.map((card) => {
+            const isExpanded = expandedCard === card.id
+
+            return (
               <div
                 key={card.id}
-                onClick={() => handleCardClick(card)}
+                onClick={() => handleCardClick(card.id)}
                 className={cn(
-                  "flex-shrink-0 w-[280px] h-[320px] rounded-[1.5rem] p-6 flex flex-col justify-between cursor-pointer snap-center transition-transform active:scale-[0.98]",
-                  card.bgColor
+                  "relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 ease-out",
+                  card.bgColor,
+                  isExpanded ? "col-span-2 z-10" : "col-span-1",
+                  card.id === "paraquien" && !isExpanded && "col-span-2"
                 )}
               >
-                <div className="flex flex-col gap-3">
-                  <h3 className={cn("text-xl font-bold", card.textColor)}>{card.title}</h3>
-                  <p className={cn("font-medium leading-snug text-sm opacity-80", card.textColor)}>
-                    {card.description}
-                  </p>
+                <div className={cn(
+                  "p-4 flex flex-col justify-between transition-all duration-300",
+                  isExpanded ? "min-h-[280px]" : "h-[140px]"
+                )}>
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className={cn(
+                        "font-bold leading-tight transition-all duration-300",
+                        card.textColor,
+                        isExpanded ? "text-xl mb-3" : "text-sm mb-1"
+                      )}>
+                        {card.title}
+                      </h3>
+                      {isExpanded && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setExpandedCard(null)
+                          }}
+                          className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors",
+                            card.textColor === "text-white" ? "bg-white/20 hover:bg-white/30" : "bg-black/10 hover:bg-black/20"
+                          )}
+                        >
+                          <IconX className={cn("w-4 h-4", card.textColor)} />
+                        </button>
+                      )}
+                    </div>
+                    <p className={cn(
+                      "font-medium leading-snug opacity-80 transition-all duration-300",
+                      card.textColor,
+                      isExpanded ? "text-sm" : "text-xs line-clamp-2"
+                    )}>
+                      {isExpanded ? card.fullDescription : card.description}
+                    </p>
+                  </div>
+
+                  {/* Arrow button */}
+                  {(card.hasArrow || card.hasCutout) && !isExpanded && (
+                    <div className="self-end mt-2">
+                      <div className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center border-2",
+                        card.hasArrow ? "bg-white border-white text-[#0B1B32]" : "bg-white border-[#0B1B32] text-[#0B1B32]"
+                      )}>
+                        <IconArrowUpRight className="w-4 h-4" />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* CTA button when expanded */}
+                  {isExpanded && (
+                    <button className="mt-4 bg-[#00F0D0] text-[#0B1B32] font-bold py-2.5 px-5 rounded-full text-sm w-full transition-transform active:scale-[0.98]">
+                      Registrarme gratis
+                    </button>
+                  )}
                 </div>
 
-                {card.hasArrow && (
-                  <div className="self-end">
-                    <div className="w-10 h-10 rounded-full bg-white border-2 border-white flex items-center justify-center text-[#0B1B32]">
-                      <IconArrowUpRight className="w-5 h-5" />
+                {/* Cutout effect for Personalización */}
+                {card.hasCutout && !isExpanded && (
+                  <>
+                    <div className="absolute bottom-0 right-0 w-14 h-14 bg-white rounded-tl-xl"></div>
+                    <div className="absolute bottom-2 right-2 w-8 h-8 rounded-full border-2 border-[#0B1B32] text-[#0B1B32] flex items-center justify-center bg-white">
+                      <IconArrowUpRight className="w-4 h-4" />
                     </div>
-                  </div>
-                )}
-
-                {card.hasCutout && (
-                  <div className="self-end relative">
-                    <div className="absolute bottom-[-24px] right-[-24px] w-20 h-20 bg-white rounded-tl-[1.5rem]"></div>
-                    <div className="relative z-10 w-10 h-10 rounded-full border-2 border-[#0B1B32] flex items-center justify-center text-[#0B1B32] bg-white">
-                      <IconArrowUpRight className="w-5 h-5" />
-                    </div>
-                  </div>
-                )}
-
-                {!card.hasArrow && !card.hasCutout && (
-                  <div className="flex items-center gap-2 mt-auto">
-                    <span className={cn("text-xs font-bold opacity-60", card.textColor)}>Toca para ver más</span>
-                  </div>
+                  </>
                 )}
               </div>
-            ))}
+            )
+          })}
+
+          {/* Imagen - siempre visible */}
+          <div className="col-span-2 relative rounded-2xl overflow-hidden h-[160px]">
+            <img
+              src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1200"
+              alt="Reunión de negocios"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/10"></div>
           </div>
-          <p className="text-center text-xs text-gray-400 mt-2">
-            Desliza para ver más • Toca para expandir
-          </p>
         </div>
 
         {/* Desktop: Bento Grid original */}
@@ -282,52 +304,12 @@ export default function DiscoverSection() {
           </div>
 
         </div>
+
+        {/* Indicador mobile */}
+        <p className="text-center text-xs text-gray-400 mt-4 md:hidden">
+          Toca una tarjeta para expandirla
+        </p>
       </div>
-
-      {/* Modal para mobile */}
-      {selectedCard && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center md:hidden"
-          onClick={() => setSelectedCard(null)}
-        >
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-
-          <div
-            className={cn(
-              "relative w-full max-h-[85vh] rounded-t-[2rem] p-6 pb-10 animate-in slide-in-from-bottom duration-300",
-              selectedCard.bgColor
-            )}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Handle de arrastre */}
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1 bg-white/30 rounded-full" />
-
-            {/* Botón cerrar */}
-            <button
-              onClick={() => setSelectedCard(null)}
-              className={cn(
-                "absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center transition-colors",
-                selectedCard.textColor === "text-white" ? "bg-white/20 hover:bg-white/30" : "bg-black/10 hover:bg-black/20"
-              )}
-            >
-              <IconX className={cn("w-5 h-5", selectedCard.textColor)} />
-            </button>
-
-            <div className="mt-6 flex flex-col gap-4">
-              <h3 className={cn("text-2xl font-bold", selectedCard.textColor)}>
-                {selectedCard.title}
-              </h3>
-              <p className={cn("text-base font-medium leading-relaxed opacity-90", selectedCard.textColor)}>
-                {selectedCard.fullDescription}
-              </p>
-
-              <button className="mt-4 bg-[#00F0D0] text-[#0B1B32] font-bold py-3 px-6 rounded-full w-full transition-transform active:scale-[0.98]">
-                Registrarme gratis
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </section>
   )
 }
