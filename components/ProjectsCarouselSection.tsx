@@ -113,11 +113,18 @@ interface ProjectCardProps {
 
 function ProjectCard({ image, title, location, price, tag }: ProjectCardProps) {
   return (
-    <div className="relative group w-[85vw] md:w-[320px] lg:w-[350px] h-[450px] md:h-[480px] rounded-[2rem] overflow-hidden shadow-lg transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer bg-white flex-shrink-0 border border-gray-100">
+    <article
+      className="relative group w-[85vw] md:w-[320px] lg:w-[350px] h-[450px] md:h-[480px] rounded-[2rem] overflow-hidden shadow-lg transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer bg-white flex-shrink-0 border border-gray-100"
+      role="group"
+      aria-label={`Proyecto ${title} en ${location}`}
+      itemScope
+      itemType="https://schema.org/RealEstateListing"
+    >
       <img
         src={image}
-        alt={title}
+        alt={`Imagen del proyecto inmobiliario ${title} en ${location}`}
         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+        loading="lazy"
         onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800' }}
       />
 
@@ -131,24 +138,32 @@ function ProjectCard({ image, title, location, price, tag }: ProjectCardProps) {
         ) : <div />}
 
         <div className="flex gap-2">
-          <button className="w-10 h-10 bg-[#00F0D0] rounded-full flex items-center justify-center text-[#0B1B32] hover:bg-[#00dbbe] transition-colors shadow-md active:scale-95">
+          <button
+            type="button"
+            className="w-10 h-10 bg-[#00F0D0] rounded-full flex items-center justify-center text-[#0B1B32] hover:bg-[#00dbbe] transition-colors shadow-md active:scale-95"
+            aria-label={`Compartir proyecto ${title}`}
+          >
             <Share2 size={18} strokeWidth={2.5} />
           </button>
-          <button className="w-10 h-10 bg-[#00F0D0] rounded-full flex items-center justify-center text-[#0B1B32] hover:bg-[#00dbbe] transition-colors shadow-md active:scale-95">
+          <button
+            type="button"
+            className="w-10 h-10 bg-[#00F0D0] rounded-full flex items-center justify-center text-[#0B1B32] hover:bg-[#00dbbe] transition-colors shadow-md active:scale-95"
+            aria-label={`Guardar proyecto ${title} en favoritos`}
+          >
             <Heart size={18} strokeWidth={2.5} />
           </button>
         </div>
       </div>
 
       <div className="absolute bottom-0 left-0 w-full bg-[#0B1B32] p-6 pt-6 pb-8 z-10">
-        <h3 className="text-white text-xl font-bold mb-1.5 line-clamp-1">{title}</h3>
-        <p className="text-gray-300 text-sm font-medium mb-2 opacity-80 flex items-center gap-1">
-          <MapPin size={14} />
+        <h3 className="text-white text-xl font-bold mb-1.5 line-clamp-1" itemProp="name">{title}</h3>
+        <p className="text-gray-300 text-sm font-medium mb-2 opacity-80 flex items-center gap-1" itemProp="address">
+          <MapPin size={14} aria-hidden="true" />
           {location}
         </p>
-        <div className="text-[#00F0D0] font-bold text-xl mt-1">Desde: {price}</div>
+        <div className="text-[#00F0D0] font-bold text-xl mt-1" itemProp="price">Desde: {price}</div>
       </div>
-    </div>
+    </article>
   )
 }
 
@@ -209,10 +224,17 @@ export default function ProjectsCarouselSection() {
   }, [emblaApi, handlePointerDown, handlePointerUp])
 
   return (
-    <section className="w-full py-16 md:py-24 bg-white overflow-hidden">
+    <section
+      className="w-full pt-16 pb-6 md:pt-24 md:pb-8 bg-white overflow-hidden"
+      role="region"
+      aria-label="Carrusel de proyectos inmobiliarios"
+    >
       <div className="w-full max-w-[1440px] mx-auto px-4 md:px-6 flex flex-col items-center mb-10 md:mb-16">
         <div className="mb-8">
-          <button className="border border-[#0B1B32] text-[#0B1B32] font-bold py-2.5 px-8 rounded-full text-sm hover:bg-[#0B1B32] hover:text-white transition-all">
+          <button
+            type="button"
+            className="border border-[#0B1B32] text-[#0B1B32] font-bold py-2.5 px-8 rounded-full text-sm hover:bg-[#0B1B32] hover:text-white transition-all"
+          >
             Descubre los proyectos
           </button>
         </div>
@@ -225,7 +247,11 @@ export default function ProjectsCarouselSection() {
         </div>
       </div>
 
-      <div className="w-full overflow-hidden" ref={emblaRef}>
+      <div
+        className="w-full overflow-hidden"
+        ref={emblaRef}
+        aria-roledescription="carrusel"
+      >
         <div className="flex gap-4 md:gap-8 pl-6 md:pl-[calc((100vw-1440px)/2+24px)]">
           {PROJECTS.map((project) => (
             <div key={project.id} className="flex-shrink-0">
@@ -241,8 +267,12 @@ export default function ProjectsCarouselSection() {
         </div>
       </div>
 
-      <div className="mt-10 md:mt-14 flex justify-center px-4">
-        <button className="bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-bold text-lg py-4 px-10 rounded-full transition-all duration-300 transform hover:scale-105 shadow-md flex items-center gap-2">
+      <div className="mt-8 md:mt-10 flex justify-center px-4">
+        <button
+          type="button"
+          className="bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-bold text-lg py-4 px-10 rounded-full transition-all duration-300 transform hover:scale-105 shadow-md flex items-center gap-2"
+          aria-label="Ver todos los proyectos inmobiliarios"
+        >
           Ver todos los proyectos
         </button>
       </div>
