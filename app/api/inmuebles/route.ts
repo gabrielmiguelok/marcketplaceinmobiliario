@@ -7,13 +7,22 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const limit = parseInt(searchParams.get('limit') || '100')
+
     const db = await getConnection()
     const [rows] = await db.query(`
       SELECT * FROM inmuebles
+      WHERE estado = 'disponible'
       ORDER BY destacado DESC, created_at DESC
-    `)
+      LIMIT ?
+    `, [limit])
 
-    return NextResponse.json(rows, { status: 200 })
+    return NextResponse.json({
+      success: true,
+      inmuebles: rows,
+      total: (rows as any[]).length
+    }, { status: 200 })
   } catch (error: any) {
     console.error('Error al obtener inmuebles:', error)
     return NextResponse.json(

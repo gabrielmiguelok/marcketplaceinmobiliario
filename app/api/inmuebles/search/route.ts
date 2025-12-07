@@ -14,21 +14,16 @@ export async function GET(request: NextRequest) {
     const habitaciones = searchParams.get("habitaciones") || ""
     const precioMin = searchParams.get("precio_min") || ""
     const precioMax = searchParams.get("precio_max") || ""
-    const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 50)
+    const limit = parseInt(searchParams.get("limit") || "20")
+    const offset = parseInt(searchParams.get("offset") || "0")
 
     const db = await getConnection()
 
-    let sql = `
-      SELECT id, titulo, descripcion, tipo, operacion, precio, moneda,
-             ubicacion, zona, departamento, metros_cuadrados, habitaciones,
-             banos, parqueos, imagen_url, destacado, estado, latitud, longitud
-      FROM inmuebles
-      WHERE estado = 'disponible'
-    `
+    let baseWhere = "estado = 'disponible'"
     const params: any[] = []
 
     if (query) {
-      sql += ` AND (
+      baseWhere += ` AND (
         titulo LIKE ? OR
         descripcion LIKE ? OR
         ubicacion LIKE ? OR
@@ -39,71 +34,82 @@ export async function GET(request: NextRequest) {
     }
 
     if (zona) {
-      sql += ` AND zona = ?`
+      baseWhere += ` AND zona = ?`
       params.push(zona)
     }
 
     if (tipo) {
-      sql += ` AND tipo = ?`
+      baseWhere += ` AND tipo = ?`
       params.push(tipo)
     }
 
     if (operacion) {
-      sql += ` AND operacion = ?`
+      baseWhere += ` AND operacion = ?`
       params.push(operacion)
     }
 
     if (habitaciones) {
       const habNum = parseInt(habitaciones)
       if (habNum === 0) {
-        sql += ` AND (habitaciones = 0 OR habitaciones IS NULL)`
+        baseWhere += ` AND (habitaciones = 0 OR habitaciones IS NULL)`
       } else if (habNum >= 4) {
-        sql += ` AND habitaciones >= 4`
+        baseWhere += ` AND habitaciones >= 4`
       } else {
-        sql += ` AND habitaciones = ?`
+        baseWhere += ` AND habitaciones = ?`
         params.push(habNum)
       }
     }
 
     if (precioMin) {
-      sql += ` AND precio >= ?`
+      baseWhere += ` AND precio >= ?`
       params.push(parseFloat(precioMin))
     }
 
     if (precioMax) {
-      sql += ` AND precio <= ?`
+      baseWhere += ` AND precio <= ?`
       params.push(parseFloat(precioMax))
     }
 
-    sql += ` ORDER BY
-      CASE WHEN destacado = 1 THEN 0 ELSE 1 END,
-      ${query ? `
-      CASE
-        WHEN titulo LIKE ? THEN 1
-        WHEN zona = ? THEN 2
-        ELSE 3
-      END,
-      ` : ''}
-      created_at DESC
-      LIMIT ?
+    const [countResult]: any = await db.query(
+      `SELECT COUNT(*) as total FROM inmuebles WHERE ${baseWhere}`,
+      params
+    )
+    const totalFiltered = countResult[0]?.total || 0
+
+    let sql = `
+      SELECT id, titulo, descripcion, tipo, operacion, precio, moneda,
+             ubicacion, zona, departamento, metros_cuadrados, habitaciones,
+             banos, parqueos, imagen_url, destacado, estado, latitud, longitud
+      FROM inmuebles
+      WHERE ${baseWhere}
+      ORDER BY
+        CASE WHEN destacado = 1 THEN 0 ELSE 1 END,
+        ${query ? `
+        CASE
+          WHEN titulo LIKE ? THEN 1
+          WHEN zona = ? THEN 2
+          ELSE 3
+        END,
+        ` : ''}
+        created_at DESC
+      LIMIT ? OFFSET ?
     `
 
+    const queryParams = [...params]
     if (query) {
-      params.push(`%${query}%`, query)
+      queryParams.push(`%${query}%`, query)
     }
-    params.push(limit)
+    queryParams.push(limit, offset)
 
-    const [rows] = await db.query(sql, params)
-
-    const [countResult]: any = await db.query(
-      `SELECT COUNT(*) as total FROM inmuebles WHERE estado = 'disponible'`
-    )
+    const [rows] = await db.query(sql, queryParams)
 
     return NextResponse.json({
       success: true,
       inmuebles: rows,
-      total: (rows as any[]).length,
-      totalDisponibles: countResult[0]?.total || 0
+      total: totalFiltered,
+      limit,
+      offset,
+      hasMore: offset + (rows as any[]).length < totalFiltered
     })
   } catch (error) {
     console.error("Error en búsqueda:", error)
