@@ -93,7 +93,19 @@ const result = await transaction(async (conn) => {
 
 ### Landing Page (`/`)
 - `Header.tsx` - Navigation with "aloba" logo, responsive menu
-- `HeroSection.tsx` - Interactive 6-question quiz for property matching
+- `HeroSection.tsx` - Hero with two tool buttons: "Encontrar la Zona" and "Pre-Calificación"
+- `ZoneQuizSection.tsx` - 6-question quiz for zone matching (intro → questions → results)
+- `PrequalQuizSection.tsx` - 8-question quiz for credit pre-qualification (intro → questions → results)
+
+### Quiz Flow Architecture
+```
+app/page.tsx (state: FlowType = "none" | "zone" | "prequal")
+├── HeroSection (flow === "none") → onSelectFlow callback
+├── ZoneQuizSection (flow === "zone") → onBack callback
+└── PrequalQuizSection (flow === "prequal") → onBack callback
+```
+
+Each quiz component manages its own step state (0 = intro, 1-N = questions, N+1 = results).
 
 ### CustomTable
 Located in `CustomTable/`. Features: inline editing, column filters, sorting, pagination, column resize, Excel export.
