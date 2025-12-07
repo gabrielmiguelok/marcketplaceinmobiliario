@@ -149,16 +149,17 @@ export default function MapaInmueblesPage() {
     setHoveredPropertyId(id)
   }, [])
 
-  const handlePropertyClick = useCallback((id: number) => {
-    setSelectedPropertyId(id)
-    if (isMobile) {
-      setShowMap(true)
-    }
-  }, [isMobile])
-
   const handleViewProperty = useCallback((id: number) => {
     router.push(`/inmuebles/${id}`)
   }, [router])
+
+  const handleMobileCardClick = useCallback((id: number) => {
+    if (selectedPropertyId === id) {
+      router.push(`/inmuebles/${id}`)
+    } else {
+      setSelectedPropertyId(id)
+    }
+  }, [selectedPropertyId, router])
 
   const zonas = useMemo(() => {
     const uniqueZonas = [...new Set(inmuebles.map(i => i.zona).filter(Boolean))].sort((a, b) => {
@@ -358,7 +359,7 @@ export default function MapaInmueblesPage() {
                           isSelected={selectedPropertyId === inmueble.id}
                           isHovered={hoveredPropertyId === inmueble.id}
                           onHover={handlePropertyHover}
-                          onClick={handleViewProperty}
+                          onClick={handleMobileCardClick}
                         />
                       </div>
                     ))}
