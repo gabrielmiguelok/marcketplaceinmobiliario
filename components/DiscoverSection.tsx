@@ -87,14 +87,34 @@ export default function DiscoverSection() {
     }
   }
 
+  const handleKeyDown = (cardId: string, e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault()
+      if (window.innerWidth < 768) {
+        setExpandedCard(expandedCard === cardId ? null : cardId)
+      }
+    }
+  }
+
   const handleOutsideClick = () => {
     if (expandedCard) {
       setExpandedCard(null)
     }
   }
 
+  const getAriaLabel = (card: CardData): string => {
+    const labels: Record<string, string> = {
+      "acceso": "Acceso exclusivo a lanzamientos y preventas inmobiliarias",
+      "comunidad": "Únete a la comunidad de compradores e inversionistas de Aloba",
+      "clasificado": "Aloba no es un clasificado, es una plataforma de conexión y decisión inmobiliaria",
+      "personalizacion": "Personaliza tu experiencia con alertas y comparación de proyectos",
+      "paraquien": "Descubre si Aloba es para ti: compradores, inversionistas y profesionales"
+    }
+    return labels[card.id] || card.title
+  }
+
   return (
-    <section className="w-full py-10 md:py-24 bg-white">
+    <section className="w-full py-10 md:py-24 bg-white" role="region" aria-label="Descubre más con Aloba">
       <div className="max-w-[1300px] mx-auto px-4 md:px-8">
 
         {/* Header */}
@@ -112,7 +132,7 @@ export default function DiscoverSection() {
             <p className="text-sm md:text-lg font-medium opacity-90 lg:text-right text-[#0B1B32] flex-1">
               Regístrate gratis y desbloquea beneficios exclusivos.
             </p>
-            <button className="bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-bold text-sm md:text-lg py-2.5 px-6 md:py-3 md:px-8 rounded-full transition-all duration-300 transform hover:scale-105 shadow-sm whitespace-nowrap">
+            <button type="button" className="bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-bold text-sm md:text-lg py-2.5 px-6 md:py-3 md:px-8 rounded-full transition-all duration-300 transform hover:scale-105 shadow-sm whitespace-nowrap">
               Registrarme
             </button>
           </div>
@@ -129,9 +149,14 @@ export default function DiscoverSection() {
             const card = CARDS[0]
             const isExpanded = expandedCard === card.id
             return (
-              <div
+              <article
                 key={card.id}
                 onClick={(e) => handleCardClick(card.id, e)}
+                onKeyDown={(e) => handleKeyDown(card.id, e)}
+                role="button"
+                tabIndex={0}
+                aria-expanded={isExpanded}
+                aria-label="Acceso exclusivo a lanzamientos y preventas inmobiliarias"
                 className={cn(
                   "relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 ease-out",
                   card.bgColor,
@@ -153,10 +178,12 @@ export default function DiscoverSection() {
                       </h3>
                       {isExpanded && (
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation()
                             setExpandedCard(null)
                           }}
+                          aria-label="Cerrar"
                           className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-white/20 hover:bg-white/30 transition-colors"
                         >
                           <IconX className="w-4 h-4 text-white" />
@@ -179,7 +206,7 @@ export default function DiscoverSection() {
                     </div>
                   )}
                 </div>
-              </div>
+              </article>
             )
           })()}
 
@@ -187,7 +214,7 @@ export default function DiscoverSection() {
           <div className="col-span-1 relative rounded-2xl overflow-hidden h-[140px]">
             <img
               src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1200"
-              alt="Reunión de negocios"
+              alt="Equipo profesional de Aloba en reunión de negocios inmobiliarios"
               className="absolute inset-0 w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-black/10"></div>
@@ -198,9 +225,14 @@ export default function DiscoverSection() {
             const isExpanded = expandedCard === card.id
 
             return (
-              <div
+              <article
                 key={card.id}
                 onClick={(e) => handleCardClick(card.id, e)}
+                onKeyDown={(e) => handleKeyDown(card.id, e)}
+                role="button"
+                tabIndex={0}
+                aria-expanded={isExpanded}
+                aria-label={getAriaLabel(card)}
                 className={cn(
                   "relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 ease-out",
                   card.bgColor,
@@ -222,10 +254,12 @@ export default function DiscoverSection() {
                       </h3>
                       {isExpanded && (
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation()
                             setExpandedCard(null)
                           }}
+                          aria-label="Cerrar"
                           className={cn(
                             "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors",
                             card.textColor === "text-white" ? "bg-white/20 hover:bg-white/30" : "bg-black/10 hover:bg-black/20"
@@ -266,7 +300,7 @@ export default function DiscoverSection() {
                     </div>
                   </>
                 )}
-              </div>
+              </article>
             )
           })}
         </div>
@@ -275,7 +309,7 @@ export default function DiscoverSection() {
         <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-6">
 
           {/* Card 1: Acceso exclusivo */}
-          <div className="relative rounded-[2rem] overflow-hidden bg-[#0B1B32] p-8 flex flex-col justify-between text-white h-[340px] group hover:shadow-xl transition-all">
+          <article className="relative rounded-[2rem] overflow-hidden bg-[#0B1B32] p-8 flex flex-col justify-between text-white h-[340px] group hover:shadow-xl transition-all" aria-label="Acceso exclusivo a lanzamientos y preventas inmobiliarias">
             <div className="flex flex-col gap-4 relative z-10">
               <h3 className="text-2xl font-bold">Acceso exclusivo</h3>
               <p className="font-medium opacity-80 leading-snug">
@@ -287,20 +321,20 @@ export default function DiscoverSection() {
                 <IconArrowUpRight className="w-6 h-6" />
               </div>
             </div>
-          </div>
+          </article>
 
           {/* Card 2: Imagen Wide */}
-          <div className="relative rounded-[2rem] overflow-hidden h-[340px] lg:col-span-2 group">
+          <div className="relative rounded-[2rem] overflow-hidden h-[340px] lg:col-span-2 group" role="img" aria-label="Equipo profesional de Aloba en reunión de negocios inmobiliarios">
             <img
               src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1200"
-              alt="Reunión de negocios"
+              alt="Equipo profesional de Aloba en reunión de negocios inmobiliarios"
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
           </div>
 
           {/* Card 3: Comunidad */}
-          <div className="relative rounded-[2rem] overflow-hidden bg-[#0B1B32] p-8 flex flex-col justify-between text-white h-[340px] group hover:shadow-xl transition-all">
+          <article className="relative rounded-[2rem] overflow-hidden bg-[#0B1B32] p-8 flex flex-col justify-between text-white h-[340px] group hover:shadow-xl transition-all" aria-label="Únete a la comunidad de compradores e inversionistas de Aloba">
             <div className="flex flex-col gap-4 relative z-10">
               <h3 className="text-2xl font-bold">Comunidad</h3>
               <p className="font-medium opacity-80 leading-snug">
@@ -312,18 +346,18 @@ export default function DiscoverSection() {
                 <IconArrowUpRight className="w-6 h-6" />
               </div>
             </div>
-          </div>
+          </article>
 
           {/* Card 4: No somos un clasificado */}
-          <div className="relative rounded-[2rem] overflow-hidden bg-[#D1FAE5] p-8 flex flex-col justify-center gap-4 h-[340px] hover:shadow-xl transition-all">
+          <article className="relative rounded-[2rem] overflow-hidden bg-[#D1FAE5] p-8 flex flex-col justify-center gap-4 h-[340px] hover:shadow-xl transition-all" aria-label="Aloba no es un clasificado, es una plataforma de conexión y decisión inmobiliaria">
             <h3 className="text-2xl font-bold text-[#0B1B32]">No somos un clasificado.</h3>
             <p className="font-medium text-[#0B1B32] opacity-90 leading-snug">
               Tampoco somos una agencia. Somos una plataforma de conexión, educación y decisión.
             </p>
-          </div>
+          </article>
 
           {/* Card 5: Personalización */}
-          <div className="relative rounded-[2rem] overflow-hidden bg-[#0B1B32] h-[340px] group hover:shadow-xl transition-all">
+          <article className="relative rounded-[2rem] overflow-hidden bg-[#0B1B32] h-[340px] group hover:shadow-xl transition-all" aria-label="Personaliza tu experiencia con alertas y comparación de proyectos">
             <div className="p-8 pb-20 h-full flex flex-col justify-between relative z-10">
               <div className="flex flex-col gap-4">
                 <h3 className="text-2xl font-bold text-white">Personalización</h3>
@@ -340,10 +374,10 @@ export default function DiscoverSection() {
                 <IconArrowUpRight className="w-6 h-6" />
               </div>
             </div>
-          </div>
+          </article>
 
           {/* Card 6: Para quién es aloba */}
-          <div className="relative rounded-[2rem] overflow-hidden bg-[#F3F4F6] flex items-center h-[340px] lg:col-span-2 hover:shadow-xl transition-all">
+          <article className="relative rounded-[2rem] overflow-hidden bg-[#F3F4F6] flex items-center h-[340px] lg:col-span-2 hover:shadow-xl transition-all" aria-label="Descubre si Aloba es para ti: compradores, inversionistas y profesionales">
             <div className="p-12 w-full lg:w-2/3 flex flex-col justify-center items-start gap-6 relative z-10">
               <div className="border border-[#0B1B32] rounded-full px-5 py-2 text-sm font-bold bg-transparent">
                 Para quién es aloba...
@@ -358,7 +392,7 @@ export default function DiscoverSection() {
 
             <div className="absolute right-0 bottom-[-20px] w-1/2 h-[120%]">
               <div className="absolute top-10 right-10 w-[200px] h-[400px] bg-black rounded-[2.5rem] border-8 border-gray-800 shadow-2xl rotate-[-15deg] overflow-hidden translate-y-10 translate-x-10 ring-1 ring-white/20">
-                <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=400" alt="App preview" className="w-full h-full object-cover opacity-80"/>
+                <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=400" alt="Mockup de aplicación móvil de Aloba mostrando proyecto inmobiliario destacado" className="w-full h-full object-cover opacity-80"/>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-6">
                   <div className="text-white text-xs font-bold mb-2">Proyecto Destacado</div>
                   <div className="h-2 w-16 bg-white/50 rounded mb-2"></div>
@@ -366,12 +400,12 @@ export default function DiscoverSection() {
                 </div>
               </div>
             </div>
-          </div>
+          </article>
 
         </div>
 
         {/* Indicador mobile */}
-        <p className="text-center text-xs text-gray-400 mt-4 md:hidden">
+        <p className="text-center text-xs text-gray-400 mt-4 md:hidden" role="note">
           Toca una tarjeta para expandirla
         </p>
       </div>
