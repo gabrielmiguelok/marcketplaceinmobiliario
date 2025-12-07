@@ -36,22 +36,22 @@ export default function Footer() {
     <div className="w-full bg-white">
 
       {/* Banner CTA - Compacto en mobile */}
-      <section className="w-full max-w-[1440px] mx-auto px-4 md:px-6 py-10 md:py-28 text-center">
+      <aside className="w-full max-w-[1440px] mx-auto px-4 md:px-6 py-10 md:py-28 text-center" role="banner">
         <h2 className="text-xl sm:text-2xl md:text-5xl font-extrabold tracking-tight mb-2 md:mb-4 text-[#0B1B32]">
           Tu inversión inmobiliaria empieza aquí
         </h2>
         <p className="text-sm md:text-xl font-medium opacity-80 mb-5 md:mb-10 text-[#0B1B32]">
           Explora, compara y encuentra tu próximo proyecto
         </p>
-        <button className="bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-bold text-sm md:text-lg py-2.5 px-6 md:py-4 md:px-10 rounded-full transition-all duration-300 transform hover:scale-105 shadow-md">
+        <button type="button" className="bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-bold text-sm md:text-lg py-2.5 px-6 md:py-4 md:px-10 rounded-full transition-all duration-300 transform hover:scale-105 shadow-md" aria-label="Empezar a explorar propiedades ahora">
           Empezar ahora!
         </button>
-      </section>
+      </aside>
 
       <div className="w-full h-[1px] bg-gray-200"></div>
 
       {/* Footer Principal - Compacto en mobile */}
-      <footer className="w-full max-w-[1440px] mx-auto px-4 md:px-6 py-6 md:py-16">
+      <footer className="w-full max-w-[1440px] mx-auto px-4 md:px-6 py-6 md:py-16" role="contentinfo">
 
         {/* Mobile: Logo centrado + enlaces en grid 2 columnas */}
         <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-6 md:gap-8">
@@ -72,7 +72,7 @@ export default function Footer() {
           {/* Enlaces en grid 2 columnas en mobile */}
           <div className="grid grid-cols-2 gap-4 md:flex md:gap-16">
             {/* Enlaces: Qué es aloba */}
-            <div className="flex flex-col space-y-2">
+            <nav className="flex flex-col space-y-2" aria-label="Navegación sobre Aloba">
               <span className="font-bold text-sm md:text-lg mb-0.5 md:mb-1 opacity-90 text-[#0B1B32]">
                 Qué es aloba
               </span>
@@ -82,10 +82,10 @@ export default function Footer() {
               <Link href="/herramientas" className="text-xs md:text-base text-[#0B1B32] hover:text-[#00F0D0] transition-colors">
                 Herramientas
               </Link>
-            </div>
+            </nav>
 
             {/* Enlaces: Contacto */}
-            <div className="flex flex-col space-y-2">
+            <nav className="flex flex-col space-y-2" aria-label="Navegación de contacto">
               <span className="font-bold text-sm md:text-lg mb-0.5 md:mb-1 opacity-90 text-[#0B1B32]">
                 Contacto
               </span>
@@ -95,7 +95,7 @@ export default function Footer() {
               <a href="#" className="text-xs md:text-base text-[#0B1B32] hover:text-[#00F0D0] transition-colors">
                 Publicar en aloba
               </a>
-            </div>
+            </nav>
           </div>
 
         </div>
@@ -108,16 +108,16 @@ export default function Footer() {
           </p>
 
           <div className="flex space-x-4 md:space-x-5 text-gray-500">
-            <a href="#" className="hover:text-[#0B1B32] transition-colors">
+            <a href="#" className="hover:text-[#0B1B32] transition-colors" aria-label="Síguenos en Facebook" title="Síguenos en Facebook" target="_blank" rel="noopener noreferrer">
               <IconFacebook className="w-4 h-4 md:w-5 md:h-5" />
             </a>
-            <a href="#" className="hover:text-[#0B1B32] transition-colors">
+            <a href="#" className="hover:text-[#0B1B32] transition-colors" aria-label="Síguenos en Instagram" title="Síguenos en Instagram" target="_blank" rel="noopener noreferrer">
               <IconInstagram className="w-4 h-4 md:w-5 md:h-5" />
             </a>
-            <a href="#" className="hover:text-[#0B1B32] transition-colors">
+            <a href="#" className="hover:text-[#0B1B32] transition-colors" aria-label="Síguenos en Twitter" title="Síguenos en Twitter" target="_blank" rel="noopener noreferrer">
               <IconTwitter className="w-4 h-4 md:w-5 md:h-5" />
             </a>
-            <a href="#" className="hover:text-[#0B1B32] transition-colors">
+            <a href="#" className="hover:text-[#0B1B32] transition-colors" aria-label="Síguenos en LinkedIn" title="Síguenos en LinkedIn" target="_blank" rel="noopener noreferrer">
               <IconLinkedIn className="w-4 h-4 md:w-5 md:h-5" />
             </a>
           </div>
