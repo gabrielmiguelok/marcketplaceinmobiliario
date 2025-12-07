@@ -5,6 +5,7 @@ import Header from "@/components/Header"
 import HeroSection from "@/components/HeroSection"
 import ZoneQuizSection from "@/components/ZoneQuizSection"
 import PrequalQuizSection from "@/components/PrequalQuizSection"
+import { WhatsAppButton } from "@/components/whatsapp-button"
 
 type FlowType = "none" | "zone" | "prequal"
 
@@ -33,6 +34,8 @@ export default function HomePage() {
           {flow === "prequal" && <PrequalQuizSection onBack={() => setFlow("none")} />}
         </section>
       </div>
+
+      <WhatsAppButton />
     </>
   )
 }
