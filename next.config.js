@@ -57,15 +57,15 @@ const nextConfig = {
     ],
   },
 
-  /* ───── 6) Cabeceras de seguridad (permitiendo Google Maps) ───── */
+  /* ───── 6) Cabeceras de seguridad (permitiendo Google Maps, Leaflet, CartoDB) ───── */
   async headers() {
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' *.google.com *.googleapis.com *.gstatic.com *.ggpht.com *.googleusercontent.com maps.googleapis.com www.google.com google.com",
-      "style-src 'self' 'unsafe-inline' fonts.googleapis.com *.googleapis.com *.gstatic.com maps.googleapis.com *.google.com google.com",
-      "img-src 'self' data: blob: *.google.com *.googleapis.com *.gstatic.com *.googleusercontent.com *.ggpht.com maps.googleapis.com maps.gstatic.com www.google.com google.com images.unsplash.com *.unsplash.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' *.google.com *.googleapis.com *.gstatic.com *.ggpht.com *.googleusercontent.com maps.googleapis.com www.google.com google.com *.googletagmanager.com www.googletagmanager.com unpkg.com cdnjs.cloudflare.com",
+      "style-src 'self' 'unsafe-inline' fonts.googleapis.com *.googleapis.com *.gstatic.com maps.googleapis.com *.google.com google.com unpkg.com cdnjs.cloudflare.com",
+      "img-src 'self' data: blob: *.google.com *.googleapis.com *.gstatic.com *.googleusercontent.com *.ggpht.com maps.googleapis.com maps.gstatic.com www.google.com google.com images.unsplash.com *.unsplash.com *.basemaps.cartocdn.com *.tile.openstreetmap.org tile.openstreetmap.org *.openstreetmap.org cdnjs.cloudflare.com unpkg.com",
       "font-src 'self' fonts.gstatic.com *.googleapis.com",
-      "connect-src 'self' *.google.com *.googleapis.com *.gstatic.com *.ggpht.com *.googleusercontent.com maps.googleapis.com www.google.com google.com wss: ws:",
+      "connect-src 'self' *.google.com *.googleapis.com *.gstatic.com *.ggpht.com *.googleusercontent.com maps.googleapis.com www.google.com google.com *.googletagmanager.com *.google-analytics.com *.basemaps.cartocdn.com *.tile.openstreetmap.org wss: ws:",
       "frame-src 'self' *.google.com *.googleapis.com *.gstatic.com *.googleusercontent.com maps.google.com www.google.com google.com",
       "frame-ancestors 'self'",
       "object-src 'none'",
