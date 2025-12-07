@@ -198,106 +198,57 @@ function norm(t: string) {
     .trim()
 }
 
-const PROPERTY_TYPE_MAPPING: Record<string, string> = {
-  "apartamento": "apartamento",
-  "apartamentos": "apartamento",
-  "apto": "apartamento",
-  "depa": "apartamento",
-  "departamento": "apartamento",
-  "piso": "apartamento",
-  "casa": "casa",
-  "casas": "casa",
-  "vivienda": "casa",
-  "residencia": "casa",
-  "chalet": "casa",
-  "terreno": "terreno",
-  "terrenos": "terreno",
-  "lote": "terreno",
-  "parcela": "terreno",
-  "finca": "terreno",
-  "oficina": "oficina",
-  "oficinas": "oficina",
-  "corporativo": "oficina",
-  "coworking": "oficina",
-  "local": "local",
-  "locales": "local",
-  "comercial": "local",
-  "tienda": "local",
-  "negocio": "local",
-  "bodega": "bodega",
-  "bodegas": "bodega",
-  "almacen": "bodega",
-  "galpon": "bodega",
+const PROPERTY_TYPES: Array<{ patterns: RegExp[]; value: string; label: string }> = [
+  { patterns: [/\b(apartamento|apartamentos|apto|aptos|depa|depas|departamento|departamentos|piso|pisos)\b/], value: "apartamento", label: "Apartamento" },
+  { patterns: [/\b(casa|casas|vivienda|viviendas|residencia|residencias|chalet|chalets)\b/], value: "casa", label: "Casa" },
+  { patterns: [/\b(terreno|terrenos|lote|lotes|parcela|parcelas|finca|fincas)\b/], value: "terreno", label: "Terreno" },
+  { patterns: [/\b(oficina|oficinas|corporativo|coworking)\b/], value: "oficina", label: "Oficina" },
+  { patterns: [/\b(local|locales|comercial|comerciales|tienda|tiendas|negocio|negocios)\b/], value: "local", label: "Local" },
+  { patterns: [/\b(bodega|bodegas|almacen|almacenes|galpon|galpones)\b/], value: "bodega", label: "Bodega" },
+]
+
+const ZONE_ALIASES: Record<string, string> = {
+  "centro historico": "1",
+  "centro civico": "4",
+  "zona viva": "10",
+  "oakland": "10",
+  "las americas": "14",
+  "la villa": "14",
+  "vista hermosa": "15",
+  "acatan": "16",
+  "cayala": "16",
 }
 
-const ZONE_MAPPING: Record<string, string> = {
-  "zona 1": "1", "z1": "1", "zona1": "1", "centro historico": "1",
-  "zona 4": "4", "z4": "4", "zona4": "4", "centro civico": "4",
-  "zona 5": "5", "z5": "5", "zona5": "5",
-  "zona 6": "6", "z6": "6", "zona6": "6",
-  "zona 7": "7", "z7": "7", "zona7": "7",
-  "zona 8": "8", "z8": "8", "zona8": "8",
-  "zona 9": "9", "z9": "9", "zona9": "9",
-  "zona 10": "10", "z10": "10", "zona10": "10", "zona viva": "10", "oakland": "10",
-  "zona 11": "11", "z11": "11", "zona11": "11",
-  "zona 12": "12", "z12": "12", "zona12": "12",
-  "zona 13": "13", "z13": "13", "zona13": "13",
-  "zona 14": "14", "z14": "14", "zona14": "14", "las americas": "14", "la villa": "14",
-  "zona 15": "15", "z15": "15", "zona15": "15", "vista hermosa": "15",
-  "zona 16": "16", "z16": "16", "zona16": "16", "acatan": "16",
-  "zona 17": "17", "z17": "17", "zona17": "17",
-  "zona 18": "18", "z18": "18", "zona18": "18",
-}
+const OPERATION_PATTERNS: Array<{ patterns: RegExp[]; value: string; label: string }> = [
+  { patterns: [/\b(comprar|compra|venta|vender|adquirir|inversion|invertir)\b/], value: "venta", label: "En venta" },
+  { patterns: [/\b(alquilar|alquiler|renta|rentar|arrendar|arrendamiento|arrendar)\b/], value: "alquiler", label: "En alquiler" },
+]
 
-const OPERATION_MAPPING: Record<string, string> = {
-  "comprar": "venta",
-  "compra": "venta",
-  "venta": "venta",
-  "vender": "venta",
-  "adquirir": "venta",
-  "inversion": "venta",
-  "invertir": "venta",
-  "alquilar": "alquiler",
-  "alquiler": "alquiler",
-  "renta": "alquiler",
-  "rentar": "alquiler",
-  "arrendar": "alquiler",
-  "arrendamiento": "alquiler",
-}
-
-const HABITACIONES_MAPPING: Record<string, number> = {
-  "studio": 1,
-  "estudio": 1,
-  "loft": 1,
-  "una habitacion": 1,
-  "1 habitacion": 1,
-  "dos habitaciones": 2,
-  "2 habitaciones": 2,
-  "tres habitaciones": 3,
-  "3 habitaciones": 3,
-  "cuatro habitaciones": 4,
-  "4 habitaciones": 4,
-}
+const HABITACIONES_PATTERNS: Array<{ pattern: RegExp; value: number }> = [
+  { pattern: /\b(studio|estudio|loft)\b/, value: 1 },
+  { pattern: /\buna?\s*(habitacion|habitaciones|cuarto|cuartos|recamara|recamaras)\b/, value: 1 },
+  { pattern: /\b1\s*(habitacion|habitaciones|cuarto|cuartos|recamara|recamaras)\b/, value: 1 },
+  { pattern: /\bdos\s*(habitacion|habitaciones|cuarto|cuartos|recamara|recamaras)\b/, value: 2 },
+  { pattern: /\b2\s*(habitacion|habitaciones|cuarto|cuartos|recamara|recamaras)\b/, value: 2 },
+  { pattern: /\btres\s*(habitacion|habitaciones|cuarto|cuartos|recamara|recamaras)\b/, value: 3 },
+  { pattern: /\b3\s*(habitacion|habitaciones|cuarto|cuartos|recamara|recamaras)\b/, value: 3 },
+  { pattern: /\bcuatro\s*(habitacion|habitaciones|cuarto|cuartos|recamara|recamaras)\b/, value: 4 },
+  { pattern: /\b4\s*(habitacion|habitaciones|cuarto|cuartos|recamara|recamaras)\b/, value: 4 },
+  { pattern: /\b(\d+)\s*(habitacion|habitaciones|cuarto|cuartos|recamara|recamaras)\b/, value: -1 },
+]
 
 const SEARCH_PATTERNS = [
-  /busco?\s+(un|una|al)?\s*(apartamento|casa|terreno|oficina|local|bodega|inmueble|propiedad)/i,
-  /necesito\s+(un|una|comprar|alquilar|rentar)/i,
-  /quiero\s+(un|una|comprar|alquilar|rentar|ver)/i,
-  /donde\s+(encuentro|hay|puedo)\s*(apartamento|casa|inmueble|propiedad)?/i,
-  /hay\s+(algun|alguna)?\s*(apartamento|casa|terreno|inmueble)?/i,
-  /tienen\s+(apartamento|casa|terreno|inmueble)/i,
-  /me\s+interesa\s+(un|una|comprar|alquilar)/i,
-  /estoy\s+buscando/i,
-  /presupuesto\s+de?\s*\$?\d+/i,
-  /hasta\s+\$?\d+/i,
-  /menos\s+de\s+\$?\d+/i,
-  /\d+\s*habitacion/i,
-  /\d+\s*cuarto/i,
-  /\d+\s*recamara/i,
+  /\b(busco|buscar|necesito|quiero|interesa|muestrame|mostrar|ver)\b/i,
+  /\b(apartamento|casa|terreno|oficina|local|bodega|inmueble|propiedad)\b/i,
+  /\bzona\s*\d+/i,
+  /\bz\s*\d+/i,
+  /\d+\s*(habitacion|cuarto|recamara)/i,
+  /\$\s*\d+/i,
+  /\d+\s*(mil|k)\b/i,
 ]
 
 const PROPERTY_INTENT_WORDS = [
-  "buscar", "busco", "necesito", "quiero", "interesa",
+  "buscar", "busco", "necesito", "quiero", "interesa", "muestrame",
   "apartamento", "casa", "terreno", "oficina", "local", "bodega",
   "inmueble", "propiedad", "vivienda",
   "comprar", "alquilar", "rentar", "venta", "alquiler",
@@ -314,79 +265,186 @@ interface SearchFilters {
   precioMax?: number
 }
 
+function detectZone(text: string): { zona: string; label: string } | null {
+  const normalized = norm(text)
+
+  for (const [alias, zoneNum] of Object.entries(ZONE_ALIASES)) {
+    if (normalized.includes(alias)) {
+      return { zona: zoneNum, label: `Zona ${zoneNum}` }
+    }
+  }
+
+  const zonePatterns = [
+    /\bzona\s*(\d{1,2})\b/i,
+    /\bz\s*(\d{1,2})\b/i,
+    /\bz(\d{1,2})\b/i,
+    /\ben\s+la\s+(\d{1,2})\b/i,
+  ]
+
+  for (const pattern of zonePatterns) {
+    const match = text.match(pattern)
+    if (match && match[1]) {
+      const zoneNum = match[1]
+      const validZones = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18"]
+      if (validZones.includes(zoneNum)) {
+        return { zona: zoneNum, label: `Zona ${zoneNum}` }
+      }
+    }
+  }
+
+  return null
+}
+
+function detectPropertyType(text: string): { tipo: string; label: string } | null {
+  const normalized = norm(text)
+
+  for (const typeInfo of PROPERTY_TYPES) {
+    for (const pattern of typeInfo.patterns) {
+      if (pattern.test(normalized)) {
+        return { tipo: typeInfo.value, label: typeInfo.label }
+      }
+    }
+  }
+
+  return null
+}
+
+function detectOperation(text: string): { operacion: string; label: string } | null {
+  const normalized = norm(text)
+
+  for (const opInfo of OPERATION_PATTERNS) {
+    for (const pattern of opInfo.patterns) {
+      if (pattern.test(normalized)) {
+        return { operacion: opInfo.value, label: opInfo.label }
+      }
+    }
+  }
+
+  return null
+}
+
+function detectHabitaciones(text: string): { habitaciones: number; label: string } | null {
+  const normalized = norm(text)
+
+  for (const habInfo of HABITACIONES_PATTERNS) {
+    const match = normalized.match(habInfo.pattern)
+    if (match) {
+      let value = habInfo.value
+      if (value === -1 && match[1]) {
+        value = parseInt(match[1])
+      }
+      if (value > 0 && value <= 10) {
+        return { habitaciones: value, label: `${value} habitación${value > 1 ? 'es' : ''}` }
+      }
+    }
+  }
+
+  return null
+}
+
+function detectPriceRange(text: string): { precioMin?: number; precioMax?: number; label?: string } {
+  const normalized = norm(text)
+  const result: { precioMin?: number; precioMax?: number; label?: string } = {}
+
+  const pricePatterns = [
+    /\$\s*([\d,]+)\s*(?:mil|k)?/gi,
+    /([\d,]+)\s*(?:mil|k)\b/gi,
+    /([\d,]+)\s*(?:dolares|usd)/gi,
+    /(?:presupuesto|budget)\s*(?:de)?\s*\$?\s*([\d,]+)/gi,
+  ]
+
+  const prices: number[] = []
+
+  for (const pattern of pricePatterns) {
+    let match
+    while ((match = pattern.exec(text)) !== null) {
+      let numStr = match[1].replace(/,/g, '')
+      let value = parseInt(numStr)
+
+      if (match[0].toLowerCase().includes('k') || match[0].toLowerCase().includes('mil')) {
+        value *= 1000
+      }
+
+      if (value > 0 && value < 100) {
+        value *= 1000
+      }
+
+      if (value > 100 && value < 1000) {
+        value *= 1000
+      }
+
+      if (value >= 10000 && value <= 50000000) {
+        prices.push(value)
+      }
+    }
+  }
+
+  if (prices.length > 0) {
+    const hasHasta = /\b(hasta|menos de|maximo|max|menor a|menor que)\b/.test(normalized)
+    const hasDesde = /\b(desde|minimo|min|mayor a|mayor que|mas de)\b/.test(normalized)
+
+    if (hasHasta) {
+      result.precioMax = Math.max(...prices)
+      result.label = `Hasta $${result.precioMax.toLocaleString()}`
+    } else if (hasDesde) {
+      result.precioMin = Math.min(...prices)
+      result.label = `Desde $${result.precioMin.toLocaleString()}`
+    } else if (prices.length === 1) {
+      result.precioMin = Math.floor(prices[0] * 0.8)
+      result.precioMax = Math.ceil(prices[0] * 1.2)
+      result.label = `~$${prices[0].toLocaleString()}`
+    } else if (prices.length >= 2) {
+      result.precioMin = Math.min(...prices)
+      result.precioMax = Math.max(...prices)
+      result.label = `$${result.precioMin.toLocaleString()} - $${result.precioMax.toLocaleString()}`
+    }
+  }
+
+  return result
+}
+
 function detectSearchIntent(text: string): { isSearch: boolean; filters: SearchFilters; searchTerms: string[] } {
   const normalized = norm(text)
   const filters: SearchFilters = {}
   const searchTerms: string[] = []
 
-  for (const [key, value] of Object.entries(PROPERTY_TYPE_MAPPING)) {
-    if (normalized.includes(key)) {
-      filters.tipo = value
-      searchTerms.push(value)
-      break
-    }
+  const typeResult = detectPropertyType(text)
+  if (typeResult) {
+    filters.tipo = typeResult.tipo
+    searchTerms.push(typeResult.label)
   }
 
-  for (const [key, value] of Object.entries(ZONE_MAPPING)) {
-    if (normalized.includes(key)) {
-      filters.zona = value
-      searchTerms.push(`Zona ${value}`)
-      break
-    }
+  const zoneResult = detectZone(text)
+  if (zoneResult) {
+    filters.zona = zoneResult.zona
+    searchTerms.push(zoneResult.label)
   }
 
-  for (const [key, value] of Object.entries(OPERATION_MAPPING)) {
-    if (normalized.includes(key)) {
-      filters.operacion = value
-      searchTerms.push(value === "venta" ? "En venta" : "En alquiler")
-      break
-    }
+  const opResult = detectOperation(text)
+  if (opResult) {
+    filters.operacion = opResult.operacion
+    searchTerms.push(opResult.label)
   }
 
-  for (const [key, value] of Object.entries(HABITACIONES_MAPPING)) {
-    if (normalized.includes(key)) {
-      filters.habitaciones = value
-      searchTerms.push(`${value} habitación${value > 1 ? 'es' : ''}`)
-      break
-    }
+  const habResult = detectHabitaciones(text)
+  if (habResult) {
+    filters.habitaciones = habResult.habitaciones
+    searchTerms.push(habResult.label)
   }
 
-  const priceMatch = text.match(/\$?\s*(\d{1,3}(?:[,.]?\d{3})*)\s*(?:mil|k)?/gi)
-  if (priceMatch) {
-    const prices = priceMatch.map(p => {
-      const num = p.replace(/[^\d]/g, '')
-      let value = parseInt(num)
-      if (p.toLowerCase().includes('k') || p.toLowerCase().includes('mil')) {
-        value *= 1000
-      }
-      if (value < 1000) value *= 1000
-      return value
-    }).filter(p => p > 0 && p < 10000000)
-
-    if (prices.length > 0) {
-      if (normalized.includes("hasta") || normalized.includes("menos") || normalized.includes("maximo")) {
-        filters.precioMax = Math.max(...prices)
-        searchTerms.push(`Hasta $${filters.precioMax.toLocaleString()}`)
-      } else if (normalized.includes("desde") || normalized.includes("minimo") || normalized.includes("mas de")) {
-        filters.precioMin = Math.min(...prices)
-        searchTerms.push(`Desde $${filters.precioMin.toLocaleString()}`)
-      } else if (prices.length === 1) {
-        filters.precioMax = prices[0] * 1.2
-        filters.precioMin = prices[0] * 0.8
-      }
-    }
-  }
+  const priceResult = detectPriceRange(text)
+  if (priceResult.precioMin) filters.precioMin = priceResult.precioMin
+  if (priceResult.precioMax) filters.precioMax = priceResult.precioMax
+  if (priceResult.label) searchTerms.push(priceResult.label)
 
   const matchesPattern = SEARCH_PATTERNS.some(pattern => pattern.test(text))
   const intentCount = PROPERTY_INTENT_WORDS.filter(word => normalized.includes(word)).length
 
-  const isSearch =
-    Object.keys(filters).length > 0 ||
-    (matchesPattern && intentCount >= 1) ||
-    intentCount >= 2
+  const hasFilters = Object.keys(filters).length > 0
+  const isSearch = hasFilters || (matchesPattern && intentCount >= 1) || intentCount >= 2
 
   console.log("[CHAT] detectSearchIntent:", {
-    normalized: normalized.substring(0, 60),
+    originalText: text.substring(0, 80),
     filters,
     searchTerms,
     matchesPattern,
