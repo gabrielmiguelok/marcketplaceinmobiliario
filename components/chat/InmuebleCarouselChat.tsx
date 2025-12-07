@@ -227,11 +227,16 @@ export default function InmuebleCarouselChat({ inmuebles, searchTerms }: Inmuebl
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
 
+  const [isDragging, setIsDragging] = useState(false)
+  const [startX, setStartX] = useState(0)
+  const [scrollLeft, setScrollLeft] = useState(0)
+  const [hasDragged, setHasDragged] = useState(false)
+
   const checkScroll = () => {
     if (!scrollRef.current) return
-    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current
-    setCanScrollLeft(scrollLeft > 10)
-    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10)
+    const { scrollLeft: sl, scrollWidth, clientWidth } = scrollRef.current
+    setCanScrollLeft(sl > 10)
+    setCanScrollRight(sl < scrollWidth - clientWidth - 10)
   }
 
   const scroll = (direction: "left" | "right") => {
@@ -242,6 +247,76 @@ export default function InmuebleCarouselChat({ inmuebles, searchTerms }: Inmuebl
       behavior: "smooth",
     })
     setTimeout(checkScroll, 300)
+  }
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return
+    setIsDragging(true)
+    setHasDragged(false)
+    setStartX(e.pageX - scrollRef.current.offsetLeft)
+    setScrollLeft(scrollRef.current.scrollLeft)
+    scrollRef.current.style.cursor = "grabbing"
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollRef.current) return
+    e.preventDefault()
+    const x = e.pageX - scrollRef.current.offsetLeft
+    const walk = (x - startX) * 1.5
+    if (Math.abs(walk) > 5) {
+      setHasDragged(true)
+    }
+    scrollRef.current.scrollLeft = scrollLeft - walk
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+    if (scrollRef.current) {
+      scrollRef.current.style.cursor = "grab"
+    }
+    checkScroll()
+    setTimeout(() => setHasDragged(false), 100)
+  }
+
+  const handleMouseLeave = () => {
+    if (isDragging) {
+      setIsDragging(false)
+      if (scrollRef.current) {
+        scrollRef.current.style.cursor = "grab"
+      }
+      checkScroll()
+    }
+  }
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!scrollRef.current) return
+    setIsDragging(true)
+    setHasDragged(false)
+    setStartX(e.touches[0].pageX - scrollRef.current.offsetLeft)
+    setScrollLeft(scrollRef.current.scrollLeft)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || !scrollRef.current) return
+    const x = e.touches[0].pageX - scrollRef.current.offsetLeft
+    const walk = (x - startX) * 1.5
+    if (Math.abs(walk) > 5) {
+      setHasDragged(true)
+    }
+    scrollRef.current.scrollLeft = scrollLeft - walk
+  }
+
+  const handleTouchEnd = () => {
+    setIsDragging(false)
+    checkScroll()
+    setTimeout(() => setHasDragged(false), 100)
+  }
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (hasDragged) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
   }
 
   if (!inmuebles || inmuebles.length === 0) return null
@@ -296,7 +371,15 @@ export default function InmuebleCarouselChat({ inmuebles, searchTerms }: Inmuebl
           <div
             ref={scrollRef}
             onScroll={checkScroll}
-            className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onClickCapture={handleCardClick}
+            className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1 cursor-grab select-none"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {inmuebles.map((inmueble, index) => (
