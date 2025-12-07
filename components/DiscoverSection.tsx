@@ -204,8 +204,7 @@ export default function DiscoverSection() {
                 className={cn(
                   "relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 ease-out",
                   card.bgColor,
-                  isExpanded ? "col-span-2 z-10" : "col-span-1",
-                  card.id === "paraquien" && !isExpanded && "col-span-2"
+                  isExpanded ? "col-span-2 z-10" : "col-span-1"
                 )}
               >
                 <div className={cn(
