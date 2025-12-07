@@ -35,86 +35,90 @@ export default function Footer() {
   return (
     <div className="w-full bg-white">
 
-      {/* Banner CTA */}
-      <section className="w-full max-w-[1440px] mx-auto px-6 py-20 md:py-28 text-center">
-        <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4 text-[#0B1B32]">
+      {/* Banner CTA - Compacto en mobile */}
+      <section className="w-full max-w-[1440px] mx-auto px-4 md:px-6 py-10 md:py-28 text-center">
+        <h2 className="text-xl sm:text-2xl md:text-5xl font-extrabold tracking-tight mb-2 md:mb-4 text-[#0B1B32]">
           Tu inversión inmobiliaria empieza aquí
         </h2>
-        <p className="text-lg md:text-xl font-medium opacity-80 mb-10 text-[#0B1B32]">
-          Explora, compara y encuentra tu próximo proyecto con aloba
+        <p className="text-sm md:text-xl font-medium opacity-80 mb-5 md:mb-10 text-[#0B1B32]">
+          Explora, compara y encuentra tu próximo proyecto
         </p>
-        <button className="bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-bold text-lg py-4 px-10 rounded-full transition-all duration-300 transform hover:scale-105 shadow-md">
+        <button className="bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-bold text-sm md:text-lg py-2.5 px-6 md:py-4 md:px-10 rounded-full transition-all duration-300 transform hover:scale-105 shadow-md">
           Empezar ahora!
         </button>
       </section>
 
       <div className="w-full h-[1px] bg-gray-200"></div>
 
-      {/* Footer Principal */}
-      <footer className="w-full max-w-[1440px] mx-auto px-6 py-10 md:py-16">
+      {/* Footer Principal - Compacto en mobile */}
+      <footer className="w-full max-w-[1440px] mx-auto px-4 md:px-6 py-6 md:py-16">
 
-        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-10 md:gap-8">
+        {/* Mobile: Logo centrado + enlaces en grid 2 columnas */}
+        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-6 md:gap-8">
 
-          {/* Logo */}
-          <div className="flex-shrink-0 mb-8 md:mb-0">
+          {/* Logo - Centrado en mobile */}
+          <div className="flex-shrink-0 flex justify-center md:justify-start">
             <Link href="/">
               <Image
                 src="/aloba-logo.png"
                 alt="Aloba - Marketplace Inmobiliario"
-                width={120}
-                height={40}
-                className="h-10 w-auto"
+                width={100}
+                height={33}
+                className="h-8 md:h-10 w-auto"
               />
             </Link>
           </div>
 
-          {/* Enlaces: Qué es aloba */}
-          <div className="flex flex-col space-y-3 w-full max-w-[200px] md:w-auto">
-            <span className="font-bold text-lg mb-1 opacity-90 text-[#0B1B32]">
-              Qué es aloba
-            </span>
-            <Link href="/conocenos" className="text-base text-[#0B1B32] hover:text-[#00F0D0] transition-colors">
-              Explorar proyectos
-            </Link>
-            <Link href="/herramientas" className="text-base text-[#0B1B32] hover:text-[#00F0D0] transition-colors">
-              Herramientas
-            </Link>
-          </div>
+          {/* Enlaces en grid 2 columnas en mobile */}
+          <div className="grid grid-cols-2 gap-4 md:flex md:gap-16">
+            {/* Enlaces: Qué es aloba */}
+            <div className="flex flex-col space-y-2">
+              <span className="font-bold text-sm md:text-lg mb-0.5 md:mb-1 opacity-90 text-[#0B1B32]">
+                Qué es aloba
+              </span>
+              <Link href="/conocenos" className="text-xs md:text-base text-[#0B1B32] hover:text-[#00F0D0] transition-colors">
+                Explorar proyectos
+              </Link>
+              <Link href="/herramientas" className="text-xs md:text-base text-[#0B1B32] hover:text-[#00F0D0] transition-colors">
+                Herramientas
+              </Link>
+            </div>
 
-          {/* Enlaces: Contacto */}
-          <div className="flex flex-col space-y-3 w-full max-w-[250px] md:w-auto">
-            <span className="font-bold text-lg mb-1 opacity-90 text-[#0B1B32]">
-              Escribir un mensaje
-            </span>
-            <a href="#" className="text-base text-[#0B1B32] hover:text-[#00F0D0] transition-colors">
-              Contactar con desarrollador
-            </a>
-            <a href="#" className="text-base text-[#0B1B32] hover:text-[#00F0D0] transition-colors">
-              Quiero publicar con aloba
-            </a>
+            {/* Enlaces: Contacto */}
+            <div className="flex flex-col space-y-2">
+              <span className="font-bold text-sm md:text-lg mb-0.5 md:mb-1 opacity-90 text-[#0B1B32]">
+                Contacto
+              </span>
+              <a href="#" className="text-xs md:text-base text-[#0B1B32] hover:text-[#00F0D0] transition-colors">
+                Desarrolladores
+              </a>
+              <a href="#" className="text-xs md:text-base text-[#0B1B32] hover:text-[#00F0D0] transition-colors">
+                Publicar en aloba
+              </a>
+            </div>
           </div>
 
         </div>
 
-        {/* Copyright y Redes Sociales */}
-        <div className="mt-16 pt-6 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center text-sm font-medium">
+        {/* Copyright y Redes Sociales - Compacto en mobile */}
+        <div className="mt-6 md:mt-16 pt-4 md:pt-6 border-t border-gray-100 flex flex-col-reverse md:flex-row justify-between items-center gap-3 text-xs md:text-sm font-medium">
 
-          <p className="mb-4 md:mb-0 text-gray-500">
+          <p className="text-gray-500 text-center">
             ©{currentYear} Aloba. Todos los derechos reservados.
           </p>
 
-          <div className="flex space-x-5 text-gray-500">
+          <div className="flex space-x-4 md:space-x-5 text-gray-500">
             <a href="#" className="hover:text-[#0B1B32] transition-colors">
-              <IconFacebook className="w-5 h-5" />
+              <IconFacebook className="w-4 h-4 md:w-5 md:h-5" />
             </a>
             <a href="#" className="hover:text-[#0B1B32] transition-colors">
-              <IconInstagram className="w-5 h-5" />
+              <IconInstagram className="w-4 h-4 md:w-5 md:h-5" />
             </a>
             <a href="#" className="hover:text-[#0B1B32] transition-colors">
-              <IconTwitter className="w-5 h-5" />
+              <IconTwitter className="w-4 h-4 md:w-5 md:h-5" />
             </a>
             <a href="#" className="hover:text-[#0B1B32] transition-colors">
-              <IconLinkedIn className="w-5 h-5" />
+              <IconLinkedIn className="w-4 h-4 md:w-5 md:h-5" />
             </a>
           </div>
 
