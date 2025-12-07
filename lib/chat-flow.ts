@@ -1,6 +1,5 @@
-// lib/chat-flow.ts - Flujo de conversación para DocTop
 import type { LucideIcon } from "lucide-react"
-import { Stethoscope, Search, Calendar, Users, MessageCircle, Shield, Star, MapPin } from "lucide-react"
+import { Search, Home, MapPin, DollarSign, MessageCircle, Building2, Key, HelpCircle } from "lucide-react"
 
 export type ChatOption = {
   key: string
@@ -21,30 +20,30 @@ export const chatFlow: Record<string, ChatStep> = {
     assistantMessages: [
       (user: any) =>
         user?.nombre
-          ? `¡Hola ${user.nombre}! 👋 Soy el Asistente Virtual de **DocTop**. ¿En qué puedo ayudarte hoy?`
-          : "¡Hola! 👋 Soy el Asistente Virtual de **DocTop**, la plataforma médica de México. ¿En qué puedo ayudarte?",
+          ? `¡Hola ${user.nombre}! 👋 Soy el Asistente Virtual de **Aloba**. ¿En qué puedo ayudarte hoy?`
+          : "¡Hola! 👋 Soy el Asistente Virtual de **Aloba**, tu marketplace inmobiliario en Guatemala. ¿En qué puedo ayudarte?",
     ],
     options: [
       {
         key: "buscar",
-        label: "Buscar médicos",
-        description: "Encuentra especialistas verificados",
+        label: "Buscar propiedades",
+        description: "Encuentra tu inmueble ideal",
         icon: Search,
-        nextStep: "BUSCAR_MEDICOS",
+        nextStep: "BUSCAR_INMUEBLES",
+      },
+      {
+        key: "zonas",
+        label: "Explorar zonas",
+        description: "Conoce las mejores ubicaciones",
+        icon: MapPin,
+        nextStep: "ZONAS",
       },
       {
         key: "como_funciona",
         label: "¿Cómo funciona?",
         description: "Conoce la plataforma",
-        icon: Stethoscope,
+        icon: HelpCircle,
         nextStep: "COMO_FUNCIONA",
-      },
-      {
-        key: "para_medicos",
-        label: "Soy médico",
-        description: "Beneficios para profesionales",
-        icon: Users,
-        nextStep: "PARA_MEDICOS",
       },
       {
         key: "contacto",
@@ -57,43 +56,184 @@ export const chatFlow: Record<string, ChatStep> = {
     viewMode: "business_qa",
   },
 
-  BUSCAR_MEDICOS: {
+  BUSCAR_INMUEBLES: {
     assistantMessages: [
-      `**Encuentra tu Especialista Ideal** 🔍
+      `**Encuentra tu Propiedad Ideal** 🏠
 
-En DocTop puedes buscar médicos por:
+En Aloba puedes buscar inmuebles por:
 
-• **Especialidad:** Cardiología, Dermatología, Pediatría, Ortopedia, y más
-• **Ubicación:** Filtra por ciudad o colonia
-• **Disponibilidad:** Ve horarios de consulta
-• **Valoraciones:** Médicos con las mejores calificaciones
+• **Tipo:** Apartamentos, casas, terrenos, oficinas, locales, bodegas
+• **Zona:** Las 18 zonas de Guatemala
+• **Precio:** Desde $150K hasta $400K+
+• **Características:** Habitaciones, baños, parqueos
 
 **¿Cómo buscar?**
-1. Ve a la página principal
-2. Usa el buscador por nombre o especialidad
-3. Revisa los perfiles de los médicos
-4. Contacta directamente por WhatsApp
+1. Usa el buscador en la página principal
+2. Aplica los filtros según tus necesidades
+3. Explora las propiedades disponibles
+4. Contáctanos para agendar una visita
 
-Todos nuestros médicos están **verificados profesionalmente** ✅`,
+¡Cuéntame qué estás buscando y te ayudo a encontrarlo!`,
     ],
     options: [
       {
-        key: "como_funciona",
-        label: "¿Cómo agendar cita?",
-        icon: Calendar,
-        nextStep: "COMO_FUNCIONA",
+        key: "zonas",
+        label: "Ver zonas disponibles",
+        icon: MapPin,
+        nextStep: "ZONAS",
       },
       {
-        key: "especialidades",
-        label: "Ver especialidades",
-        icon: Stethoscope,
-        nextStep: "ESPECIALIDADES",
+        key: "tipos",
+        label: "Tipos de inmuebles",
+        icon: Building2,
+        nextStep: "TIPOS",
       },
       {
-        key: "contacto",
-        label: "Necesito ayuda",
+        key: "precios",
+        label: "Rangos de precios",
+        icon: DollarSign,
+        nextStep: "PRECIOS",
+      },
+      {
+        key: "volver",
+        label: "Volver al menú",
         icon: MessageCircle,
-        nextStep: "CONTACTO",
+        nextStep: "MAIN",
+      },
+    ],
+    viewMode: "business_qa",
+  },
+
+  ZONAS: {
+    assistantMessages: [
+      `**Zonas de Guatemala** 📍
+
+Las zonas más buscadas en nuestra plataforma:
+
+**Zona 10 - Zona Viva / Oakland**
+• Área premium, centros comerciales, vida nocturna
+• Ideal para apartamentos de lujo
+
+**Zona 14 - Las Américas / La Villa**
+• Residencial de alta gama
+• Colegios y hospitales cercanos
+
+**Zona 15 - Vista Hermosa**
+• Ambiente familiar y tranquilo
+• Áreas verdes y parques
+
+**Zona 16 - Acatán**
+• Desarrollo en crecimiento
+• Excelente inversión
+
+También tenemos propiedades en zonas 1, 4, 5, 6, 7, 8, 9, 11, 12, 13, 17 y 18.
+
+¿Te interesa alguna zona en particular?`,
+    ],
+    options: [
+      {
+        key: "buscar",
+        label: "Buscar por zona",
+        icon: Search,
+        nextStep: "BUSCAR_INMUEBLES",
+      },
+      {
+        key: "tipos",
+        label: "Ver tipos de inmuebles",
+        icon: Building2,
+        nextStep: "TIPOS",
+      },
+      {
+        key: "volver",
+        label: "Volver al menú",
+        icon: MessageCircle,
+        nextStep: "MAIN",
+      },
+    ],
+    viewMode: "business_qa",
+  },
+
+  TIPOS: {
+    assistantMessages: [
+      `**Tipos de Inmuebles** 🏢
+
+En Aloba encontrarás:
+
+**Apartamentos**
+• Studios, 1, 2, 3+ habitaciones
+• En edificios con amenidades
+
+**Casas**
+• Unifamiliares y en condominio
+• Con jardín y parqueo
+
+**Terrenos**
+• Para construcción residencial o comercial
+
+**Oficinas**
+• Espacios corporativos
+• Coworking y privados
+
+**Locales Comerciales**
+• Para negocios y retail
+
+**Bodegas**
+• Almacenamiento industrial
+
+¿Qué tipo de propiedad te interesa?`,
+    ],
+    options: [
+      {
+        key: "buscar",
+        label: "Buscar inmuebles",
+        icon: Search,
+        nextStep: "BUSCAR_INMUEBLES",
+      },
+      {
+        key: "precios",
+        label: "Ver precios",
+        icon: DollarSign,
+        nextStep: "PRECIOS",
+      },
+      {
+        key: "volver",
+        label: "Volver al menú",
+        icon: MessageCircle,
+        nextStep: "MAIN",
+      },
+    ],
+    viewMode: "business_qa",
+  },
+
+  PRECIOS: {
+    assistantMessages: [
+      `**Rangos de Precios** 💰
+
+Nuestros inmuebles están organizados por rangos:
+
+• **Hasta $150,000** - Apartamentos pequeños, terrenos
+• **$150,000 - $200,000** - Apartamentos 2 habitaciones
+• **$200,000 - $250,000** - Casas y apartamentos amplios
+• **$250,000 - $300,000** - Propiedades premium
+• **$300,000 - $400,000** - Inmuebles de lujo
+• **$400,000+** - Exclusivos y de inversión
+
+Todos los precios están en **dólares americanos (USD)**.
+
+¿Cuál es tu presupuesto?`,
+    ],
+    options: [
+      {
+        key: "buscar",
+        label: "Buscar por precio",
+        icon: Search,
+        nextStep: "BUSCAR_INMUEBLES",
+      },
+      {
+        key: "zonas",
+        label: "Ver zonas",
+        icon: MapPin,
+        nextStep: "ZONAS",
       },
       {
         key: "volver",
@@ -107,35 +247,29 @@ Todos nuestros médicos están **verificados profesionalmente** ✅`,
 
   COMO_FUNCIONA: {
     assistantMessages: [
-      `**¿Cómo funciona DocTop?** 🏥
+      `**¿Cómo funciona Aloba?** 🏠
 
-**Para Pacientes:**
-1. **Busca** médicos por especialidad o nombre
-2. **Revisa** perfiles con foto, experiencia y ubicación
+**Para Compradores/Inquilinos:**
+1. **Busca** propiedades con filtros avanzados
+2. **Explora** fotos, detalles y ubicación
 3. **Contacta** directamente por WhatsApp
-4. **Agenda** tu cita con el médico
+4. **Agenda** una visita al inmueble
 
 **Beneficios:**
-• Médicos **verificados** profesionalmente
-• Información completa de cada especialista
+• Propiedades **verificadas**
+• Información **completa** de cada inmueble
 • Contacto **directo** sin intermediarios
-• Valoraciones de otros pacientes
-• **Gratis** para pacientes
+• Búsqueda **rápida** con filtros inteligentes
+• **Gratis** para usuarios
 
-**¿Listo para encontrar tu médico?** Usa el buscador en la página principal.`,
+**¿Listo para encontrar tu inmueble?** Usa el buscador en la página principal.`,
     ],
     options: [
       {
         key: "buscar",
-        label: "Buscar médicos",
+        label: "Buscar inmuebles",
         icon: Search,
-        nextStep: "BUSCAR_MEDICOS",
-      },
-      {
-        key: "para_medicos",
-        label: "Soy médico",
-        icon: Users,
-        nextStep: "PARA_MEDICOS",
+        nextStep: "BUSCAR_INMUEBLES",
       },
       {
         key: "contacto",
@@ -153,125 +287,32 @@ Todos nuestros médicos están **verificados profesionalmente** ✅`,
     viewMode: "business_qa",
   },
 
-  ESPECIALIDADES: {
+  OPERACIONES: {
     assistantMessages: [
-      `**Especialidades Médicas en DocTop** 👨‍⚕️
+      `**Venta o Alquiler** 🔑
 
-Contamos con profesionales en diversas áreas:
+En Aloba puedes encontrar propiedades para:
 
-**Medicina General**
-• Consultas de rutina y prevención
+**Venta**
+• Compra tu inmueble propio
+• Inversión a largo plazo
+• Construcción en terrenos
 
-**Especialidades más buscadas:**
-• **Cardiología** - Corazón y sistema cardiovascular
-• **Dermatología** - Piel, cabello y uñas
-• **Ortopedia** - Huesos, músculos y articulaciones
-• **Pediatría** - Salud infantil
-• **Ginecología** - Salud de la mujer
-• **Neurología** - Sistema nervioso
-• **Oftalmología** - Salud visual
+**Alquiler**
+• Renta mensual flexible
+• Apartamentos amueblados
+• Oficinas y locales
 
-Y muchas más especialidades con médicos verificados listos para atenderte.`,
+Puedes filtrar tu búsqueda por tipo de operación en nuestra plataforma.
+
+¿Qué operación te interesa?`,
     ],
     options: [
       {
         key: "buscar",
-        label: "Buscar médicos",
+        label: "Buscar inmuebles",
         icon: Search,
-        nextStep: "BUSCAR_MEDICOS",
-      },
-      {
-        key: "como_funciona",
-        label: "¿Cómo agendar?",
-        icon: Calendar,
-        nextStep: "COMO_FUNCIONA",
-      },
-      {
-        key: "volver",
-        label: "Volver al menú",
-        icon: MessageCircle,
-        nextStep: "MAIN",
-      },
-    ],
-    viewMode: "business_qa",
-  },
-
-  PARA_MEDICOS: {
-    assistantMessages: [
-      `**Beneficios para Médicos** 🩺
-
-**¿Por qué unirte a DocTop?**
-
-• **Perfil profesional** - Muestra tu experiencia, especialidad y ubicación
-• **Visibilidad** - Aparece en búsquedas de pacientes en México
-• **Contacto directo** - Los pacientes te contactan por WhatsApp
-• **Gratis para empezar** - Crea tu perfil sin costo
-• **Verificación** - Badge de médico verificado
-• **Sin comisiones** - Tú manejas tus consultas
-
-**¿Cómo empezar?**
-1. Regístrate con Google
-2. Completa tu perfil médico
-3. Sube tu foto profesional
-4. ¡Listo! Pacientes te encontrarán
-
-**[Crear mi perfil gratis](/login)**`,
-    ],
-    options: [
-      {
-        key: "planes",
-        label: "Ver planes",
-        icon: Star,
-        nextStep: "PLANES",
-      },
-      {
-        key: "contacto",
-        label: "Contactar ventas",
-        icon: MessageCircle,
-        nextStep: "CONTACTO",
-      },
-      {
-        key: "volver",
-        label: "Volver al menú",
-        icon: MessageCircle,
-        nextStep: "MAIN",
-      },
-    ],
-    viewMode: "business_qa",
-  },
-
-  PLANES: {
-    assistantMessages: [
-      `**Planes para Médicos** ⭐
-
-**Plan Básico (Gratis)**
-• Perfil profesional básico
-• Contacto por WhatsApp
-• Aparecer en búsquedas
-
-**Plan Premium**
-• Todo lo del plan básico
-• Perfil destacado en búsquedas
-• Badge verificado premium
-• Estadísticas de visitas
-• Soporte prioritario
-
-Para más información sobre precios y beneficios, contáctanos directamente.
-
-**¿Te interesa el plan premium?** Escríbenos por WhatsApp.`,
-    ],
-    options: [
-      {
-        key: "contacto",
-        label: "Contactar ventas",
-        icon: MessageCircle,
-        nextStep: "CONTACTO",
-      },
-      {
-        key: "para_medicos",
-        label: "Más beneficios",
-        icon: Users,
-        nextStep: "PARA_MEDICOS",
+        nextStep: "BUSCAR_INMUEBLES",
       },
       {
         key: "volver",
@@ -285,19 +326,19 @@ Para más información sobre precios y beneficios, contáctanos directamente.
 
   CONTACTO: {
     assistantMessages: [
-      `**Contacta con DocTop** 📬
+      `**Contacta con Aloba** 📬
 
 Estamos aquí para ayudarte:
 
-**WhatsApp:** [+54 9 236 465 5702](https://wa.me/5492364655702)
-**Email:** contacto@doctop.space
+**WhatsApp:** [+502 3000 0000](https://wa.me/50230000000)
+**Email:** contacto@marketplaceinmobiliario.com
 
 **Horario de atención:**
 Lunes a Viernes: 9:00 - 18:00 hrs
 Sábados: 10:00 - 14:00 hrs
 
 **Ubicación:**
-📍 Argentina
+📍 Guatemala, Ciudad de Guatemala
 
 ¿En qué más puedo ayudarte?`,
     ],
@@ -324,7 +365,7 @@ Sábados: 10:00 - 14:00 hrs
 
 Haz clic aquí para abrir WhatsApp:
 
-**[Abrir WhatsApp](https://wa.me/5492364655702)**
+**[Abrir WhatsApp](https://wa.me/50230000000)**
 
 Te responderemos lo antes posible.
 
@@ -333,9 +374,9 @@ Te responderemos lo antes posible.
     options: [
       {
         key: "buscar",
-        label: "Buscar médicos",
+        label: "Buscar inmuebles",
         icon: Search,
-        nextStep: "BUSCAR_MEDICOS",
+        nextStep: "BUSCAR_INMUEBLES",
       },
       {
         key: "volver",
@@ -352,15 +393,15 @@ Te responderemos lo antes posible.
     options: [
       {
         key: "buscar",
-        label: "Buscar médicos",
+        label: "Buscar inmuebles",
         icon: Search,
-        nextStep: "BUSCAR_MEDICOS",
+        nextStep: "BUSCAR_INMUEBLES",
       },
       {
-        key: "como_funciona",
-        label: "¿Cómo funciona?",
-        icon: Stethoscope,
-        nextStep: "COMO_FUNCIONA",
+        key: "zonas",
+        label: "Explorar zonas",
+        icon: MapPin,
+        nextStep: "ZONAS",
       },
       {
         key: "contacto",

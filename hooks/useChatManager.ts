@@ -1,30 +1,33 @@
-// hooks/useChatManager.ts
-
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { chatFlow, type ChatOption } from "@/lib/chat-flow"
 
-export interface DoctorResult {
+export interface InmuebleResult {
   id: number
-  usuario: string
-  full_name: string
-  first_name: string | null
-  last_name: string | null
-  picture: string | null
-  especialidad: string | null
-  direccion_consultorio: string | null
-  anos_experiencia: number | null
-  pacientes_atendidos: number | null
+  titulo: string
+  tipo: string
+  operacion: string
+  precio: number
+  moneda: string
+  ubicacion: string | null
+  zona: string | null
+  departamento: string | null
+  metros_cuadrados: number | null
+  habitaciones: number | null
+  banos: number | null
+  parqueos: number | null
+  imagen_url: string | null
+  destacado: boolean
 }
 
 export type StructuredMessage = {
   id: string
   role: "user" | "assistant" | "system"
-  type: "text" | "options" | "doctors"
+  type: "text" | "options" | "inmuebles"
   text?: string
   options?: ChatOption[]
-  doctors?: DoctorResult[]
+  inmuebles?: InmuebleResult[]
   searchTerms?: string[]
   error?: boolean
   source?: "llm" | "flow" | "system"
@@ -45,7 +48,6 @@ export const useChatManager = () => {
   const isConnecting = false
   const humanSupportConversationId: string | null = null
 
-  // Usuario por defecto - el widget funciona sin auth
   const user = { nombre: "Usuario" }
   const initialized = useRef(false)
 
@@ -86,7 +88,7 @@ export const useChatManager = () => {
   }, [showWelcome])
 
   const SAFE_DEFAULT =
-    "¡Hola! Soy el Asistente Virtual de DocTop. Puedo ayudarte a buscar médicos, conocer cómo funciona la plataforma, o responder tus preguntas. ¿En qué puedo ayudarte?"
+    "¡Hola! Soy el Asistente Virtual de Aloba. Puedo ayudarte a buscar propiedades, conocer las zonas de Guatemala, o responder tus preguntas sobre inmuebles. ¿En qué puedo ayudarte?"
 
   const sanitize = (t: string) =>
     (t || "")
@@ -97,7 +99,7 @@ export const useChatManager = () => {
 
   const handleBusinessInfoQuery = useCallback(
     async (text: string) => {
-      console.log("[DocTop] Enviando mensaje al chatbot:", text)
+      console.log("[Aloba] Enviando mensaje al chatbot:", text)
       appendMessage({ role: "user", type: "text", text, source: "system" })
       setIsTyping(true)
 
@@ -106,11 +108,11 @@ export const useChatManager = () => {
         .map<ApiMessage>((m) => ({ role: m.role as "user" | "assistant", content: m.text || "" }))
       const apiHistory = base.slice(-MAX_TURNS * 2).concat({ role: "user", content: text })
 
-      console.log("[DocTop] Historial de mensajes para API:", apiHistory.length, "mensajes")
+      console.log("[Aloba] Historial de mensajes para API:", apiHistory.length, "mensajes")
 
       try {
         if (USE_STREAM) {
-          console.log("[DocTop] Llamando a /api/chat-business-info con streaming")
+          console.log("[Aloba] Llamando a /api/chat-business-info con streaming")
           const res = await fetch("/api/chat-business-info?stream=1", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -120,16 +122,14 @@ export const useChatManager = () => {
             keepalive: true,
           })
 
-          console.log("[DocTop] Respuesta de API recibida:", res.status, res.ok)
+          console.log("[Aloba] Respuesta de API recibida:", res.status, res.ok)
 
           if (res.ok && res.body) {
-            // Check if it's streaming or JSON response
             const contentType = res.headers.get("content-type") || ""
 
             if (contentType.includes("application/json")) {
-              // Non-streaming response with potential doctors
               const data = await res.json()
-              console.log("[DocTop] JSON response received:", data)
+              console.log("[Aloba] JSON response received:", data)
 
               appendMessage({
                 role: "assistant",
@@ -138,19 +138,17 @@ export const useChatManager = () => {
                 source: "llm",
               })
 
-              // Si hay doctores, agregar mensaje con carrusel
-              if (data?.doctors && data.doctors.length > 0) {
-                console.log("[DocTop] Doctors found:", data.doctors.length)
+              if (data?.inmuebles && data.inmuebles.length > 0) {
+                console.log("[Aloba] Inmuebles found:", data.inmuebles.length)
                 appendMessage({
                   role: "assistant",
-                  type: "doctors",
-                  doctors: data.doctors,
+                  type: "inmuebles",
+                  inmuebles: data.inmuebles,
                   searchTerms: data.searchTerms,
                   source: "llm",
                 })
               }
             } else {
-              // Streaming response
               const tempId = crypto.randomUUID()
               appendMessage({ id: tempId, role: "assistant", type: "text", text: "", source: "llm" })
 
@@ -165,10 +163,10 @@ export const useChatManager = () => {
                 updateMessage(tempId, { text: sanitize(acc) })
               }
 
-              console.log("[DocTop] Respuesta completa recibida:", acc.substring(0, 100) + "...")
+              console.log("[Aloba] Respuesta completa recibida:", acc.substring(0, 100) + "...")
             }
           } else {
-            console.log("[DocTop] Request falló, intentando sin streaming")
+            console.log("[Aloba] Request falló, intentando sin streaming")
             const res2 = await fetch("/api/chat-business-info", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -177,9 +175,9 @@ export const useChatManager = () => {
               credentials: "same-origin",
               keepalive: true,
             })
-            console.log("[DocTop] Respuesta sin streaming:", res2.status, res2.ok)
+            console.log("[Aloba] Respuesta sin streaming:", res2.status, res2.ok)
             const data = res2.ok ? await res2.json().catch(() => null as any) : null
-            console.log("[DocTop] Datos recibidos:", data)
+            console.log("[Aloba] Datos recibidos:", data)
             appendMessage({
               role: "assistant",
               type: "text",
@@ -187,19 +185,18 @@ export const useChatManager = () => {
               source: "llm",
             })
 
-            // Si hay doctores, agregar mensaje con carrusel
-            if (data?.doctors && data.doctors.length > 0) {
+            if (data?.inmuebles && data.inmuebles.length > 0) {
               appendMessage({
                 role: "assistant",
-                type: "doctors",
-                doctors: data.doctors,
+                type: "inmuebles",
+                inmuebles: data.inmuebles,
                 searchTerms: data.searchTerms,
                 source: "llm",
               })
             }
           }
         } else {
-          console.log("[DocTop] Llamando a /api/chat-business-info sin streaming")
+          console.log("[Aloba] Llamando a /api/chat-business-info sin streaming")
           const res = await fetch("/api/chat-business-info", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -208,9 +205,9 @@ export const useChatManager = () => {
             credentials: "same-origin",
             keepalive: true,
           })
-          console.log("[DocTop] Respuesta de API:", res.status, res.ok)
+          console.log("[Aloba] Respuesta de API:", res.status, res.ok)
           const data = res.ok ? await res.json().catch(() => null as any) : null
-          console.log("[DocTop] Datos recibidos:", data)
+          console.log("[Aloba] Datos recibidos:", data)
           appendMessage({
             role: "assistant",
             type: "text",
@@ -218,23 +215,22 @@ export const useChatManager = () => {
             source: "llm",
           })
 
-          // Si hay doctores, agregar mensaje con carrusel
-          if (data?.doctors && data.doctors.length > 0) {
+          if (data?.inmuebles && data.inmuebles.length > 0) {
             appendMessage({
               role: "assistant",
-              type: "doctors",
-              doctors: data.doctors,
+              type: "inmuebles",
+              inmuebles: data.inmuebles,
               searchTerms: data.searchTerms,
               source: "llm",
             })
           }
         }
       } catch (err) {
-        console.error("[DocTop] Error en /api/chat-business-info:", err)
+        console.error("[Aloba] Error en /api/chat-business-info:", err)
         appendMessage({ role: "assistant", type: "text", text: SAFE_DEFAULT, source: "llm" })
       } finally {
         setIsTyping(false)
-        console.log("[DocTop] Proceso de mensaje completado")
+        console.log("[Aloba] Proceso de mensaje completado")
       }
     },
     [appendMessage, messages, updateMessage],
