@@ -41,7 +41,7 @@ function UserBadge({ initials }: UserBadgeProps) {
   )
 }
 
-type ActivePage = "conocenos" | "herramientas" | "proyectos" | null
+type ActivePage = "conocenos" | "herramientas" | "inmuebles" | null
 
 interface HeaderProps {
   userInitials?: string
@@ -84,7 +84,7 @@ export default function Header({ userInitials = "SK", activePage = null }: Heade
           role="menu"
           className="hidden md:flex items-center space-x-10 lg:space-x-14 absolute left-1/2 transform -translate-x-1/2"
         >
-          <NavLink text="Proyectos nuevos" href="/proyectos" isActive={activePage === "proyectos"} />
+          <NavLink text="Inmuebles" href="/inmuebles" isActive={activePage === "inmuebles"} />
           <NavLink text="Conócenos" href="/conocenos" isActive={activePage === "conocenos"} />
           <NavLink text="Herramientas" href="/herramientas" isActive={activePage === "herramientas"} />
         </div>
@@ -120,7 +120,7 @@ export default function Header({ userInitials = "SK", activePage = null }: Heade
           isMobileMenuOpen ? "flex" : "hidden"
         }`}
       >
-        <NavLink text="Proyectos nuevos" href="/proyectos" isActive={activePage === "proyectos"} />
+        <NavLink text="Inmuebles" href="/inmuebles" isActive={activePage === "inmuebles"} />
         <NavLink text="Conócenos" href="/conocenos" isActive={activePage === "conocenos"} />
         <NavLink text="Herramientas" href="/herramientas" isActive={activePage === "herramientas"} />
         <div className="h-px bg-gray-100 w-full my-4" aria-hidden="true" />
