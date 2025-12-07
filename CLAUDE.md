@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Aloba** - Real estate marketplace platform for Guatemala. A Next.js 14 application for finding properties, with interactive quiz-based property matching, infinite carousel of projects, and Google OAuth authentication.
+**Aloba** - Real estate marketplace platform for Guatemala. A Next.js 14 application for finding properties, with dynamic search filters, property detail pages, interactive quiz-based property matching, and Google OAuth authentication.
 
 **URL**: https://marketplaceinmobiliario.com
 
@@ -21,6 +21,9 @@ pnpm build && pm2 restart marcketplaceinmobiliario
 
 # View logs
 pm2 logs marcketplaceinmobiliario
+
+# Database queries (via socket, no password needed)
+sudo mysql -u root -e "SELECT * FROM aloba_db.inmuebles LIMIT 5"
 ```
 
 ## Tech Stack
@@ -30,8 +33,11 @@ pm2 logs marcketplaceinmobiliario
 - **Tailwind CSS 4** with OKLCH color model
 - **Radix UI + Shadcn/ui** (New York style)
 - **Embla Carousel** for infinite scroll carousels
+- **TanStack Table + MUI** for admin tables (CustomTable component)
+- **Sharp** for image processing (WebP conversion, thumbnails)
 - **MariaDB/MySQL** with **mysql2/promise** connection pool
 - **Google OAuth2** for authentication
+- **react-hot-toast** for notifications
 
 ## Architecture
 
@@ -39,13 +45,17 @@ pm2 logs marcketplaceinmobiliario
 
 ```
 API Routes → lib/auth.ts (session) → lib/db.ts (pool) → MariaDB
+                                  → lib/services/inmuebles-service.ts (cached queries)
 ```
 
 ### Key Files
 
 - `lib/db.ts` - Database connection pool with `query()` and `transaction()` helpers
 - `lib/auth.ts` - Server-side auth: `getSession()`, `verifyAuth()`, `createSession()`
-- `lib/auth-client.ts` - Client-side auth utilities
+- `lib/services/inmuebles-service.ts` - Cached property queries with React `cache()`
+- `components/CustomTable/` - Reusable admin table with inline editing, image upload, filters
+- `components/HeroSearchBanner.tsx` - Dynamic search component with filters from DB
+- `components/InmueblesGrid.tsx` - Property listing with filtering, pagination, share/like buttons
 
 ### Database Access Pattern
 
@@ -55,132 +65,148 @@ import { query, transaction } from "@/lib/db"
 // Simple query
 const users = await query<User>("SELECT * FROM users WHERE role = ?", ["admin"])
 
-// Transaction
-const result = await transaction(async (conn) => {
-  await conn.query("INSERT INTO properties ...", [...])
-  await conn.query("INSERT INTO property_features ...", [...])
-  return { success: true }
-})
+// Using inmuebles service (cached)
+import { getInmuebles, getInmuebleById } from "@/lib/services/inmuebles-service"
+const properties = await getInmuebles()
+const property = await getInmuebleById(123)
 ```
 
-### Authentication Flow
+## Search System
 
-1. User clicks login → `/login` → selects role
-2. Redirects to Google OAuth → `/api/auth/google`
-3. User created/updated with JWD token (64 bytes hex, NOT JWT)
-4. Cookie `doutopAuth` set (httpOnly, 30 days)
+### APIs
 
-### Roles
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /api/search-filters` | Returns dynamic filters (zonas, tipos, habitaciones, rangos de precio) from DB |
+| `GET /api/inmuebles/search` | Search with combined filters: `?zona=10&habitaciones=3&precio_min=150000&precio_max=300000` |
 
-| Role | Access |
-|------|--------|
-| admin | `/admin/users` - Full user management |
+### HeroSearchBanner Component
 
-## Design System
+Located in `components/HeroSearchBanner.tsx`. Features:
+- Loads filters dynamically from `/api/search-filters`
+- Grid display with 2 rows x 4 columns (8 items per page)
+- Carousel pagination with arrows and dots
+- Clicking a result navigates to `/inmuebles/{id}`
 
-**Colors**: Real Estate Turquoise/Navy theme
-- Primary: Turquoise `#00F0D0`
-- Accent: Navy `#0B1B32`
-- Secondary: Light Blue `#4AB7E6`
+### InmueblesGrid Component
 
-**Patterns**:
-- Semantic: `bg-background`, `text-foreground`, `bg-card`, `border-border`
-- Custom colors: `text-[#0B1B32]`, `bg-[#00F0D0]`
-- Gradients: `.bg-real-estate-gradient`, `.bg-turquoise-gradient`
+Located in `components/InmueblesGrid.tsx`. Accepts `initialFilters` prop from URL query params:
+```typescript
+<InmueblesGrid
+  inmuebles={data}
+  initialFilters={{
+    zona: "10",
+    habitaciones: "3",
+    precioMin: "150000",
+    precioMax: "300000"
+  }}
+/>
+```
+
+## Image System
+
+### Dynamic Image Serving (Without Rebuild)
+
+All images are served through `/api/imagen` proxy to work without rebuild:
+
+```typescript
+// Helper function used across components
+function getImageSrc(url: string | null): string | null {
+  if (!url) return null
+  if (url.startsWith('/inmuebles/') || url.startsWith('/uploads/')) {
+    return `/api/imagen${url}`
+  }
+  return url
+}
+```
+
+### Storage Structure
+
+```
+public/
+├── inmuebles/           # Property images (gitignored, runtime uploads)
+│   ├── inmueble-{id}-{timestamp}.webp
+│   └── thumb-inmueble-{id}-{timestamp}.webp
+└── images/              # Static images (committed to git)
+```
 
 ## Main Pages
 
 ### `/conocenos` (Landing)
-Full landing page with modular section components:
-
 ```
 app/conocenos/page.tsx
-├── Header (with activePage prop for navigation highlighting)
-├── Hero section (inline - search filters with dropdown menus)
-├── ProjectsCarouselSection - Infinite auto-scroll carousel (Embla)
-├── StatsBannerSection - Stats banner + developer logos
-├── WhyAlobaSection - 3 feature cards with mobile expansion
-├── DiscoverSection - Bento grid with expandable cards
-├── TestimonialsSection - Auto-scroll testimonial carousel
-└── Footer - CTA + links + social
+├── Header
+├── Hero section with HeroSearchBanner (dynamic filters + results preview)
+├── ProjectsCarouselSection
+├── StatsBannerSection
+├── WhyAlobaSection
+├── DiscoverSection
+├── TestimonialsSection
+└── Footer
 ```
+
+### `/inmuebles` (Property Listing)
+- Server Component that passes query params to InmueblesGrid
+- Supports URL filters: `?zona=10&habitaciones=3&precio_min=150000`
+
+### `/inmuebles/[id]` (Property Detail)
+- Dynamic page with full property information
+- SEO optimized with OpenGraph/Twitter Cards using property image
+- Share button copies link to clipboard
+- Contact buttons (WhatsApp, email, schedule visit)
 
 ### `/herramientas` (Tools)
-- `HeroSection` - Tool selection with two buttons
-- `ZoneQuizSection` - 6-question quiz for zone matching (intro → questions → results)
-- `PrequalQuizSection` - 8-question quiz for credit pre-qualification (intro → questions → results)
+- `ZoneQuizSection` - 6-question quiz for zone matching
+- `PrequalQuizSection` - 8-question quiz for credit pre-qualification
 
-### Quiz Flow Architecture
+### `/admin/inmuebles` (Admin Panel)
+- CustomTable-based CRUD with inline editing
+- Image upload with preview modal
+
+## Design System
+
+**Colors**:
+- Primary: Turquoise `#00F0D0`
+- Accent: Navy `#0B1B32`
+
+**Patterns**:
+```typescript
+// Buttons
+className="bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32]"
+
+// Cards
+className="bg-white rounded-3xl shadow-lg border border-gray-100"
+
+// Dark background
+className="bg-[#0B1B32] text-white"
 ```
-app/herramientas/page.tsx (state: FlowType = "none" | "zone" | "prequal")
-├── HeroSection (flow === "none") → onSelectFlow callback
-├── ZoneQuizSection (flow === "zone") → onBack callback
-└── PrequalQuizSection (flow === "prequal") → onBack callback
-```
 
-Each quiz component manages its own step state (0 = intro, 1-N = questions, N+1 = results).
-
-## Component Patterns
-
-### Carousels (Embla)
-Both `ProjectsCarouselSection` and `TestimonialsSection` use Embla Carousel with auto-scroll:
+## API Response Format
 
 ```typescript
-import useEmblaCarousel from "embla-carousel-react"
-import AutoScroll from "embla-carousel-auto-scroll"
+// Success
+{ success: true, data: {...} }
+{ success: true, inmuebles: [...], total: 20 }
+{ success: true, filters: { zonas: [...], tipos: [...] } }
 
-const [emblaRef] = useEmblaCarousel({ loop: true }, [AutoScroll({ speed: 1 })])
-```
-
-### Mobile Expandable Cards
-Components like `DiscoverSection` and `WhyAlobaSection` use a pattern for mobile-only card expansion:
-
-```typescript
-const [expandedCard, setExpandedCard] = useState<string | null>(null)
-
-const handleCardClick = (cardId: string, e: React.MouseEvent) => {
-  e.stopPropagation() // Prevent bubbling
-  if (window.innerWidth < 768) {
-    setExpandedCard(expandedCard === cardId ? null : cardId)
-  }
-}
-
-// Close on outside click
-const handleOutsideClick = () => {
-  if (expandedCard) setExpandedCard(null)
-}
-```
-
-Cards use `col-span-2` when expanded in a 2-column grid for full-width display.
-
-### Local Utility: cn()
-Many components define a local `cn` helper instead of importing from utils:
-
-```typescript
-const cn = (...classes: (string | undefined | null | false)[]) =>
-  classes.filter(Boolean).join(" ")
+// Error
+{ success: false, error: "Error message" }
 ```
 
 ## Environment Variables
 
 ```env
-# Database
 DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
-
-# Auth
 AUTH_JWD_BYTES=64
 COOKIE_DOMAIN=marketplaceinmobiliario.com
-JWT_SECRET=***
 GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
-
-# App
 NEXT_PUBLIC_BASE_URL=https://marketplaceinmobiliario.com
-NEXT_PUBLIC_GA_ID=G-***
 ```
 
 ## Development Notes
 
 - **Port**: 1212
 - **Cookie**: `doutopAuth` (httpOnly)
-- **Google OAuth callback**: `/api/auth/google`
-- **Navigation**: Uses `next/link` for client-side routing
+- **Toast notifications**: Use `react-hot-toast` (never `alert()`)
+- **Cache invalidation**: Use `revalidatePath()` after mutations
+- **SEO**: Property pages have dynamic metadata with OpenGraph images
