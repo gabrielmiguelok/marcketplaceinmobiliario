@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getConnection } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 
+export const dynamic = "force-dynamic"
+
 export async function POST(request: NextRequest) {
   try {
     // Verificar autenticación
@@ -32,11 +34,6 @@ export async function POST(request: NextRequest) {
       'locale',
       'role',
       'estado',
-      'telefono',
-      'especialidad',
-      'cedula_profesional',
-      'direccion_consultorio',
-      'fecha_nacimiento',
     ]
 
     if (!allowedFields.includes(field)) {
@@ -76,7 +73,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error: any) {
-    console.error('[API admin/clientes/update-field] Error:', error)
+    console.error('[API admin/users/update-field] Error:', error)
     return NextResponse.json(
       { success: false, error: error.message || 'Error al actualizar campo' },
       { status: 500 }

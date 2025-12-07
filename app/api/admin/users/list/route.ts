@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getConnection } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,11 +31,6 @@ export async function GET(request: NextRequest) {
         locale,
         role,
         estado,
-        telefono,
-        especialidad,
-        cedula_profesional,
-        direccion_consultorio,
-        fecha_nacimiento,
         created_at,
         updated_at,
         last_login
@@ -48,9 +43,9 @@ export async function GET(request: NextRequest) {
       users: rows,
     })
   } catch (error: any) {
-    console.error('[API admin/clientes/list] Error:', error)
+    console.error('[API admin/users/list] Error:', error)
     return NextResponse.json(
-      { success: false, error: error.message || 'Error al cargar clientes' },
+      { success: false, error: error.message || 'Error al cargar usuarios' },
       { status: 500 }
     )
   }

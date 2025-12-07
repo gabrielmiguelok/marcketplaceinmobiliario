@@ -12,50 +12,43 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const result = await verifyAuthentication({
-        redirectUrl: "/login",
-        forceCheck: true,
-      })
+      try {
+        const result = await verifyAuthentication({
+          redirectUrl: "/login",
+          forceCheck: true,
+        })
 
-      if (result?.authenticated && result?.user) {
-        if (result.user.role !== 'admin') {
-          if (result.user.role === 'doctor') {
-            router.push(result.user.usuario ? `/${result.user.usuario}/administracion` : "/pendiente")
-          } else if (result.user.role === 'paciente') {
-            router.push("/admin/paciente")
-          } else {
-            router.push("/pendiente")
+        if (result?.authenticated && result?.user) {
+          if (result.user.role !== 'admin') {
+            console.log("[admin/users] User is not admin, redirecting")
+            router.push("/")
+            return
           }
-          return
-        }
 
-        if (result.user.estado !== 'confirmado') {
-          router.push("/pendiente")
-          return
+          setUser(result.user)
+          setIsLoading(false)
+        } else {
+          router.push("/login")
         }
-
-        setUser(result.user)
+      } catch (error) {
+        console.error("[admin/users] Auth check failed:", error)
+        router.push("/login")
       }
-      setIsLoading(false)
     }
 
     checkAuth()
   }, [router])
 
-  if (isLoading) {
+  if (isLoading || !user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-500">Cargando panel de administración...</p>
+          <p className="text-muted-foreground">Verificando acceso de administrador...</p>
         </div>
       </div>
     )
   }
 
-  if (!user) {
-    return null
-  }
-
-  return <AdminUsersClient currentUser={user} />
+  return <AdminUsersClient user={user} />
 }
