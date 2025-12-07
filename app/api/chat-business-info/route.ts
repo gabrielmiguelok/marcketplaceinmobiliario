@@ -1,4 +1,3 @@
-// app/api/chat-business-info/route.ts
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
@@ -7,29 +6,23 @@ import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { query } from "@/lib/db"
 
-/**
- * ============================================================
- * Tipos para búsqueda de doctores
- * ============================================================
- */
-interface DoctorResult {
+interface InmuebleResult {
   id: number
-  usuario: string
-  full_name: string
-  first_name: string | null
-  last_name: string | null
-  picture: string | null
-  especialidad: string | null
-  direccion_consultorio: string | null
-  anos_experiencia: number | null
-  pacientes_atendidos: number | null
+  titulo: string
+  tipo: string
+  operacion: string
+  precio: number
+  moneda: string
+  ubicacion: string | null
+  zona: string | null
+  departamento: string | null
+  metros_cuadrados: number | null
+  habitaciones: number | null
+  banos: number | null
+  parqueos: number | null
+  imagen_url: string | null
+  destacado: boolean
 }
-
-/**
- * ============================================================
- * Infra y Config (superficie pública estable para clientes externos)
- * ============================================================
- */
 
 const apiKey = (process.env.OPENAI_API_KEY || "").replace(/^['"]|['"]$/g, "")
 const openai = new OpenAI({
@@ -83,201 +76,118 @@ function rateLimit(req: NextRequest): boolean {
   return true
 }
 
-/**
- * ============================================================
- * Programa Canónico (DOCTOP) — curado y normalizado
- * ============================================================
- */
-const DOCTOP = {
-  nombre: "DocTop",
-  descripcion: "Plataforma médica líder en México que conecta pacientes con profesionales de la salud verificados",
-  lema: "Encuentra tu especialista y agenda tu consulta de forma segura.",
-  url: "https://doctop.space",
+const ALOBA = {
+  nombre: "Aloba",
+  descripcion: "Marketplace inmobiliario líder en Guatemala que conecta compradores e inquilinos con las mejores propiedades",
+  lema: "Invierte con claridad. Decide con confianza.",
+  url: "https://marketplaceinmobiliario.com",
 
   servicios: {
-    principal: "Búsqueda y conexión con médicos verificados",
-    para_pacientes: [
-      "Búsqueda de médicos por especialidad",
-      "Filtro por ubicación y disponibilidad",
-      "Perfiles completos con foto, experiencia y valoraciones",
+    principal: "Búsqueda y conexión con propiedades verificadas",
+    para_usuarios: [
+      "Búsqueda de inmuebles por zona, tipo y precio",
+      "Filtros avanzados (habitaciones, baños, metros cuadrados)",
+      "Fotos y detalles completos de cada propiedad",
       "Contacto directo por WhatsApp",
-      "Verificación profesional de todos los médicos",
-      "Servicio gratuito para pacientes",
-    ],
-    para_medicos: [
-      "Perfil profesional en la plataforma",
-      "Visibilidad en búsquedas de pacientes",
-      "Contacto directo sin intermediarios",
-      "Badge de médico verificado",
-      "Sin comisiones por consulta",
-      "Plan gratuito disponible",
+      "Información de ubicación con mapa",
+      "Servicio gratuito para usuarios",
     ],
   },
 
   como_funciona: {
-    descripcion: "Proceso simple para encontrar tu médico ideal",
-    pasos_paciente: [
-      {
-        numero: 1,
-        nombre: "Busca",
-        descripcion: "Encuentra médicos por especialidad, nombre o ubicación",
-      },
-      {
-        numero: 2,
-        nombre: "Revisa",
-        descripcion: "Consulta perfiles con foto, experiencia y valoraciones",
-      },
-      {
-        numero: 3,
-        nombre: "Contacta",
-        descripcion: "Comunícate directamente por WhatsApp",
-      },
-      {
-        numero: 4,
-        nombre: "Agenda",
-        descripcion: "Coordina tu cita con el médico",
-      },
-    ],
-    pasos_medico: [
-      {
-        numero: 1,
-        nombre: "Regístrate",
-        descripcion: "Crea tu cuenta con Google",
-      },
-      {
-        numero: 2,
-        nombre: "Completa tu perfil",
-        descripcion: "Agrega tu especialidad, experiencia y foto",
-      },
-      {
-        numero: 3,
-        nombre: "Verifica",
-        descripcion: "Obtén tu badge de médico verificado",
-      },
-      {
-        numero: 4,
-        nombre: "Recibe pacientes",
-        descripcion: "Los pacientes te encontrarán y contactarán",
-      },
+    descripcion: "Proceso simple para encontrar tu propiedad ideal",
+    pasos: [
+      { numero: 1, nombre: "Busca", descripcion: "Encuentra inmuebles por zona, tipo o precio" },
+      { numero: 2, nombre: "Explora", descripcion: "Revisa fotos, detalles y ubicación" },
+      { numero: 3, nombre: "Contacta", descripcion: "Comunícate directamente por WhatsApp" },
+      { numero: 4, nombre: "Visita", descripcion: "Agenda una visita a la propiedad" },
     ],
   },
 
-  especialidades: {
-    descripcion: "Diversas especialidades médicas disponibles",
+  tipos_inmuebles: {
+    descripcion: "Diversos tipos de propiedades disponibles",
     lista: [
-      "Medicina General",
-      "Cardiología",
-      "Dermatología",
-      "Ortopedia",
-      "Pediatría",
-      "Ginecología",
-      "Neurología",
-      "Oftalmología",
-      "Otorrinolaringología",
-      "Urología",
-      "Gastroenterología",
-      "Psiquiatría",
-      "Y muchas más...",
+      { tipo: "apartamento", descripcion: "Studios, 1, 2, 3+ habitaciones en edificios con amenidades" },
+      { tipo: "casa", descripcion: "Casas unifamiliares y en condominio con jardín y parqueo" },
+      { tipo: "terreno", descripcion: "Terrenos para construcción residencial o comercial" },
+      { tipo: "oficina", descripcion: "Espacios corporativos y coworking" },
+      { tipo: "local", descripcion: "Locales comerciales para negocios y retail" },
+      { tipo: "bodega", descripcion: "Espacios de almacenamiento industrial" },
     ],
   },
 
-  planes: {
-    descripcion: "Planes flexibles para médicos",
-    basico: {
-      nombre: "Plan Básico",
-      precio: "Gratis",
-      caracteristicas: [
-        "Perfil profesional básico",
-        "Contacto por WhatsApp",
-        "Aparecer en búsquedas",
-      ],
-    },
-    premium: {
-      nombre: "Plan Premium",
-      precio: "Consultar",
-      caracteristicas: [
-        "Todo lo del plan básico",
-        "Perfil destacado en búsquedas",
-        "Badge verificado premium",
-        "Estadísticas de visitas",
-        "Soporte prioritario",
-      ],
-    },
+  zonas: {
+    descripcion: "Las 18 zonas de Guatemala disponibles",
+    destacadas: [
+      { zona: "10", nombre: "Zona Viva / Oakland", caracteristicas: "Área premium, centros comerciales, vida nocturna" },
+      { zona: "14", nombre: "Las Américas / La Villa", caracteristicas: "Residencial de alta gama, colegios y hospitales" },
+      { zona: "15", nombre: "Vista Hermosa", caracteristicas: "Ambiente familiar, áreas verdes y parques" },
+      { zona: "16", nombre: "Acatán", caracteristicas: "Desarrollo en crecimiento, excelente inversión" },
+    ],
+    otras: ["1", "4", "5", "6", "7", "8", "9", "11", "12", "13", "17", "18"],
   },
 
-  estadisticas: {
-    medicos: "15,000+",
-    pacientes: "500,000+",
-    valoracion: "4.9",
-    descripcion: "La plataforma médica de mayor confianza en México",
+  rangos_precios: {
+    descripcion: "Rangos de precios en dólares americanos (USD)",
+    rangos: [
+      { rango: "0-150000", etiqueta: "Hasta $150K", descripcion: "Apartamentos pequeños, terrenos" },
+      { rango: "150000-200000", etiqueta: "$150K - $200K", descripcion: "Apartamentos 2 habitaciones" },
+      { rango: "200000-250000", etiqueta: "$200K - $250K", descripcion: "Casas y apartamentos amplios" },
+      { rango: "250000-300000", etiqueta: "$250K - $300K", descripcion: "Propiedades premium" },
+      { rango: "300000-400000", etiqueta: "$300K - $400K", descripcion: "Inmuebles de lujo" },
+      { rango: "400000+", etiqueta: "$400K+", descripcion: "Exclusivos y de inversión" },
+    ],
+  },
+
+  operaciones: {
+    venta: "Compra de inmuebles propios, inversión a largo plazo",
+    alquiler: "Renta mensual flexible, apartamentos amueblados, oficinas",
   },
 
   nosotros: {
-    filosofia: "Conectamos profesionales de la salud verificados con pacientes en toda México",
+    filosofia: "Conectamos personas con las mejores propiedades en Guatemala de forma transparente y eficiente",
     valores: [
-      { valor: "Confianza", descripcion: "Todos los médicos son verificados profesionalmente" },
-      { valor: "Accesibilidad", descripcion: "Servicio gratuito para pacientes" },
-      { valor: "Transparencia", descripcion: "Perfiles completos con toda la información" },
-      { valor: "Seguridad", descripcion: "Datos protegidos y comunicación segura" },
-    ],
-    caracteristicas: [
-      "Verificación profesional de médicos",
-      "Plataforma moderna y fácil de usar",
-      "Soporte en español 24/7",
-      "Presente en todo México",
+      { valor: "Transparencia", descripcion: "Información completa y verificada de cada inmueble" },
+      { valor: "Accesibilidad", descripcion: "Búsqueda gratuita y sin intermediarios" },
+      { valor: "Confianza", descripcion: "Propiedades verificadas y datos actualizados" },
+      { valor: "Eficiencia", descripcion: "Filtros inteligentes para encontrar rápido" },
     ],
   },
 
   faq: {
     preguntas: [
       {
-        pregunta: "¿Cómo busco un médico?",
-        respuesta:
-          "Usa el buscador en la página principal. Puedes buscar por especialidad, nombre del médico o ubicación. Todos los resultados muestran médicos verificados con perfiles completos.",
+        pregunta: "¿Cómo busco un inmueble?",
+        respuesta: "Usa el buscador en la página principal. Puedes filtrar por zona, tipo de inmueble, rango de precio, número de habitaciones y más.",
       },
       {
-        pregunta: "¿Es gratis para pacientes?",
-        respuesta:
-          "Sí, DocTop es completamente gratis para pacientes. Puedes buscar médicos, ver perfiles y contactarlos sin ningún costo.",
+        pregunta: "¿Es gratis usar Aloba?",
+        respuesta: "Sí, Aloba es completamente gratis para usuarios. Puedes buscar propiedades, ver detalles y contactar sin ningún costo.",
       },
       {
-        pregunta: "¿Cómo contacto a un médico?",
-        respuesta:
-          "Cada perfil de médico tiene un botón de WhatsApp para contacto directo. También puedes ver su dirección de consultorio y otros datos de contacto.",
+        pregunta: "¿Cómo contacto al vendedor?",
+        respuesta: "Cada propiedad tiene un botón de WhatsApp para contacto directo. También puedes agendar una visita desde la página del inmueble.",
       },
       {
-        pregunta: "¿Los médicos están verificados?",
-        respuesta:
-          "Sí, todos los médicos en DocTop pasan por un proceso de verificación profesional. Verificamos su cédula profesional y datos de contacto.",
+        pregunta: "¿Las propiedades están verificadas?",
+        respuesta: "Sí, verificamos la información de cada inmueble. Las fotos, precios y características son actualizados regularmente.",
       },
       {
-        pregunta: "Soy médico, ¿cómo me registro?",
-        respuesta:
-          "Haz clic en 'Registrarse' e inicia sesión con Google. Luego completa tu perfil con tu especialidad, experiencia y foto profesional. El registro básico es gratuito.",
-      },
-      {
-        pregunta: "¿Cuánto cuesta para médicos?",
-        respuesta:
-          "Ofrecemos un plan básico gratuito y un plan premium con beneficios adicionales. Contacta con nosotros para conocer los precios del plan premium.",
+        pregunta: "¿Puedo buscar solo alquiler o solo venta?",
+        respuesta: "Sí, puedes filtrar por tipo de operación: venta o alquiler. Usa los filtros avanzados en el buscador.",
       },
     ],
   },
 
   contacto: {
-    email: "contacto@doctop.space",
-    whatsapp: "https://wa.me/5492364655702",
-    whatsapp_numero: "+54 9 236 465 5702",
-    ubicacion: "Argentina",
+    email: "contacto@marketplaceinmobiliario.com",
+    whatsapp: "https://wa.me/50230000000",
+    whatsapp_numero: "+502 3000 0000",
+    ubicacion: "Guatemala, Ciudad de Guatemala",
     horario: "Lunes a Viernes: 9:00 - 18:00 hrs, Sábados: 10:00 - 14:00 hrs",
-    respuesta: "Respuesta en menos de 24 horas",
   },
 }
 
-/**
- * ============================================================
- * Herramientas de interpretación y selección canónica
- * ============================================================
- */
 function norm(t: string) {
   return t
     .toLowerCase()
@@ -288,462 +198,274 @@ function norm(t: string) {
     .trim()
 }
 
-/**
- * ============================================================
- * Detección de intención de búsqueda de médicos (MEJORADA)
- * ============================================================
- */
-
-// Mapeo completo de síntomas/condiciones/términos a especialidades
-const SYMPTOM_TO_SPECIALTY: Record<string, string> = {
-  // DERMATOLOGÍA - términos muy amplios
-  "piel": "dermatología",
-  "acne": "dermatología",
-  "acné": "dermatología",
-  "granos": "dermatología",
-  "espinillas": "dermatología",
-  "manchas": "dermatología",
-  "arrugas": "dermatología",
-  "dermato": "dermatología",
-  "derma": "dermatología",
-  "cutane": "dermatología",
-  "erupcion": "dermatología",
-  "sarpullido": "dermatología",
-  "picazon": "dermatología",
-  "comezon": "dermatología",
-  "eczema": "dermatología",
-  "psoriasis": "dermatología",
-  "verruga": "dermatología",
-  "lunar": "dermatología",
-  "caida del cabello": "dermatología",
-  "alopecia": "dermatología",
-  "calvicie": "dermatología",
-  "cabello": "dermatología",
-  "caspa": "dermatología",
-  "rojez": "dermatología",
-  "irritacion piel": "dermatología",
-  "cuero cabelludo": "dermatología",
-  "belleza facial": "dermatología",
-  "estetico": "dermatología",
-  "estetic": "dermatología",
-
-  // CARDIOLOGÍA
-  "corazon": "cardiología",
-  "cardio": "cardiología",
-  "pecho": "cardiología",
-  "dolor de pecho": "cardiología",
-  "presion arterial": "cardiología",
-  "hipertension": "cardiología",
-  "arritmia": "cardiología",
-  "taquicardia": "cardiología",
-  "infarto": "cardiología",
-  "colesterol": "cardiología",
-  "palpitaciones": "cardiología",
-
-  // TRAUMATOLOGÍA / ORTOPEDIA
-  "huesos": "traumatología",
-  "hueso": "traumatología",
-  "articulaciones": "traumatología",
-  "articulacion": "traumatología",
-  "rodilla": "traumatología",
-  "rodillas": "traumatología",
-  "fractura": "traumatología",
-  "esguince": "traumatología",
-  "espalda": "traumatología",
-  "columna": "traumatología",
-  "lumbar": "traumatología",
-  "ciatica": "traumatología",
-  "lumbalgia": "traumatología",
-  "tobillo": "traumatología",
-  "cadera": "traumatología",
-  "hombro": "traumatología",
-  "tendinitis": "traumatología",
-  "artritis": "traumatología",
-  "artrosis": "traumatología",
-  "menisco": "traumatología",
-  "ligamento": "traumatología",
-
-  // NEUROLOGÍA
-  "cabeza": "neurología",
-  "dolor de cabeza": "neurología",
-  "migraña": "neurología",
-  "migrana": "neurología",
-  "jaqueca": "neurología",
-  "vertigo": "neurología",
-  "mareo": "neurología",
-  "convulsion": "neurología",
-  "epilepsia": "neurología",
-  "temblor": "neurología",
-  "parkinson": "neurología",
-  "alzheimer": "neurología",
-  "memoria": "neurología",
-  "olvidos": "neurología",
-  "hormigueo": "neurología",
-  "adormecimiento": "neurología",
-  "nervios": "neurología",
-
-  // GASTROENTEROLOGÍA
-  "estomago": "gastroenterología",
-  "digestion": "gastroenterología",
-  "digestivo": "gastroenterología",
-  "gastritis": "gastroenterología",
-  "colitis": "gastroenterología",
-  "reflujo": "gastroenterología",
-  "acidez": "gastroenterología",
-  "nauseas": "gastroenterología",
-  "vomito": "gastroenterología",
-  "diarrea": "gastroenterología",
-  "estreñimiento": "gastroenterología",
-  "estrenimiento": "gastroenterología",
-  "intestino": "gastroenterología",
-  "colon": "gastroenterología",
-  "higado": "gastroenterología",
-  "pancreas": "gastroenterología",
-  "hepatitis": "gastroenterología",
-  "hemorroides": "gastroenterología",
-
-  // GINECOLOGÍA
-  "gineco": "ginecología",
-  "mujer": "ginecología",
-  "femenino": "ginecología",
-  "femenina": "ginecología",
-  "menstruacion": "ginecología",
-  "periodo": "ginecología",
-  "menopausia": "ginecología",
-  "embarazo": "ginecología",
-  "embarazada": "ginecología",
-  "prenatal": "ginecología",
-  "matriz": "ginecología",
-  "utero": "ginecología",
-  "ovarios": "ginecología",
-  "papanicolau": "ginecología",
-  "anticonceptivo": "ginecología",
-  "fertilidad": "ginecología",
-
-  // PEDIATRÍA
-  "niño": "pediatría",
-  "niña": "pediatría",
-  "nino": "pediatría",
-  "nina": "pediatría",
-  "bebe": "pediatría",
-  "bebé": "pediatría",
-  "hijo": "pediatría",
-  "hija": "pediatría",
-  "infancia": "pediatría",
-  "infantil": "pediatría",
-  "recien nacido": "pediatría",
-  "vacunas": "pediatría",
-
-  // UROLOGÍA
-  "orina": "urología",
-  "orinar": "urología",
-  "rinon": "urología",
-  "riñon": "urología",
-  "riñones": "urología",
-  "prostata": "urología",
-  "vejiga": "urología",
-  "infeccion urinaria": "urología",
-  "calculos": "urología",
-  "piedras en el riñon": "urología",
-  "incontinencia": "urología",
-
-  // OFTALMOLOGÍA
-  "ojos": "oftalmología",
-  "ojo": "oftalmología",
-  "vista": "oftalmología",
-  "vision": "oftalmología",
-  "ver": "oftalmología",
-  "lentes": "oftalmología",
-  "catarata": "oftalmología",
-  "glaucoma": "oftalmología",
-  "miopia": "oftalmología",
-  "astigmatismo": "oftalmología",
-  "conjuntivitis": "oftalmología",
-
-  // OTORRINOLARINGOLOGÍA
-  "oido": "otorrinolaringología",
-  "oidos": "otorrinolaringología",
-  "nariz": "otorrinolaringología",
-  "garganta": "otorrinolaringología",
-  "sinusitis": "otorrinolaringología",
-  "amigdalas": "otorrinolaringología",
-  "sordera": "otorrinolaringología",
-  "zumbido": "otorrinolaringología",
-  "ronquido": "otorrinolaringología",
-  "rinitis": "otorrinolaringología",
-  "alergia nasal": "otorrinolaringología",
-
-  // ENDOCRINOLOGÍA
-  "diabetes": "endocrinología",
-  "diabetico": "endocrinología",
-  "tiroides": "endocrinología",
-  "hormona": "endocrinología",
-  "hormonas": "endocrinología",
-  "metabolismo": "endocrinología",
-  "obesidad": "endocrinología",
-  "sobrepeso": "endocrinología",
-  "insulina": "endocrinología",
-
-  // PSIQUIATRÍA / PSICOLOGÍA
-  "ansiedad": "psiquiatría",
-  "depresion": "psiquiatría",
-  "deprimido": "psiquiatría",
-  "estres": "psiquiatría",
-  "insomnio": "psiquiatría",
-  "dormir": "psiquiatría",
-  "sueño": "psiquiatría",
-  "panico": "psiquiatría",
-  "fobia": "psiquiatría",
-  "mental": "psiquiatría",
-  "emocional": "psiquiatría",
-  "trastorno": "psiquiatría",
-  "bipolar": "psiquiatría",
-  "esquizofrenia": "psiquiatría",
-  "adiccion": "psiquiatría",
-
-  // NEUMOLOGÍA
-  "pulmon": "neumología",
-  "pulmones": "neumología",
-  "respirar": "neumología",
-  "respiracion": "neumología",
-  "asma": "neumología",
-  "tos": "neumología",
-  "bronquitis": "neumología",
-  "neumonia": "neumología",
-  "falta de aire": "neumología",
-
-  // ONCOLOGÍA
-  "cancer": "oncología",
-  "tumor": "oncología",
-  "quimioterapia": "oncología",
-  "oncologico": "oncología",
-
-  // REUMATOLOGÍA
-  "reuma": "reumatología",
-  "reumatico": "reumatología",
-  "lupus": "reumatología",
-  "fibromialgia": "reumatología",
-  "gota": "reumatología",
-
-  // ALERGIA / INMUNOLOGÍA
-  "alergia": "alergología",
-  "alergico": "alergología",
-  "alergias": "alergología",
-  "urticaria": "alergología",
+const PROPERTY_TYPE_MAPPING: Record<string, string> = {
+  "apartamento": "apartamento",
+  "apartamentos": "apartamento",
+  "apto": "apartamento",
+  "depa": "apartamento",
+  "departamento": "apartamento",
+  "piso": "apartamento",
+  "casa": "casa",
+  "casas": "casa",
+  "vivienda": "casa",
+  "residencia": "casa",
+  "chalet": "casa",
+  "terreno": "terreno",
+  "terrenos": "terreno",
+  "lote": "terreno",
+  "parcela": "terreno",
+  "finca": "terreno",
+  "oficina": "oficina",
+  "oficinas": "oficina",
+  "corporativo": "oficina",
+  "coworking": "oficina",
+  "local": "local",
+  "locales": "local",
+  "comercial": "local",
+  "tienda": "local",
+  "negocio": "local",
+  "bodega": "bodega",
+  "bodegas": "bodega",
+  "almacen": "bodega",
+  "galpon": "bodega",
 }
 
-// Mapeo de especialidades (nombre directo)
-const SPECIALTY_NAMES: Record<string, string> = {
-  "cardiologo": "cardiología",
-  "cardiologia": "cardiología",
-  "cardiologa": "cardiología",
-  "dermatologo": "dermatología",
-  "dermatologa": "dermatología",
-  "dermatologia": "dermatología",
-  "dermatologico": "dermatología",
-  "dermatologica": "dermatología",
-  "pediatra": "pediatría",
-  "pediatria": "pediatría",
-  "ginecologo": "ginecología",
-  "ginecologa": "ginecología",
-  "ginecologia": "ginecología",
-  "ginecologico": "ginecología",
-  "ginecologica": "ginecología",
-  "traumatologo": "traumatología",
-  "traumatologia": "traumatología",
-  "ortopedista": "ortopedia",
-  "ortopedia": "ortopedia",
-  "neurologo": "neurología",
-  "neurologa": "neurología",
-  "neurologia": "neurología",
-  "neurologico": "neurología",
-  "neurologica": "neurología",
-  "psicologo": "psicología",
-  "psicologa": "psicología",
-  "psicologia": "psicología",
-  "psicologico": "psicología",
-  "psicologica": "psicología",
-  "psiquiatra": "psiquiatría",
-  "psiquiatria": "psiquiatría",
-  "oftalmologo": "oftalmología",
-  "oftalmologa": "oftalmología",
-  "oftalmologia": "oftalmología",
-  "oculista": "oftalmología",
-  "otorrino": "otorrinolaringología",
-  "otorrinolaringologo": "otorrinolaringología",
-  "urologo": "urología",
-  "urologa": "urología",
-  "urologia": "urología",
-  "urologico": "urología",
-  "urologica": "urología",
-  "gastroenterologo": "gastroenterología",
-  "gastroenterologa": "gastroenterología",
-  "gastroenterologia": "gastroenterología",
-  "endocrinologo": "endocrinología",
-  "endocrinologa": "endocrinología",
-  "endocrinologia": "endocrinología",
-  "reumatologo": "reumatología",
-  "reumatologa": "reumatología",
-  "reumatologia": "reumatología",
-  "nefrologo": "nefrología",
-  "nefrologa": "nefrología",
-  "nefrologia": "nefrología",
-  "oncologo": "oncología",
-  "oncologa": "oncología",
-  "oncologia": "oncología",
-  "cirujano": "cirugía",
-  "cirujana": "cirugía",
-  "cirugia": "cirugía",
-  "quirurgico": "cirugía",
-  "quirurgica": "cirugía",
-  "internista": "medicina interna",
-  "medicina general": "medicina general",
-  "medicina interna": "medicina interna",
-  "general": "medicina general",
-  "neumologo": "neumología",
-  "neumologa": "neumología",
-  "neumologia": "neumología",
-  "alergologo": "alergología",
-  "alergologa": "alergología",
-  "alergologia": "alergología",
+const ZONE_MAPPING: Record<string, string> = {
+  "zona 1": "1", "z1": "1", "zona1": "1", "centro historico": "1",
+  "zona 4": "4", "z4": "4", "zona4": "4", "centro civico": "4",
+  "zona 5": "5", "z5": "5", "zona5": "5",
+  "zona 6": "6", "z6": "6", "zona6": "6",
+  "zona 7": "7", "z7": "7", "zona7": "7",
+  "zona 8": "8", "z8": "8", "zona8": "8",
+  "zona 9": "9", "z9": "9", "zona9": "9",
+  "zona 10": "10", "z10": "10", "zona10": "10", "zona viva": "10", "oakland": "10",
+  "zona 11": "11", "z11": "11", "zona11": "11",
+  "zona 12": "12", "z12": "12", "zona12": "12",
+  "zona 13": "13", "z13": "13", "zona13": "13",
+  "zona 14": "14", "z14": "14", "zona14": "14", "las americas": "14", "la villa": "14",
+  "zona 15": "15", "z15": "15", "zona15": "15", "vista hermosa": "15",
+  "zona 16": "16", "z16": "16", "zona16": "16", "acatan": "16",
+  "zona 17": "17", "z17": "17", "zona17": "17",
+  "zona 18": "18", "z18": "18", "zona18": "18",
 }
 
-// Patrones de búsqueda más flexibles
+const OPERATION_MAPPING: Record<string, string> = {
+  "comprar": "venta",
+  "compra": "venta",
+  "venta": "venta",
+  "vender": "venta",
+  "adquirir": "venta",
+  "inversion": "venta",
+  "invertir": "venta",
+  "alquilar": "alquiler",
+  "alquiler": "alquiler",
+  "renta": "alquiler",
+  "rentar": "alquiler",
+  "arrendar": "alquiler",
+  "arrendamiento": "alquiler",
+}
+
+const HABITACIONES_MAPPING: Record<string, number> = {
+  "studio": 1,
+  "estudio": 1,
+  "loft": 1,
+  "una habitacion": 1,
+  "1 habitacion": 1,
+  "dos habitaciones": 2,
+  "2 habitaciones": 2,
+  "tres habitaciones": 3,
+  "3 habitaciones": 3,
+  "cuatro habitaciones": 4,
+  "4 habitaciones": 4,
+}
+
 const SEARCH_PATTERNS = [
-  // Patrones directos
-  /busco?\s+(un|una|al)?\s*(medico|doctor|especialista)/i,
-  /necesito\s+(un|una|ver|una?\s*cita|una?\s*consulta)/i,
-  /quiero\s+(un|una|ver|una?\s*cita|una?\s*consulta|agendar)/i,
-  /donde\s+(encuentro|hay|puedo)\s*(medico|doctor|especialista)?/i,
-  /recomiend[ae]n?\s+(un|una)?\s*(medico|doctor|especialista)?/i,
-  /tiene[ns]?\s+(medico|doctor|especialista)/i,
-  /hay\s+(algun|alguna)?\s*(medico|doctor|especialista)?/i,
-  // Patrones de consulta médica
-  /consulta\s+(de\s+|con\s+)?\w+/i,
-  /cita\s+(con|de|medica|para)/i,
-  /atencion\s+(medica|de)/i,
-  /problema\s*(de|con|en)\s*(la|el|mi|mis)?\s*\w+/i,
-  /tengo\s+(problemas?|dolor|molestia)/i,
-  /me\s+duele/i,
-  /padezco/i,
-  /sufro\s+de/i,
+  /busco?\s+(un|una|al)?\s*(apartamento|casa|terreno|oficina|local|bodega|inmueble|propiedad)/i,
+  /necesito\s+(un|una|comprar|alquilar|rentar)/i,
+  /quiero\s+(un|una|comprar|alquilar|rentar|ver)/i,
+  /donde\s+(encuentro|hay|puedo)\s*(apartamento|casa|inmueble|propiedad)?/i,
+  /hay\s+(algun|alguna)?\s*(apartamento|casa|terreno|inmueble)?/i,
+  /tienen\s+(apartamento|casa|terreno|inmueble)/i,
+  /me\s+interesa\s+(un|una|comprar|alquilar)/i,
+  /estoy\s+buscando/i,
+  /presupuesto\s+de?\s*\$?\d+/i,
+  /hasta\s+\$?\d+/i,
+  /menos\s+de\s+\$?\d+/i,
+  /\d+\s*habitacion/i,
+  /\d+\s*cuarto/i,
+  /\d+\s*recamara/i,
 ]
 
-// Palabras que indican intención de búsqueda médica
-const MEDICAL_INTENT_WORDS = [
-  "consulta", "cita", "turno", "atencion", "ver", "visitar",
-  "medico", "doctor", "doctora", "especialista", "profesional",
-  "tratamiento", "revisar", "chequeo", "estudio", "analisis",
-  "problema", "dolor", "molestia", "sintoma", "enfermedad",
-  "padecimiento", "condicion", "diagnostico", "receta"
+const PROPERTY_INTENT_WORDS = [
+  "buscar", "busco", "necesito", "quiero", "interesa",
+  "apartamento", "casa", "terreno", "oficina", "local", "bodega",
+  "inmueble", "propiedad", "vivienda",
+  "comprar", "alquilar", "rentar", "venta", "alquiler",
+  "habitacion", "habitaciones", "cuarto", "cuartos", "recamara",
+  "zona", "ubicacion", "precio", "presupuesto",
 ]
 
-function detectSearchIntent(text: string): { isSearch: boolean; searchTerms: string[] } {
+interface SearchFilters {
+  tipo?: string
+  zona?: string
+  operacion?: string
+  habitaciones?: number
+  precioMin?: number
+  precioMax?: number
+}
+
+function detectSearchIntent(text: string): { isSearch: boolean; filters: SearchFilters; searchTerms: string[] } {
   const normalized = norm(text)
+  const filters: SearchFilters = {}
   const searchTerms: string[] = []
 
-  // 1. Buscar especialidades directamente mencionadas
-  for (const [key, value] of Object.entries(SPECIALTY_NAMES)) {
-    if (normalized.includes(key) && !searchTerms.includes(value)) {
+  for (const [key, value] of Object.entries(PROPERTY_TYPE_MAPPING)) {
+    if (normalized.includes(key)) {
+      filters.tipo = value
       searchTerms.push(value)
+      break
     }
   }
 
-  // 2. Buscar síntomas/condiciones que mapean a especialidades
-  for (const [symptom, specialty] of Object.entries(SYMPTOM_TO_SPECIALTY)) {
-    if (normalized.includes(symptom) && !searchTerms.includes(specialty)) {
-      searchTerms.push(specialty)
+  for (const [key, value] of Object.entries(ZONE_MAPPING)) {
+    if (normalized.includes(key)) {
+      filters.zona = value
+      searchTerms.push(`Zona ${value}`)
+      break
     }
   }
 
-  // 3. Verificar patrones de búsqueda
+  for (const [key, value] of Object.entries(OPERATION_MAPPING)) {
+    if (normalized.includes(key)) {
+      filters.operacion = value
+      searchTerms.push(value === "venta" ? "En venta" : "En alquiler")
+      break
+    }
+  }
+
+  for (const [key, value] of Object.entries(HABITACIONES_MAPPING)) {
+    if (normalized.includes(key)) {
+      filters.habitaciones = value
+      searchTerms.push(`${value} habitación${value > 1 ? 'es' : ''}`)
+      break
+    }
+  }
+
+  const priceMatch = text.match(/\$?\s*(\d{1,3}(?:[,.]?\d{3})*)\s*(?:mil|k)?/gi)
+  if (priceMatch) {
+    const prices = priceMatch.map(p => {
+      const num = p.replace(/[^\d]/g, '')
+      let value = parseInt(num)
+      if (p.toLowerCase().includes('k') || p.toLowerCase().includes('mil')) {
+        value *= 1000
+      }
+      if (value < 1000) value *= 1000
+      return value
+    }).filter(p => p > 0 && p < 10000000)
+
+    if (prices.length > 0) {
+      if (normalized.includes("hasta") || normalized.includes("menos") || normalized.includes("maximo")) {
+        filters.precioMax = Math.max(...prices)
+        searchTerms.push(`Hasta $${filters.precioMax.toLocaleString()}`)
+      } else if (normalized.includes("desde") || normalized.includes("minimo") || normalized.includes("mas de")) {
+        filters.precioMin = Math.min(...prices)
+        searchTerms.push(`Desde $${filters.precioMin.toLocaleString()}`)
+      } else if (prices.length === 1) {
+        filters.precioMax = prices[0] * 1.2
+        filters.precioMin = prices[0] * 0.8
+      }
+    }
+  }
+
   const matchesPattern = SEARCH_PATTERNS.some(pattern => pattern.test(text))
+  const intentCount = PROPERTY_INTENT_WORDS.filter(word => normalized.includes(word)).length
 
-  // 4. Verificar palabras de intención médica
-  const medicalIntentCount = MEDICAL_INTENT_WORDS.filter(word => normalized.includes(word)).length
-
-  // Determinar si es una búsqueda:
-  // - Si encontramos especialidades/síntomas
-  // - Si hay patrón de búsqueda + alguna palabra médica
-  // - Si hay 2+ palabras de intención médica
   const isSearch =
-    searchTerms.length > 0 ||
-    (matchesPattern && medicalIntentCount >= 1) ||
-    medicalIntentCount >= 2
-
-  // Si no encontramos términos específicos pero detectamos intención de búsqueda,
-  // usar "medicina general" como fallback
-  if (isSearch && searchTerms.length === 0) {
-    // Solo si realmente parece una búsqueda médica
-    const hasMedicalContext = medicalIntentCount >= 1 || matchesPattern
-    if (hasMedicalContext) {
-      // No agregamos término, dejamos que muestre todos los doctores
-    }
-  }
+    Object.keys(filters).length > 0 ||
+    (matchesPattern && intentCount >= 1) ||
+    intentCount >= 2
 
   console.log("[CHAT] detectSearchIntent:", {
     normalized: normalized.substring(0, 60),
+    filters,
     searchTerms,
     matchesPattern,
-    medicalIntentCount,
+    intentCount,
     isSearch
   })
 
-  return { isSearch, searchTerms: [...new Set(searchTerms)] }
+  return { isSearch, filters, searchTerms: [...new Set(searchTerms)] }
 }
 
-/**
- * ============================================================
- * Búsqueda de doctores en la base de datos
- * ============================================================
- */
-async function searchDoctors(searchTerms: string[], limit: number = 6): Promise<DoctorResult[]> {
+async function searchInmuebles(filters: SearchFilters, limit: number = 6): Promise<InmuebleResult[]> {
   try {
-    if (searchTerms.length === 0) {
-      // Sin términos específicos, devolver doctores destacados
-      const doctors = await query<DoctorResult>(
-        `SELECT id, usuario, full_name, first_name, last_name, picture,
-                especialidad, direccion_consultorio, anos_experiencia, pacientes_atendidos
-         FROM users
-         WHERE role = 'doctor' AND estado = 'confirmado' AND usuario IS NOT NULL
-         ORDER BY pacientes_atendidos DESC, anos_experiencia DESC
-         LIMIT ?`,
-        [limit]
-      )
-      return doctors
-    }
-
-    // Construir query con múltiples términos de búsqueda
-    const conditions = searchTerms.map(() =>
-      `(especialidad LIKE ? OR bio LIKE ? OR full_name LIKE ?)`
-    ).join(" OR ")
-
+    const conditions: string[] = ["estado = 'disponible'"]
     const params: (string | number)[] = []
-    for (const term of searchTerms) {
-      const searchTerm = `%${term}%`
-      params.push(searchTerm, searchTerm, searchTerm)
+
+    if (filters.tipo) {
+      conditions.push("tipo = ?")
+      params.push(filters.tipo)
     }
+
+    if (filters.zona) {
+      conditions.push("zona = ?")
+      params.push(filters.zona)
+    }
+
+    if (filters.operacion) {
+      conditions.push("operacion = ?")
+      params.push(filters.operacion)
+    }
+
+    if (filters.habitaciones) {
+      if (filters.habitaciones >= 4) {
+        conditions.push("habitaciones >= 4")
+      } else {
+        conditions.push("habitaciones = ?")
+        params.push(filters.habitaciones)
+      }
+    }
+
+    if (filters.precioMin) {
+      conditions.push("precio >= ?")
+      params.push(filters.precioMin)
+    }
+
+    if (filters.precioMax) {
+      conditions.push("precio <= ?")
+      params.push(filters.precioMax)
+    }
+
     params.push(limit)
 
-    const doctors = await query<DoctorResult>(
-      `SELECT id, usuario, full_name, first_name, last_name, picture,
-              especialidad, direccion_consultorio, anos_experiencia, pacientes_atendidos
-       FROM users
-       WHERE role = 'doctor' AND estado = 'confirmado' AND usuario IS NOT NULL
-         AND (${conditions})
-       ORDER BY
-         CASE
-           WHEN especialidad LIKE ? THEN 1
-           ELSE 2
-         END,
-         pacientes_atendidos DESC
-       LIMIT ?`,
-      [...params.slice(0, -1), `%${searchTerms[0]}%`, limit]
-    )
+    const sql = `
+      SELECT id, titulo, tipo, operacion, precio, moneda, ubicacion, zona,
+             departamento, metros_cuadrados, habitaciones, banos, parqueos,
+             imagen_url, destacado
+      FROM inmuebles
+      WHERE ${conditions.join(" AND ")}
+      ORDER BY destacado DESC, created_at DESC
+      LIMIT ?
+    `
 
-    return doctors
+    const inmuebles = await query<InmuebleResult>(sql, params)
+
+    if (inmuebles.length === 0 && Object.keys(filters).length > 1) {
+      const fallbackSql = `
+        SELECT id, titulo, tipo, operacion, precio, moneda, ubicacion, zona,
+               departamento, metros_cuadrados, habitaciones, banos, parqueos,
+               imagen_url, destacado
+        FROM inmuebles
+        WHERE estado = 'disponible'
+        ORDER BY destacado DESC, created_at DESC
+        LIMIT ?
+      `
+      return await query<InmuebleResult>(fallbackSql, [limit])
+    }
+
+    return inmuebles
   } catch (error) {
-    console.error("[CHAT] Error searching doctors:", error)
+    console.error("[CHAT] Error searching inmuebles:", error)
     return []
   }
 }
@@ -751,111 +473,90 @@ async function searchDoctors(searchTerms: string[], limit: number = 6): Promise<
 function pickCanonSubset(lastUser: string) {
   const n = norm(lastUser || "")
 
-  const servicioKeywords = ["servicio", "buscar", "medico", "doctor", "especialista", "consulta", "cita", "paciente"]
-  const comoKeywords = ["como", "cómo", "funciona", "proceso", "pasos", "agendar", "registrar"]
-  const especialidadKeywords = ["especialidad", "especialidades", "cardiologia", "dermatologia", "pediatria", "ortopedia", "medicina"]
-  const planesKeywords = ["plan", "planes", "precio", "costo", "gratis", "premium", "pagar"]
-  const nosotrosKeywords = ["nosotros", "sobre", "empresa", "quienes", "DocTop", "plataforma"]
-  const contactoKeywords = ["contacto", "telefono", "whatsapp", "email", "correo", "hablar", "comunicar"]
-  const faqKeywords = ["pregunta", "faq", "duda", "ayuda", "informacion", "saber"]
+  const servicioKeywords = ["servicio", "buscar", "inmueble", "propiedad", "apartamento", "casa"]
+  const comoKeywords = ["como", "cómo", "funciona", "proceso", "pasos"]
+  const tiposKeywords = ["tipo", "tipos", "apartamento", "casa", "terreno", "oficina", "local", "bodega"]
+  const zonasKeywords = ["zona", "zonas", "ubicacion", "donde", "oakland", "vista hermosa"]
+  const preciosKeywords = ["precio", "precios", "costo", "presupuesto", "cuanto", "rango"]
+  const nosotrosKeywords = ["nosotros", "sobre", "empresa", "quienes", "aloba"]
+  const contactoKeywords = ["contacto", "telefono", "whatsapp", "email", "correo"]
+  const faqKeywords = ["pregunta", "faq", "duda", "ayuda"]
 
   const wantsServicio = servicioKeywords.some((k) => n.includes(k))
   const wantsComo = comoKeywords.some((k) => n.includes(k))
-  const wantsEspecialidad = especialidadKeywords.some((k) => n.includes(k))
-  const wantsPlanes = planesKeywords.some((k) => n.includes(k))
+  const wantsTipos = tiposKeywords.some((k) => n.includes(k))
+  const wantsZonas = zonasKeywords.some((k) => n.includes(k))
+  const wantsPrecios = preciosKeywords.some((k) => n.includes(k))
   const wantsNosotros = nosotrosKeywords.some((k) => n.includes(k))
   const wantsContacto = contactoKeywords.some((k) => n.includes(k))
   const wantsFaq = faqKeywords.some((k) => n.includes(k))
 
   const subset: any = {
-    nombre: DOCTOP.nombre,
-    descripcion: DOCTOP.descripcion,
-    lema: DOCTOP.lema,
-    url: DOCTOP.url,
-    estadisticas: DOCTOP.estadisticas,
+    nombre: ALOBA.nombre,
+    descripcion: ALOBA.descripcion,
+    lema: ALOBA.lema,
+    url: ALOBA.url,
   }
 
-  if (wantsServicio) subset.servicios = DOCTOP.servicios
-  if (wantsComo) subset.como_funciona = DOCTOP.como_funciona
-  if (wantsEspecialidad) subset.especialidades = DOCTOP.especialidades
-  if (wantsPlanes) subset.planes = DOCTOP.planes
-  if (wantsNosotros) subset.nosotros = DOCTOP.nosotros
-  if (wantsContacto) subset.contacto = DOCTOP.contacto
-  if (wantsFaq) subset.faq = DOCTOP.faq
+  if (wantsServicio) subset.servicios = ALOBA.servicios
+  if (wantsComo) subset.como_funciona = ALOBA.como_funciona
+  if (wantsTipos) subset.tipos_inmuebles = ALOBA.tipos_inmuebles
+  if (wantsZonas) subset.zonas = ALOBA.zonas
+  if (wantsPrecios) subset.rangos_precios = ALOBA.rangos_precios
+  if (wantsNosotros) subset.nosotros = ALOBA.nosotros
+  if (wantsContacto) subset.contacto = ALOBA.contacto
+  if (wantsFaq) subset.faq = ALOBA.faq
 
-  if (!wantsServicio && !wantsComo && !wantsEspecialidad && !wantsPlanes && !wantsNosotros && !wantsContacto && !wantsFaq) {
-    return DOCTOP
+  if (!wantsServicio && !wantsComo && !wantsTipos && !wantsZonas && !wantsPrecios && !wantsNosotros && !wantsContacto && !wantsFaq) {
+    return ALOBA
   }
 
   return subset
 }
 
-/**
- * ============================================================
- * Estilo y continuidad (CORE)
- * ============================================================
- */
 const CORE = `
-Sos el Asistente Virtual de DocTop. Hablás profesional pero cercano, especializado en ayudar a pacientes a encontrar médicos y a médicos a registrarse en la plataforma.
+Sos el Asistente Virtual de Aloba, el marketplace inmobiliario líder en Guatemala. Hablás profesional pero cercano, especializado en ayudar a usuarios a encontrar propiedades.
 
 **Lo que SÍ sabés (y podés hablar):**
-- Servicios: Búsqueda de médicos, perfiles verificados, contacto directo por WhatsApp
-- Cómo funciona: Para pacientes (buscar, revisar, contactar, agendar) y para médicos (registrar, completar perfil, verificar, recibir pacientes)
-- Especialidades: Medicina general, cardiología, dermatología, ortopedia, pediatría, ginecología, neurología, y más
-- Planes: Plan básico gratuito y plan premium para médicos
-- Estadísticas: 15,000+ médicos, 500,000+ pacientes, valoración 4.9
-- Nosotros: Plataforma médica líder en México, verificación profesional
-- Contacto: contacto@doctop.space, [WhatsApp](https://wa.me/5492364655702), Argentina
-- FAQ: Preguntas frecuentes sobre búsqueda, registro, verificación, costos
+- Servicios: Búsqueda de inmuebles, filtros avanzados, contacto directo por WhatsApp
+- Cómo funciona: Buscar, explorar, contactar, visitar
+- Tipos de inmuebles: Apartamentos, casas, terrenos, oficinas, locales, bodegas
+- Zonas: Las 18 zonas de Guatemala, especialmente Zona 10, 14, 15, 16
+- Rangos de precios: Desde $150K hasta $400K+ en USD
+- Operaciones: Venta y alquiler
+- Nosotros: Marketplace inmobiliario transparente y eficiente
+- Contacto: WhatsApp +502 3000 0000, email contacto@marketplaceinmobiliario.com
 
-**Lo que NO sabés:**
-- Precios específicos del plan premium (derivá a contacto)
-- Diagnósticos médicos o consejos de salud específicos
-- Información de médicos específicos (derivá a buscar en la plataforma)
-- Temas fuera de DocTop
+**Lo que NO sabés (REGLA INQUEBRANTABLE):**
+- Asesoría legal o financiera específica (derivá a profesionales)
+- Información de propietarios o vendedores específicos
+- Tasaciones o avalúos de propiedades
+- Temas fuera de inmuebles en Guatemala
 
-**Reglas de longitud de respuesta (FLEXIBLE):**
-1. **Respuestas concisas (60-80 palabras, 2-3 oraciones)** para:
-   - Preguntas simples y directas ("¿Qué es DocTop?", "¿Es gratis?")
-   - Saludos iniciales
-   - Confirmaciones rápidas
-
-2. **Respuestas amplias (150-200 palabras, 4-6 oraciones)** cuando:
-   - El usuario solicita más detalles explícitamente ("cuéntame más", "explícame mejor")
-   - Preguntas complejas que requieren contexto ("¿Cómo funciona para médicos?")
-   - El usuario pregunta sobre múltiples temas a la vez
-   - Se necesita explicar procesos paso a paso
-
+**Reglas de longitud de respuesta:**
+1. **Respuestas concisas (60-80 palabras)** para preguntas simples
+2. **Respuestas amplias (150-200 palabras)** cuando se necesita contexto
 3. **Siempre:**
-   - Respondé directo a la pregunta, sin rodeos
-   - Usá **negritas** para datos clave (ej: **15,000+ médicos**, **gratis para pacientes**, **verificados**)
-   - Usá [hipervínculos en markdown](url) para WhatsApp y links importantes
-   - Sin bullets ni listas excesivas - hablá natural
+   - Respondé directo a la pregunta
+   - Usá **negritas** para datos clave
+   - Usá [hipervínculos en markdown](url) para WhatsApp y links
    - Profesional pero cercano y amigable
-   - Cerrá con UNA pregunta corta SOLO sobre temas que SÍ sabés
+   - Cerrá con UNA pregunta corta sobre búsqueda de propiedades
 
 **REGLA CRÍTICA SOBRE URLs:**
-- SIEMPRE usá las URLs EXACTAS del contexto JSON sin modificarlas
-- NO acortes, NO cambies, NO inventes URLs
-- WhatsApp: https://wa.me/5492364655702
-- Web: https://doctop.space
-
-**Ejemplos de hipervínculos CORRECTOS:**
-- "Podés [contactarnos por WhatsApp](https://wa.me/5492364655702) ahora mismo"
-- "Registrate gratis en [DocTop](https://doctop.space)"
-- "Visitá nuestra [página principal](https://doctop.space) para buscar médicos"
+- SIEMPRE usá las URLs EXACTAS sin modificarlas
+- WhatsApp: https://wa.me/50230000000
+- Web: https://marketplaceinmobiliario.com
+- Inmuebles: https://marketplaceinmobiliario.com/inmuebles
 
 **Tu estilo:**
-❌ "DocTop es una innovadora plataforma..."
-✅ "DocTop conecta pacientes con **médicos verificados** en todo México"
+❌ "Te invito a explorar nuestro catálogo..."
+✅ "Tenemos **apartamentos en Zona 10** desde **$150K**. ¿Buscás venta o alquiler?"
 
-❌ "Te invito a explorar nuestros servicios..."
-✅ "Buscá médicos por especialidad en nuestra plataforma, es **gratis para pacientes**. ¿Qué especialidad necesitás?"
+❌ "¿Te gustaría asesoría legal?"
+✅ "¿Te ayudo a buscar por zona o por presupuesto?"
 
-❌ "¿Te gustaría saber sobre diagnósticos?" (no sabés de medicina)
-✅ "¿Te ayudo a buscar un especialista o tenés dudas sobre cómo registrarte?" (sí sabés)
-
-Hablá como un asistente de servicio al cliente amigable que conoce perfectamente la plataforma DocTop.
+Hablá como un asesor inmobiliario amigable que conoce perfectamente Guatemala y el mercado de propiedades.
 `.trim()
 
 type Msg = { role: "user" | "assistant" | "system"; content: string }
@@ -870,7 +571,6 @@ function buildMessages(history: Msg[], sessionContext?: Msg[], searchContext?: s
     { role: "system", content: "INFORMACIÓN RELEVANTE:\n" + JSON.stringify(canonSlim, null, 2) },
   ]
 
-  // Si hay contexto de búsqueda, agregarlo
   if (searchContext) {
     sys.push({ role: "system", content: searchContext })
   }
@@ -882,16 +582,14 @@ function buildMessages(history: Msg[], sessionContext?: Msg[], searchContext?: s
     {
       role: "system",
       content: searchContext
-        ? "El usuario está buscando médicos. Presenta los resultados de forma amigable y menciona que puede ver los perfiles debajo. NO cierres con pregunta, solo confirma la búsqueda."
-        : "Cerrá SIEMPRE con una pregunta corta sobre algo que SÍ está en tu contexto: buscar médicos, registrarse, especialidades, planes o contacto. NO sugieras temas médicos que no conocés.",
+        ? "El usuario está buscando propiedades. Presenta los resultados de forma amigable mencionando que puede ver las opciones debajo. NO cierres con pregunta."
+        : "Cerrá SIEMPRE con una pregunta corta sobre búsqueda de propiedades: zona, tipo de inmueble, presupuesto o características. NO sugieras temas que no conocés.",
     },
   ]
 }
 
 const requestSchema = z.object({
   messages: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().min(1) })).min(1),
-  topic: z.string().optional(),
-  category: z.string().optional(),
   session: z
     .object({
       id: z.string().min(1).max(200),
@@ -903,9 +601,7 @@ const requestSchema = z.object({
     .object({
       temperature: z.number().min(0).max(2).optional(),
       max_tokens: z.number().int().min(64).max(2000).optional(),
-      system_overrides: z.string().optional(),
       stream: z.boolean().optional(),
-      model: z.string().optional(),
     })
     .optional(),
 })
@@ -957,14 +653,16 @@ function sanitize(text: string) {
 }
 
 function getSafeDefault() {
-  return "¡Hola! Soy el Asistente Virtual de DocTop. Puedo ayudarte a buscar médicos, conocer cómo funciona la plataforma, o responder tus preguntas. ¿En qué puedo ayudarte?"
+  return "¡Hola! Soy el Asistente Virtual de Aloba. Puedo ayudarte a buscar propiedades en Guatemala, conocer zonas, rangos de precios o responder tus preguntas. ¿En qué puedo ayudarte?"
 }
 
-/**
- * ============================================================
- * POST (stream opcional) — **Superficie pública estable**
- * ============================================================
- */
+function formatPrecio(precio: number, moneda: string): string {
+  if (moneda === 'USD') {
+    return `$${precio.toLocaleString('en-US')}`
+  }
+  return `Q${precio.toLocaleString('es-GT')}`
+}
+
 export async function POST(request: NextRequest) {
   try {
     if (!apiKey) {
@@ -1009,49 +707,45 @@ export async function POST(request: NextRequest) {
 
     const temperature = options?.temperature ?? 0.7
     const max_tokens = options?.max_tokens ?? 1000
-    const model = options?.model || MODEL
     const wantStream = wantStreamQuery || !!options?.stream
 
-    // Detectar intención de búsqueda en el último mensaje del usuario
     const lastUserMsg = messages[messages.length - 1]?.content || ""
-    const { isSearch, searchTerms } = detectSearchIntent(lastUserMsg)
+    const { isSearch, filters, searchTerms } = detectSearchIntent(lastUserMsg)
 
-    console.log("[CHAT] Search detection:", { isSearch, searchTerms, lastUserMsg: lastUserMsg.substring(0, 50) })
+    console.log("[CHAT] Search detection:", { isSearch, filters, searchTerms, lastUserMsg: lastUserMsg.substring(0, 50) })
 
-    // Si es una búsqueda, buscar doctores y generar respuesta contextual
-    let doctors: DoctorResult[] = []
+    let inmuebles: InmuebleResult[] = []
     let searchContext = ""
 
     if (isSearch) {
-      doctors = await searchDoctors(searchTerms, 6)
-      console.log("[CHAT] Doctors found:", doctors.length)
+      inmuebles = await searchInmuebles(filters, 6)
+      console.log("[CHAT] Inmuebles found:", inmuebles.length)
 
-      if (doctors.length > 0) {
-        const displayHint = doctors.length === 1
-          ? "Menciona que encontraste este médico y que puede ver su perfil debajo."
-          : doctors.length === 2
-            ? "Menciona que encontraste estos médicos y que puede ver sus perfiles debajo."
-            : "Menciona que encontraste estos médicos y que puede explorar los perfiles en el carrusel debajo."
+      if (inmuebles.length > 0) {
+        const displayHint = inmuebles.length === 1
+          ? "Menciona que encontraste esta propiedad y que puede ver los detalles debajo."
+          : inmuebles.length === 2
+            ? "Menciona que encontraste estas propiedades y que puede explorarlas debajo."
+            : "Menciona que encontraste estas propiedades y que puede explorar las opciones en el carrusel debajo."
 
-        searchContext = `\n\n[RESULTADOS DE BÚSQUEDA - ${doctors.length} médico${doctors.length > 1 ? 's' : ''} encontrado${doctors.length > 1 ? 's' : ''}]
-Los siguientes médicos están disponibles en la plataforma:
-${doctors.map((d, i) => `${i + 1}. ${d.full_name} - ${d.especialidad || "Medicina General"} (${d.direccion_consultorio?.split(",")[0] || "México"})`).join("\n")}
+        searchContext = `\n\n[RESULTADOS DE BÚSQUEDA - ${inmuebles.length} propiedad${inmuebles.length > 1 ? 'es' : ''} encontrada${inmuebles.length > 1 ? 's' : ''}]
+Las siguientes propiedades están disponibles:
+${inmuebles.map((i, idx) => `${idx + 1}. ${i.titulo} - ${formatPrecio(i.precio, i.moneda)} (${i.zona ? `Zona ${i.zona}` : i.ubicacion || 'Guatemala'})`).join("\n")}
 
-IMPORTANTE: ${displayHint} NO inventes información adicional sobre estos doctores.`
+IMPORTANTE: ${displayHint} NO inventes información adicional sobre estas propiedades.`
       } else {
-        searchContext = "\n\n[SIN RESULTADOS] No se encontraron médicos con esos criterios. Sugiere al usuario usar términos más amplios o contactar por WhatsApp."
+        searchContext = "\n\n[SIN RESULTADOS] No se encontraron propiedades con esos criterios. Sugiere al usuario ampliar la búsqueda o contactar por WhatsApp para opciones personalizadas."
       }
     }
 
     const payload = {
-      model,
+      model: MODEL,
       messages: buildMessages([...prior, ...messages], extraContext, searchContext) as any,
       temperature,
       max_tokens,
     } as const
 
-    // Si hay doctores encontrados, NO usar streaming para poder incluirlos en la respuesta JSON
-    const shouldStream = wantStream && doctors.length === 0
+    const shouldStream = wantStream && inmuebles.length === 0
 
     if (shouldStream) {
       const completion = await openai.chat.completions.create({ ...payload, stream: true })
@@ -1091,10 +785,9 @@ IMPORTANTE: ${displayHint} NO inventes información adicional sobre estos doctor
       gcSessions()
     }
 
-    // Incluir doctores en la respuesta si hubo búsqueda
     const responseData: any = { type: "text", content }
-    if (doctors.length > 0) {
-      responseData.doctors = doctors
+    if (inmuebles.length > 0) {
+      responseData.inmuebles = inmuebles
       responseData.searchTerms = searchTerms
     }
 
@@ -1110,11 +803,6 @@ IMPORTANTE: ${displayHint} NO inventes información adicional sobre estos doctor
   }
 }
 
-/**
- * ============================================================
- * GET (health)
- * ============================================================
- */
 export async function GET(req: NextRequest) {
   const url = new URL(req.url)
   const wantProbe = url.searchParams.get("health") === "1"
