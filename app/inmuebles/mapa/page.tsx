@@ -247,6 +247,8 @@ export default function MapaInmueblesPage() {
     try {
       const params = new URLSearchParams()
       if (zonaFilter) params.set('zona', zonaFilter)
+      if (tipoFilter) params.set('tipo', tipoFilter)
+      if (operacionFilter) params.set('operacion', operacionFilter)
       if (precioMaxFilter) {
         const [min, max] = precioMaxFilter.split('-')
         if (min) params.set('precio_min', min)
@@ -267,7 +269,7 @@ export default function MapaInmueblesPage() {
         setUpdatingFilters(false)
       }
     }
-  }, [zonaFilter, precioMaxFilter])
+  }, [zonaFilter, tipoFilter, operacionFilter, precioMaxFilter])
 
   useEffect(() => {
     fetchFiltersWithParams(true)
@@ -277,7 +279,7 @@ export default function MapaInmueblesPage() {
     if (!loadingFilters) {
       fetchFiltersWithParams(false)
     }
-  }, [zonaFilter, precioMaxFilter])
+  }, [zonaFilter, tipoFilter, operacionFilter, precioMaxFilter])
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024)

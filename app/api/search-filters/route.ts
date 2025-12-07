@@ -44,7 +44,9 @@ function buildBaseConditions(
   zona: string | null,
   habitaciones: string | null,
   precioMin: string | null,
-  precioMax: string | null
+  precioMax: string | null,
+  tipo: string | null = null,
+  operacion: string | null = null
 ): { sql: string; params: any[] } {
   let conditions = ["estado = 'disponible'"]
   const params: any[] = []
@@ -76,6 +78,16 @@ function buildBaseConditions(
     params.push(parseFloat(precioMax))
   }
 
+  if (tipo) {
+    conditions.push("tipo = ?")
+    params.push(tipo)
+  }
+
+  if (operacion) {
+    conditions.push("operacion = ?")
+    params.push(operacion)
+  }
+
   return {
     sql: conditions.join(" AND "),
     params
@@ -90,17 +102,19 @@ export async function GET(request: NextRequest) {
     const habitaciones = searchParams.get("habitaciones") || null
     const precioMin = searchParams.get("precio_min") || null
     const precioMax = searchParams.get("precio_max") || null
+    const tipo = searchParams.get("tipo") || null
+    const operacion = searchParams.get("operacion") || null
 
     const db = await getConnection()
 
-    const baseWhere = buildBaseConditions(zona, habitaciones, precioMin, precioMax)
+    const baseWhere = buildBaseConditions(zona, habitaciones, precioMin, precioMax, tipo, operacion)
     const [totalResult]: any = await db.query(
       `SELECT COUNT(*) as total FROM inmuebles WHERE ${baseWhere.sql}`,
       baseWhere.params
     )
     const totalDisponibles = totalResult[0]?.total || 0
 
-    const zonasBase = buildBaseConditions(null, habitaciones, precioMin, precioMax)
+    const zonasBase = buildBaseConditions(null, habitaciones, precioMin, precioMax, tipo, operacion)
     const [zonasRows]: any = await db.query(`
       SELECT zona, COUNT(*) as count
       FROM inmuebles
@@ -116,7 +130,7 @@ export async function GET(request: NextRequest) {
       count: r.count
     }))
 
-    const habitacionesBase = buildBaseConditions(zona, null, precioMin, precioMax)
+    const habitacionesBase = buildBaseConditions(zona, null, precioMin, precioMax, tipo, operacion)
     const [habitacionesRows]: any = await db.query(`
       SELECT habitaciones, COUNT(*) as count
       FROM inmuebles
@@ -142,7 +156,7 @@ export async function GET(request: NextRequest) {
       count: r.count
     }))
 
-    const preciosBase = buildBaseConditions(zona, habitaciones, null, null)
+    const preciosBase = buildBaseConditions(zona, habitaciones, null, null, tipo, operacion)
     const rangosConConteo = await Promise.all(
       rangosPrecios.map(async (rango) => {
         let rangoConditions = preciosBase.sql
@@ -171,7 +185,7 @@ export async function GET(request: NextRequest) {
 
     const rangosDisponibles = rangosConConteo.filter(r => r.count > 0)
 
-    const tiposBase = buildBaseConditions(zona, habitaciones, precioMin, precioMax)
+    const tiposBase = buildBaseConditions(zona, habitaciones, precioMin, precioMax, null, operacion)
     const [tiposRows]: any = await db.query(`
       SELECT tipo, COUNT(*) as count
       FROM inmuebles
@@ -186,7 +200,7 @@ export async function GET(request: NextRequest) {
       count: r.count
     }))
 
-    const operacionesBase = buildBaseConditions(zona, habitaciones, precioMin, precioMax)
+    const operacionesBase = buildBaseConditions(zona, habitaciones, precioMin, precioMax, tipo, null)
     const [operacionesRows]: any = await db.query(`
       SELECT operacion, COUNT(*) as count
       FROM inmuebles
