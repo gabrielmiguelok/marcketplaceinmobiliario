@@ -38,6 +38,7 @@ sudo mysql -u root -e "SELECT * FROM aloba_db.inmuebles LIMIT 5"
 - **MariaDB/MySQL** with **mysql2/promise** connection pool
 - **Google OAuth2** for authentication
 - **react-hot-toast** for notifications
+- **OpenAI GPT-4o-mini** for AI chat with function calling
 
 ## Architecture
 
@@ -130,6 +131,51 @@ public/
 └── images/              # Static images (committed to git)
 ```
 
+## AI Chat System
+
+### Architecture
+
+```
+User Message → extractSearchFilters (GPT function calling)
+            → searchInmuebles (flexible SQL with scoring)
+            → filterRelevantInmuebles (ranking)
+            → GPT response with context
+            → InmuebleCarouselChat (display results)
+```
+
+### Key Files
+
+- `app/api/chat-business-info/route.ts` - AI API with OpenAI integration
+- `components/chat/SupportChatWidget.tsx` - Floating chat widget
+- `components/chat/InmuebleCarouselChat.tsx` - Property carousel for chat results
+- `hooks/useChatManager.ts` - Chat state management
+- `lib/chat-flow.ts` - Predefined conversation flows
+
+### Search Intelligence
+
+The chat uses OpenAI function calling to extract search filters:
+```typescript
+// User: "casa en zona 10 hasta 150k"
+// AI extracts: { tipo: "casa", zona: "10", precioMax: 150000 }
+```
+
+Key behaviors:
+- **Casa/Apartamento intercambiables**: Si pide casa, también muestra apartamentos
+- **Precio flexible**: +20% margen sobre el máximo solicitado
+- **Scoring**: Resultados ordenados por relevancia (zona, tipo, habitaciones, precio)
+- **Solo filtros explícitos**: No asume tipo si el usuario no lo menciona
+
+### Widget Integration
+
+```typescript
+import { SupportChatWidget } from "@/components/chat/SupportChatWidget"
+
+// Add to any page
+<SupportChatWidget />
+```
+
+Present in: `/`, `/conocenos`, `/inmuebles`
+
 ## Main Pages
 
 ### `/conocenos` (Landing)
@@ -201,6 +247,7 @@ AUTH_JWD_BYTES=64
 COOKIE_DOMAIN=marketplaceinmobiliario.com
 GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
 NEXT_PUBLIC_BASE_URL=https://marketplaceinmobiliario.com
+OPENAI_API_KEY=sk-...
 ```
 
 ## Development Notes
