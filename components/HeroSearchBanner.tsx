@@ -6,6 +6,8 @@ import { ChevronDown, Check, Search, MapPin, Bed, Loader2, ChevronLeft, ChevronR
 
 const cn = (...classes: (string | undefined | null | false)[]) => classes.filter(Boolean).join(" ")
 
+const ITEMS_PER_PAGE = 20
+
 interface FilterOption {
   value: string
   label: string
@@ -263,6 +265,10 @@ export default function HeroSearchBanner() {
   const [openFilter, setOpenFilter] = useState<string | null>(null)
   const [showResults, setShowResults] = useState(false)
   const [results, setResults] = useState<SearchResult[]>([])
+  const [totalResults, setTotalResults] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [currentOffset, setCurrentOffset] = useState(0)
 
   const [zona, setZona] = useState("")
   const [habitaciones, setHabitaciones] = useState("")
@@ -272,6 +278,18 @@ export default function HeroSearchBanner() {
   const [startX, setStartX] = useState(0)
   const [scrollLeft, setScrollLeft] = useState(0)
   const [hasDragged, setHasDragged] = useState(false)
+
+  const buildSearchParams = useCallback(() => {
+    const params = new URLSearchParams()
+    if (zona) params.set("zona", zona)
+    if (habitaciones) params.set("habitaciones", habitaciones)
+    if (rangoPrecio) {
+      const [min, max] = rangoPrecio.split("-")
+      if (min) params.set("precio_min", min)
+      if (max) params.set("precio_max", max)
+    }
+    return params
+  }, [zona, habitaciones, rangoPrecio])
 
   const fetchFilters = useCallback(async (currentZona: string, currentHabitaciones: string, currentRangoPrecio: string, isInitial = false) => {
     if (!isInitial) {
@@ -325,6 +343,52 @@ export default function HeroSearchBanner() {
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
+
+  const checkScrollPosition = useCallback(() => {
+    if (!carouselRef.current || loadingMore || !hasMore) return
+
+    const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current
+    const scrollEnd = scrollWidth - clientWidth
+    const threshold = 300
+
+    if (scrollEnd - scrollLeft < threshold) {
+      loadMoreResults()
+    }
+  }, [loadingMore, hasMore])
+
+  useEffect(() => {
+    const carousel = carouselRef.current
+    if (!carousel) return
+
+    carousel.addEventListener('scroll', checkScrollPosition)
+    return () => carousel.removeEventListener('scroll', checkScrollPosition)
+  }, [checkScrollPosition])
+
+  const loadMoreResults = async () => {
+    if (loadingMore || !hasMore) return
+
+    setLoadingMore(true)
+    const newOffset = currentOffset + ITEMS_PER_PAGE
+
+    try {
+      const params = buildSearchParams()
+      params.set("limit", ITEMS_PER_PAGE.toString())
+      params.set("offset", newOffset.toString())
+
+      const res = await fetch(`/api/inmuebles/search?${params.toString()}`)
+      const data = await res.json()
+
+      if (data.success) {
+        setResults(prev => [...prev, ...data.inmuebles])
+        setCurrentOffset(newOffset)
+        setHasMore(data.hasMore)
+      }
+    } catch (error) {
+      console.error("Error cargando más resultados:", error)
+    } finally {
+      setLoadingMore(false)
+    }
+  }
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!carouselRef.current) return
@@ -401,41 +465,31 @@ export default function HeroSearchBanner() {
     setSearching(true)
     setShowResults(true)
     setOpenFilter(null)
+    setResults([])
+    setCurrentOffset(0)
 
     try {
-      const params = new URLSearchParams()
-      if (zona) params.set("zona", zona)
-      if (habitaciones) params.set("habitaciones", habitaciones)
-      if (rangoPrecio) {
-        const [min, max] = rangoPrecio.split("-")
-        if (min) params.set("precio_min", min)
-        if (max) params.set("precio_max", max)
-      }
-      params.set("limit", "24")
+      const params = buildSearchParams()
+      params.set("limit", ITEMS_PER_PAGE.toString())
+      params.set("offset", "0")
 
       const res = await fetch(`/api/inmuebles/search?${params.toString()}`)
       const data = await res.json()
 
       if (data.success) {
         setResults(data.inmuebles)
+        setTotalResults(data.total)
+        setHasMore(data.hasMore)
       }
     } catch (error) {
       console.error("Error en búsqueda:", error)
     } finally {
       setSearching(false)
     }
-  }, [zona, habitaciones, rangoPrecio, totalDisponibles])
+  }, [totalDisponibles, buildSearchParams])
 
   const handleViewAll = () => {
-    const params = new URLSearchParams()
-    if (zona) params.set("zona", zona)
-    if (habitaciones) params.set("habitaciones", habitaciones)
-    if (rangoPrecio) {
-      const [min, max] = rangoPrecio.split("-")
-      if (min) params.set("precio_min", min)
-      if (max) params.set("precio_max", max)
-    }
-
+    const params = buildSearchParams()
     const queryString = params.toString()
     router.push(`/inmuebles${queryString ? `?${queryString}` : ""}`)
   }
@@ -448,6 +502,8 @@ export default function HeroSearchBanner() {
   const handleClose = () => {
     setShowResults(false)
     setResults([])
+    setCurrentOffset(0)
+    setHasMore(false)
   }
 
   const getZonaDisplay = () => {
@@ -622,7 +678,12 @@ export default function HeroSearchBanner() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-gray-600">
-                    <strong className="text-[#0B1B32] text-lg">{results.length}</strong> propiedades encontradas
+                    <strong className="text-[#0B1B32] text-lg">{totalResults}</strong> propiedades encontradas
+                    {results.length < totalResults && (
+                      <span className="text-gray-400 ml-1">
+                        (mostrando {results.length})
+                      </span>
+                    )}
                   </span>
                   <span className="text-xs text-gray-400 hidden md:inline">
                     Arrastra para ver más →
@@ -673,6 +734,23 @@ export default function HeroSearchBanner() {
                       />
                     </div>
                   ))}
+
+                  {loadingMore && (
+                    <div className="flex-shrink-0 w-[160px] md:w-[220px] flex items-center justify-center">
+                      <Loader2 size={32} className="animate-spin text-[#00F0D0]" />
+                    </div>
+                  )}
+
+                  {hasMore && !loadingMore && (
+                    <div className="flex-shrink-0 w-[160px] md:w-[220px] flex items-center justify-center">
+                      <button
+                        onClick={loadMoreResults}
+                        className="text-[#00F0D0] font-medium text-sm hover:underline"
+                      >
+                        Cargar más...
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <button
