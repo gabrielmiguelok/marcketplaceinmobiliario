@@ -6,7 +6,36 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import InmuebleCardMap from '@/components/map/InmuebleCardMap'
-import { ChevronLeft, ChevronRight, MapPin, Loader2, X, ChevronDown, SlidersHorizontal } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MapPin, Loader2, X, ChevronDown, SlidersHorizontal, Bed, Bath, Car, Maximize, ExternalLink, ArrowLeft } from 'lucide-react'
+
+function getImageSrc(url: string | null): string | null {
+  if (!url) return null
+  if (url.startsWith('/inmuebles/') || url.startsWith('/uploads/')) {
+    return `/api/imagen${url}`
+  }
+  if (url.startsWith('/') && !url.startsWith('/api/')) {
+    return `/api/imagen${url}`
+  }
+  return url
+}
+
+function formatPrecio(precio: number, moneda: string): string {
+  if (moneda === 'USD') {
+    if (precio >= 1000000) return `$${(precio / 1000000).toFixed(1)}M`
+    if (precio >= 1000) return `$${Math.round(precio / 1000)}k`
+    return `$${precio.toLocaleString('en-US')}`
+  }
+  return `Q${precio.toLocaleString('es-GT')}`
+}
+
+const tipoLabels: Record<string, string> = {
+  apartamento: 'Apartamento',
+  casa: 'Casa',
+  terreno: 'Terreno',
+  oficina: 'Oficina',
+  local: 'Local',
+  bodega: 'Bodega',
+}
 
 const PropertyMapAloba = dynamic(() => import('@/components/map/PropertyMapAloba'), {
   ssr: false,
@@ -224,6 +253,11 @@ export default function MapaInmueblesPage() {
     return filteredInmuebles.filter(i => selectedIds.includes(i.id))
   }, [filteredInmuebles, selectedIds])
 
+  const selectedInmueble = useMemo(() => {
+    if (!selectedPropertyId) return null
+    return inmuebles.find(i => i.id === selectedPropertyId) || null
+  }, [inmuebles, selectedPropertyId])
+
   const handleMapPropertySelect = useCallback((id: number) => {
     setSelectedPropertyId(id)
     const indexInDisplay = displayInmuebles.findIndex(i => i.id === id)
@@ -346,46 +380,138 @@ export default function MapaInmueblesPage() {
             </div>
 
             <div className="flex-1 overflow-y-auto bg-gray-50/50">
-              <div className="px-4 py-3">
-                <div className="overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-                  <div className="flex gap-3" style={{ width: 'max-content' }}>
-                    {displayInmuebles.slice(0, 20).map((inmueble) => (
-                      <div
-                        key={inmueble.id}
-                        className="w-[260px] flex-shrink-0"
-                      >
-                        <InmuebleCardMap
-                          inmueble={inmueble}
-                          isSelected={selectedPropertyId === inmueble.id}
-                          isHovered={hoveredPropertyId === inmueble.id}
-                          onHover={handlePropertyHover}
-                          onClick={handleMobileCardClick}
-                        />
+              {selectedInmueble ? (
+                <div className="p-4">
+                  <button
+                    onClick={() => setSelectedPropertyId(null)}
+                    className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#0B1B32] mb-3 transition-colors"
+                  >
+                    <ArrowLeft size={16} />
+                    Ver todas
+                  </button>
+
+                  <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+                    <div className="relative aspect-[16/9]">
+                      <img
+                        src={getImageSrc(selectedInmueble.imagen_url) || "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800"}
+                        alt={selectedInmueble.titulo}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800" }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+                      <div className="absolute top-3 left-3 flex gap-2">
+                        <span className="bg-[#00F0D0] text-[#0B1B32] text-xs font-bold px-3 py-1 rounded-full">
+                          {tipoLabels[selectedInmueble.tipo] || selectedInmueble.tipo}
+                        </span>
+                        <span className="bg-white/90 text-[#0B1B32] text-xs font-medium px-3 py-1 rounded-full">
+                          {selectedInmueble.operacion === 'alquiler' ? 'Alquiler' : 'Venta'}
+                        </span>
                       </div>
-                    ))}
+
+                      <div className="absolute bottom-3 left-3 right-3">
+                        <span className="text-white font-bold text-2xl drop-shadow-lg">
+                          {formatPrecio(selectedInmueble.precio, selectedInmueble.moneda)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="p-4">
+                      <h3 className="font-bold text-[#0B1B32] text-lg leading-tight mb-1">
+                        {selectedInmueble.titulo}
+                      </h3>
+
+                      <p className="text-gray-500 text-sm flex items-center gap-1 mb-3">
+                        <MapPin size={14} />
+                        {selectedInmueble.zona ? `Zona ${selectedInmueble.zona} · ` : ''}
+                        {selectedInmueble.ubicacion || selectedInmueble.departamento}
+                      </p>
+
+                      <div className="flex items-center gap-4 text-gray-600 text-sm mb-4 pb-4 border-b border-gray-100">
+                        {selectedInmueble.habitaciones > 0 && (
+                          <span className="flex items-center gap-1.5">
+                            <Bed size={16} className="text-[#00F0D0]" />
+                            {selectedInmueble.habitaciones} hab
+                          </span>
+                        )}
+                        {selectedInmueble.banos > 0 && (
+                          <span className="flex items-center gap-1.5">
+                            <Bath size={16} className="text-[#00F0D0]" />
+                            {selectedInmueble.banos} baños
+                          </span>
+                        )}
+                        {selectedInmueble.parqueos > 0 && (
+                          <span className="flex items-center gap-1.5">
+                            <Car size={16} className="text-[#00F0D0]" />
+                            {selectedInmueble.parqueos}
+                          </span>
+                        )}
+                        {selectedInmueble.metros_cuadrados > 0 && (
+                          <span className="flex items-center gap-1.5">
+                            <Maximize size={16} className="text-[#00F0D0]" />
+                            {selectedInmueble.metros_cuadrados}m²
+                          </span>
+                        )}
+                      </div>
+
+                      {selectedInmueble.descripcion && (
+                        <p className="text-gray-600 text-sm line-clamp-3 mb-4">
+                          {selectedInmueble.descripcion}
+                        </p>
+                      )}
+
+                      <Link
+                        href={`/inmuebles/${selectedInmueble.id}`}
+                        className="flex items-center justify-center gap-2 w-full bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-bold py-3 px-4 rounded-xl transition-colors"
+                      >
+                        Ver propiedad completa
+                        <ExternalLink size={16} />
+                      </Link>
+                    </div>
                   </div>
                 </div>
-
-                {displayInmuebles.length > 20 && (
-                  <div className="mt-3 text-center">
-                    <Link
-                      href="/inmuebles"
-                      className="inline-flex items-center gap-1 text-sm text-[#00F0D0] hover:text-[#00dbbe] font-medium"
-                    >
-                      Ver todas las propiedades
-                      <ChevronRight size={14} />
-                    </Link>
+              ) : (
+                <div className="px-4 py-3">
+                  <div className="overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                    <div className="flex gap-3" style={{ width: 'max-content' }}>
+                      {displayInmuebles.slice(0, 20).map((inmueble) => (
+                        <div
+                          key={inmueble.id}
+                          className="w-[260px] flex-shrink-0"
+                        >
+                          <InmuebleCardMap
+                            inmueble={inmueble}
+                            isSelected={selectedPropertyId === inmueble.id}
+                            isHovered={hoveredPropertyId === inmueble.id}
+                            onHover={handlePropertyHover}
+                            onClick={handleMobileCardClick}
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                )}
 
-                {displayInmuebles.length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-8 text-gray-500">
-                    <MapPin className="w-10 h-10 text-gray-300 mb-2" />
-                    <p className="text-sm font-medium">No hay propiedades</p>
-                    <p className="text-xs text-gray-400">Dibuja una zona en el mapa</p>
-                  </div>
-                )}
-              </div>
+                  {displayInmuebles.length > 20 && (
+                    <div className="mt-3 text-center">
+                      <Link
+                        href="/inmuebles"
+                        className="inline-flex items-center gap-1 text-sm text-[#00F0D0] hover:text-[#00dbbe] font-medium"
+                      >
+                        Ver todas las propiedades
+                        <ChevronRight size={14} />
+                      </Link>
+                    </div>
+                  )}
+
+                  {displayInmuebles.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+                      <MapPin className="w-10 h-10 text-gray-300 mb-2" />
+                      <p className="text-sm font-medium">No hay propiedades</p>
+                      <p className="text-xs text-gray-400">Dibuja una zona en el mapa</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ) : (
