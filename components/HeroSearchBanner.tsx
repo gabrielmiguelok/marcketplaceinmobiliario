@@ -18,7 +18,7 @@ interface FiltersData {
   tipos: FilterOption[]
   operaciones: FilterOption[]
   habitaciones: FilterOption[]
-  rangosPrecios: { value: string; label: string; min: number; max: number | null }[]
+  rangosPrecios: { value: string; label: string; min: number; max: number | null; count?: number }[]
 }
 
 interface SearchResult {
@@ -46,6 +46,7 @@ interface SearchFilterItemProps {
   onSelect: (value: string) => void
   hasSeparator?: boolean
   loading?: boolean
+  updating?: boolean
 }
 
 function SearchFilterItem({
@@ -57,7 +58,8 @@ function SearchFilterItem({
   options,
   onSelect,
   hasSeparator,
-  loading
+  loading,
+  updating
 }: SearchFilterItemProps) {
   return (
     <div
@@ -74,10 +76,14 @@ function SearchFilterItem({
     >
       <span className="text-[10px] md:text-[11px] uppercase tracking-widest text-gray-500 font-bold mb-1.5 select-none flex items-center gap-1 transition-colors group-hover:text-[#00F0D0]">
         {label}
+        {updating && <Loader2 size={10} className="animate-spin text-[#00F0D0]" />}
       </span>
 
       <div className="flex items-center justify-between text-[#0B1B32]">
-        <span className="font-bold text-[14px] md:text-[15px] truncate select-none leading-tight">
+        <span className={cn(
+          "font-bold text-[14px] md:text-[15px] truncate select-none leading-tight",
+          updating && "opacity-60"
+        )}>
           {loading ? "Cargando..." : displayValue}
         </span>
         <div className={cn(
@@ -116,30 +122,36 @@ function SearchFilterItem({
             {!value && <Check size={16} className="text-[#00F0D0]" />}
           </div>
 
-          {options.map((opt) => (
-            <div
-              key={opt.value}
-              className={cn(
-                "flex items-center justify-between px-4 py-3 hover:bg-[#F0FDFA] rounded-xl transition-colors cursor-pointer group/item",
-                value === opt.value && "bg-[#F0FDFA]"
-              )}
-              onClick={(e) => {
-                e.stopPropagation()
-                onSelect(opt.value)
-              }}
-            >
-              <div>
-                <div className="font-bold text-[#0B1B32] text-sm group-hover/item:text-[#00F0D0] transition-colors">
-                  {opt.label}
-                  {opt.count !== undefined && (
-                    <span className="text-gray-400 font-normal ml-1">({opt.count})</span>
-                  )}
-                </div>
-                {opt.subLabel && <div className="text-xs text-gray-400 mt-0.5">{opt.subLabel}</div>}
-              </div>
-              {value === opt.value && <Check size={16} className="text-[#00F0D0]" />}
+          {options.length === 0 ? (
+            <div className="px-4 py-3 text-gray-400 text-sm text-center">
+              Sin opciones disponibles
             </div>
-          ))}
+          ) : (
+            options.map((opt) => (
+              <div
+                key={opt.value}
+                className={cn(
+                  "flex items-center justify-between px-4 py-3 hover:bg-[#F0FDFA] rounded-xl transition-colors cursor-pointer group/item",
+                  value === opt.value && "bg-[#F0FDFA]"
+                )}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onSelect(opt.value)
+                }}
+              >
+                <div>
+                  <div className="font-bold text-[#0B1B32] text-sm group-hover/item:text-[#00F0D0] transition-colors">
+                    {opt.label}
+                    {opt.count !== undefined && (
+                      <span className="text-gray-400 font-normal ml-1">({opt.count})</span>
+                    )}
+                  </div>
+                  {opt.subLabel && <div className="text-xs text-gray-400 mt-0.5">{opt.subLabel}</div>}
+                </div>
+                {value === opt.value && <Check size={16} className="text-[#00F0D0]" />}
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
@@ -167,9 +179,10 @@ function formatPrecio(precio: number, moneda: string): string {
 interface ResultCardProps {
   inmueble: SearchResult
   onClick: () => void
+  isDragging: boolean
 }
 
-function ResultCard({ inmueble, onClick }: ResultCardProps) {
+function ResultCard({ inmueble, onClick, isDragging }: ResultCardProps) {
   const fallbackImage = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=400"
   const imageUrl = getImageSrc(inmueble.imagen_url) || fallbackImage
 
@@ -182,17 +195,27 @@ function ResultCard({ inmueble, onClick }: ResultCardProps) {
     bodega: 'Bodega',
   }
 
+  const handleClick = (e: React.MouseEvent) => {
+    if (isDragging) {
+      e.preventDefault()
+      e.stopPropagation()
+      return
+    }
+    onClick()
+  }
+
   return (
     <div
-      className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all cursor-pointer group flex-shrink-0 w-[280px] md:w-auto"
-      onClick={onClick}
+      className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all cursor-pointer group flex-shrink-0 w-[160px] md:w-[220px] select-none"
+      onClick={handleClick}
     >
-      <div className="relative h-32 md:h-36 overflow-hidden">
+      <div className="relative h-28 md:h-36 overflow-hidden">
         <img
           src={imageUrl}
           alt={inmueble.titulo}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none"
           onError={(e) => { (e.target as HTMLImageElement).src = fallbackImage }}
+          draggable={false}
         />
         <div className="absolute top-2 left-2">
           <span className="bg-[#00F0D0] text-[#0B1B32] text-[10px] font-bold px-2 py-1 rounded-full">
@@ -225,8 +248,6 @@ function ResultCard({ inmueble, onClick }: ResultCardProps) {
   )
 }
 
-const ITEMS_PER_PAGE = 8
-
 export default function HeroSearchBanner() {
   const router = useRouter()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -234,36 +255,65 @@ export default function HeroSearchBanner() {
 
   const [filters, setFilters] = useState<FiltersData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [updatingFilters, setUpdatingFilters] = useState(false)
   const [searching, setSearching] = useState(false)
+  const [totalDisponibles, setTotalDisponibles] = useState(0)
 
   const [openFilter, setOpenFilter] = useState<string | null>(null)
   const [showResults, setShowResults] = useState(false)
   const [results, setResults] = useState<SearchResult[]>([])
-  const [currentPage, setCurrentPage] = useState(0)
 
   const [zona, setZona] = useState("")
   const [habitaciones, setHabitaciones] = useState("")
   const [rangoPrecio, setRangoPrecio] = useState("")
 
-  const totalPages = Math.ceil(results.length / ITEMS_PER_PAGE)
-  const visibleResults = results.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE)
+  const [isDragging, setIsDragging] = useState(false)
+  const [startX, setStartX] = useState(0)
+  const [scrollLeft, setScrollLeft] = useState(0)
+  const [hasDragged, setHasDragged] = useState(false)
 
-  useEffect(() => {
-    const fetchFilters = async () => {
-      try {
-        const res = await fetch("/api/search-filters")
-        const data = await res.json()
-        if (data.success) {
-          setFilters(data.filters)
-        }
-      } catch (error) {
-        console.error("Error cargando filtros:", error)
-      } finally {
+  const fetchFilters = useCallback(async (currentZona: string, currentHabitaciones: string, currentRangoPrecio: string, isInitial = false) => {
+    if (!isInitial) {
+      setUpdatingFilters(true)
+    }
+
+    try {
+      const params = new URLSearchParams()
+      if (currentZona) params.set("zona", currentZona)
+      if (currentHabitaciones) params.set("habitaciones", currentHabitaciones)
+      if (currentRangoPrecio) {
+        const [min, max] = currentRangoPrecio.split("-")
+        if (min) params.set("precio_min", min)
+        if (max) params.set("precio_max", max)
+      }
+
+      const res = await fetch(`/api/search-filters?${params.toString()}`)
+      const data = await res.json()
+
+      if (data.success) {
+        setFilters(data.filters)
+        setTotalDisponibles(data.totalDisponibles)
+      }
+    } catch (error) {
+      console.error("Error cargando filtros:", error)
+    } finally {
+      if (isInitial) {
         setLoading(false)
+      } else {
+        setUpdatingFilters(false)
       }
     }
-    fetchFilters()
   }, [])
+
+  useEffect(() => {
+    fetchFilters("", "", "", true)
+  }, [fetchFilters])
+
+  useEffect(() => {
+    if (!loading) {
+      fetchFilters(zona, habitaciones, rangoPrecio)
+    }
+  }, [zona, habitaciones, rangoPrecio, loading, fetchFilters])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -275,11 +325,81 @@ export default function HeroSearchBanner() {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!carouselRef.current) return
+    setIsDragging(true)
+    setHasDragged(false)
+    setStartX(e.pageX - carouselRef.current.offsetLeft)
+    setScrollLeft(carouselRef.current.scrollLeft)
+    carouselRef.current.style.cursor = 'grabbing'
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+    if (carouselRef.current) {
+      carouselRef.current.style.cursor = 'grab'
+    }
+    setTimeout(() => setHasDragged(false), 100)
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !carouselRef.current) return
+    e.preventDefault()
+    const x = e.pageX - carouselRef.current.offsetLeft
+    const walk = (x - startX) * 1.5
+    if (Math.abs(walk) > 5) {
+      setHasDragged(true)
+    }
+    carouselRef.current.scrollLeft = scrollLeft - walk
+  }
+
+  const handleMouseLeave = () => {
+    if (isDragging) {
+      setIsDragging(false)
+      if (carouselRef.current) {
+        carouselRef.current.style.cursor = 'grab'
+      }
+    }
+  }
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!carouselRef.current) return
+    setIsDragging(true)
+    setHasDragged(false)
+    setStartX(e.touches[0].pageX - carouselRef.current.offsetLeft)
+    setScrollLeft(carouselRef.current.scrollLeft)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || !carouselRef.current) return
+    const x = e.touches[0].pageX - carouselRef.current.offsetLeft
+    const walk = (x - startX) * 1.5
+    if (Math.abs(walk) > 5) {
+      setHasDragged(true)
+    }
+    carouselRef.current.scrollLeft = scrollLeft - walk
+  }
+
+  const handleTouchEnd = () => {
+    setIsDragging(false)
+    setTimeout(() => setHasDragged(false), 100)
+  }
+
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    if (!carouselRef.current) return
+    const scrollAmount = carouselRef.current.clientWidth * 0.8
+    carouselRef.current.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth'
+    })
+  }
+
   const handleSearch = useCallback(async () => {
+    if (totalDisponibles === 0) return
+
     setSearching(true)
     setShowResults(true)
     setOpenFilter(null)
-    setCurrentPage(0)
 
     try {
       const params = new URLSearchParams()
@@ -303,7 +423,7 @@ export default function HeroSearchBanner() {
     } finally {
       setSearching(false)
     }
-  }, [zona, habitaciones, rangoPrecio])
+  }, [zona, habitaciones, rangoPrecio, totalDisponibles])
 
   const handleViewAll = () => {
     const params = new URLSearchParams()
@@ -320,21 +440,13 @@ export default function HeroSearchBanner() {
   }
 
   const handleResultClick = (id: number) => {
+    if (hasDragged) return
     router.push(`/inmuebles/${id}`)
   }
 
   const handleClose = () => {
     setShowResults(false)
     setResults([])
-    setCurrentPage(0)
-  }
-
-  const handlePrevPage = () => {
-    setCurrentPage(prev => Math.max(0, prev - 1))
-  }
-
-  const handleNextPage = () => {
-    setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))
   }
 
   const getZonaDisplay = () => {
@@ -355,6 +467,26 @@ export default function HeroSearchBanner() {
     return found ? found.label : rangoPrecio
   }
 
+  const handleZonaSelect = (val: string) => {
+    setZona(val)
+    if (val && filters?.zonas.find(z => z.value === val) === undefined) {
+      setZona("")
+    }
+    setOpenFilter(null)
+  }
+
+  const handleHabitacionesSelect = (val: string) => {
+    setHabitaciones(val)
+    setOpenFilter(null)
+  }
+
+  const handlePrecioSelect = (val: string) => {
+    setRangoPrecio(val)
+    setOpenFilter(null)
+  }
+
+  const hasActiveFilters = zona || habitaciones || rangoPrecio
+
   return (
     <div ref={containerRef} className="w-full max-w-[360px] lg:max-w-[1100px] flex flex-col items-center gap-4">
       <div className="bg-white rounded-[2rem] p-2 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] w-full max-w-[360px] lg:max-w-[900px] flex flex-col lg:flex-row items-stretch lg:items-center animate-in fade-in zoom-in-95 duration-700 backdrop-blur-sm border border-white/80">
@@ -367,8 +499,9 @@ export default function HeroSearchBanner() {
             onToggle={() => setOpenFilter(openFilter === "location" ? null : "location")}
             hasSeparator={true}
             options={filters?.zonas || []}
-            onSelect={(val) => { setZona(val); setOpenFilter(null) }}
+            onSelect={handleZonaSelect}
             loading={loading}
+            updating={updatingFilters}
           />
         </div>
 
@@ -381,8 +514,9 @@ export default function HeroSearchBanner() {
             onToggle={() => setOpenFilter(openFilter === "rooms" ? null : "rooms")}
             hasSeparator={true}
             options={filters?.habitaciones || []}
-            onSelect={(val) => { setHabitaciones(val); setOpenFilter(null) }}
+            onSelect={handleHabitacionesSelect}
             loading={loading}
+            updating={updatingFilters}
           />
         </div>
 
@@ -394,9 +528,10 @@ export default function HeroSearchBanner() {
             isOpen={openFilter === "price"}
             onToggle={() => setOpenFilter(openFilter === "price" ? null : "price")}
             hasSeparator={false}
-            options={filters?.rangosPrecios.map(r => ({ value: r.value, label: r.label })) || []}
-            onSelect={(val) => { setRangoPrecio(val); setOpenFilter(null) }}
+            options={filters?.rangosPrecios.map(r => ({ value: r.value, label: r.label, count: r.count })) || []}
+            onSelect={handlePrecioSelect}
             loading={loading}
+            updating={updatingFilters}
           />
         </div>
 
@@ -404,8 +539,14 @@ export default function HeroSearchBanner() {
           <button
             type="button"
             onClick={handleSearch}
-            disabled={searching}
-            className="w-full lg:w-auto bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-extrabold text-[14px] py-3 px-6 rounded-[1.5rem] transition-all duration-300 shadow-[0_10px_30px_-5px_rgba(0,240,208,0.4)] hover:shadow-[0_15px_35px_-5px_rgba(0,240,208,0.5)] hover:scale-[1.02] active:scale-[0.98] whitespace-nowrap flex items-center justify-center gap-2 disabled:opacity-70"
+            disabled={searching || totalDisponibles === 0}
+            className={cn(
+              "w-full lg:w-auto font-extrabold text-[14px] py-3 px-6 rounded-[1.5rem] transition-all duration-300 whitespace-nowrap flex items-center justify-center gap-2",
+              totalDisponibles === 0
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] shadow-[0_10px_30px_-5px_rgba(0,240,208,0.4)] hover:shadow-[0_15px_35px_-5px_rgba(0,240,208,0.5)] hover:scale-[1.02] active:scale-[0.98]",
+              "disabled:opacity-70"
+            )}
             aria-label="Buscar propiedades con los filtros seleccionados"
           >
             {searching ? (
@@ -413,10 +554,32 @@ export default function HeroSearchBanner() {
             ) : (
               <Search size={18} />
             )}
-            Buscar
+            {totalDisponibles === 0 ? "Sin resultados" : `Buscar (${totalDisponibles})`}
           </button>
         </div>
       </div>
+
+      {hasActiveFilters && !showResults && (
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-white/80">
+            {totalDisponibles === 0 ? (
+              <span className="text-red-300">No hay propiedades con estos filtros</span>
+            ) : (
+              <span>{totalDisponibles} propiedades disponibles</span>
+            )}
+          </span>
+          <button
+            onClick={() => {
+              setZona("")
+              setHabitaciones("")
+              setRangoPrecio("")
+            }}
+            className="text-[#00F0D0] hover:underline font-medium"
+          >
+            Limpiar filtros
+          </button>
+        </div>
+      )}
 
       {showResults && (
         <div className="w-full bg-white/95 backdrop-blur-md rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.4)] border border-white/80 p-4 md:p-6 animate-in fade-in slide-in-from-top-4 duration-300">
@@ -443,11 +606,9 @@ export default function HeroSearchBanner() {
                   <span className="text-sm text-gray-600">
                     <strong className="text-[#0B1B32] text-lg">{results.length}</strong> propiedades encontradas
                   </span>
-                  {totalPages > 1 && (
-                    <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
-                      Página {currentPage + 1} de {totalPages}
-                    </span>
-                  )}
+                  <span className="text-xs text-gray-400 hidden md:inline">
+                    Arrastra para ver más →
+                  </span>
                 </div>
                 <button
                   onClick={handleClose}
@@ -458,52 +619,51 @@ export default function HeroSearchBanner() {
               </div>
 
               <div className="relative">
-                {totalPages > 1 && currentPage > 0 && (
-                  <button
-                    onClick={handlePrevPage}
-                    className="absolute -left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white shadow-lg rounded-full flex items-center justify-center text-[#0B1B32] hover:bg-[#00F0D0] transition-colors"
-                  >
-                    <ChevronLeft size={24} />
-                  </button>
-                )}
+                <button
+                  onClick={() => scrollCarousel('left')}
+                  className="absolute -left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white shadow-lg rounded-full flex items-center justify-center text-[#0B1B32] hover:bg-[#00F0D0] transition-colors hidden md:flex"
+                >
+                  <ChevronLeft size={24} />
+                </button>
 
                 <div
                   ref={carouselRef}
-                  className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 overflow-hidden"
+                  className={cn(
+                    "flex gap-3 md:gap-4 overflow-x-auto scrollbar-hide pb-2",
+                    "scroll-smooth snap-x snap-mandatory",
+                    "cursor-grab active:cursor-grabbing"
+                  )}
+                  style={{
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none',
+                    WebkitOverflowScrolling: 'touch'
+                  }}
+                  onMouseDown={handleMouseDown}
+                  onMouseUp={handleMouseUp}
+                  onMouseMove={handleMouseMove}
+                  onMouseLeave={handleMouseLeave}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
                 >
-                  {visibleResults.map((inmueble) => (
-                    <ResultCard
-                      key={inmueble.id}
-                      inmueble={inmueble}
-                      onClick={() => handleResultClick(inmueble.id)}
-                    />
+                  {results.map((inmueble) => (
+                    <div key={inmueble.id} className="snap-start flex-shrink-0">
+                      <ResultCard
+                        inmueble={inmueble}
+                        onClick={() => handleResultClick(inmueble.id)}
+                        isDragging={hasDragged}
+                      />
+                    </div>
                   ))}
                 </div>
 
-                {totalPages > 1 && currentPage < totalPages - 1 && (
-                  <button
-                    onClick={handleNextPage}
-                    className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white shadow-lg rounded-full flex items-center justify-center text-[#0B1B32] hover:bg-[#00F0D0] transition-colors"
-                  >
-                    <ChevronRight size={24} />
-                  </button>
-                )}
+                <button
+                  onClick={() => scrollCarousel('right')}
+                  className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white shadow-lg rounded-full flex items-center justify-center text-[#0B1B32] hover:bg-[#00F0D0] transition-colors hidden md:flex"
+                >
+                  <ChevronRight size={24} />
+                </button>
               </div>
-
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-4">
-                  {Array.from({ length: totalPages }).map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setCurrentPage(idx)}
-                      className={cn(
-                        "w-2 h-2 rounded-full transition-all",
-                        currentPage === idx ? "bg-[#00F0D0] w-6" : "bg-gray-300 hover:bg-gray-400"
-                      )}
-                    />
-                  ))}
-                </div>
-              )}
 
               <div className="mt-5 pt-4 border-t border-gray-200">
                 <button
