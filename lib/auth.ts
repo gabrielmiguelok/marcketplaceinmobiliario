@@ -29,7 +29,10 @@ const TOKEN_BYTES = Number(process.env.AUTH_JWD_BYTES) || 64
 const COOKIE_NAME = "alobaAuth"
 const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || "localhost"
 
-const JWT_SECRET = process.env.JWT_SECRET || "default-dev-secret"
+const JWT_SECRET = process.env.JWT_SECRET
+if (!JWT_SECRET) {
+  console.warn("[auth] ADVERTENCIA: JWT_SECRET no definido en .env.local")
+}
 
 export function genJwd(): string {
   return crypto.randomBytes(TOKEN_BYTES).toString("hex")
