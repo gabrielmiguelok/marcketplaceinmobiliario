@@ -1,10 +1,12 @@
 import type { MetadataRoute } from "next"
 import { query } from "@/lib/db"
+import { slugify } from "@/lib/utils"
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://marketplaceinmobiliario.com"
 
 interface InmuebleSitemap {
   id: number
+  titulo: string
   updated_at: Date | null
   created_at: Date
   tipo: string
@@ -53,9 +55,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const inmuebles = await query<InmuebleSitemap>(
-      `SELECT id, updated_at, created_at, tipo, operacion, zona, destacado
+      `SELECT id, titulo, updated_at, created_at, tipo, operacion, zona, destacado
        FROM inmuebles
-       WHERE activo = 1
+       WHERE estado = 'disponible'
        ORDER BY destacado DESC, updated_at DESC, created_at DESC`
     )
 
@@ -63,9 +65,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       let priority = 0.6
       if (inmueble.destacado) priority = 0.8
       if (inmueble.zona && [10, 14, 15, 16].includes(inmueble.zona)) priority += 0.05
+      const slug = slugify(inmueble.titulo)
 
       return {
-        url: `${baseUrl}/inmuebles/${inmueble.id}`,
+        url: `${baseUrl}/inmuebles/${inmueble.id}/${slug}`,
         lastModified: inmueble.updated_at || inmueble.created_at || now,
         changeFrequency: "weekly" as const,
         priority: Math.min(priority, 0.85),
