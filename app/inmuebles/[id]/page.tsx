@@ -10,10 +10,12 @@ interface Props {
   params: Promise<{ id: string }>
 }
 
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://marketplaceinmobiliario.com"
+
 function getOgImageUrl(url: string | null): string {
-  if (!url) return "https://marketplaceinmobiliario.com/og.png"
+  if (!url) return `${baseUrl}/og.png`
   if (url.startsWith('/inmuebles/') || url.startsWith('/uploads/') || url.startsWith('/')) {
-    return `https://marketplaceinmobiliario.com/api/imagen${url.startsWith('/') ? url : '/' + url}`
+    return `${baseUrl}/api/imagen${url.startsWith('/') ? url : '/' + url}`
   }
   return url
 }
@@ -36,39 +38,114 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const tipoLabel = tipoLabels[inmueble.tipo] || inmueble.tipo
+  const operacionLabel = inmueble.operacion === 'alquiler' ? 'en Alquiler' : 'en Venta'
   const precioFormateado = inmueble.moneda === 'USD'
     ? `$${inmueble.precio.toLocaleString('en-US')}`
     : `Q${inmueble.precio.toLocaleString('es-GT')}`
 
-  const descripcionSEO = inmueble.descripcion?.slice(0, 160) ||
-    `${tipoLabel} en ${inmueble.zona ? `Zona ${inmueble.zona}, ` : ''}${inmueble.ubicacion || inmueble.departamento}. ${inmueble.habitaciones} hab, ${inmueble.banos} baños. ${precioFormateado}`
+  const ubicacionCompleta = [
+    inmueble.zona ? `Zona ${inmueble.zona}` : null,
+    inmueble.ubicacion,
+    inmueble.departamento,
+    'Guatemala'
+  ].filter(Boolean).join(', ')
+
+  const caracteristicas = [
+    inmueble.habitaciones > 0 ? `${inmueble.habitaciones} habitaciones` : null,
+    inmueble.banos > 0 ? `${inmueble.banos} baños` : null,
+    inmueble.parqueos > 0 ? `${inmueble.parqueos} parqueos` : null,
+    inmueble.metros_cuadrados > 0 ? `${inmueble.metros_cuadrados}m²` : null,
+  ].filter(Boolean).join(', ')
+
+  const tituloSEO = `${tipoLabel} ${operacionLabel} en ${inmueble.zona ? `Zona ${inmueble.zona}` : inmueble.ubicacion || inmueble.departamento} | ${precioFormateado}`
+
+  const descripcionSEO = inmueble.descripcion?.slice(0, 155) ||
+    `${tipoLabel} ${operacionLabel} en ${ubicacionCompleta}. ${caracteristicas}. Precio: ${precioFormateado}. Encuentra tu propiedad ideal en Aloba Guatemala.`
 
   const imageUrl = getOgImageUrl(inmueble.imagen_url)
+  const canonicalUrl = `${baseUrl}/inmuebles/${inmueble.id}`
+
+  const keywordsArray = [
+    tipoLabel,
+    `${tipoLabel} ${operacionLabel}`,
+    `${tipoLabel} ${inmueble.zona ? `Zona ${inmueble.zona}` : ''}`.trim(),
+    inmueble.operacion === 'alquiler' ? 'alquiler' : 'venta',
+    inmueble.zona ? `Zona ${inmueble.zona}` : null,
+    inmueble.zona ? `Zona ${inmueble.zona} Guatemala` : null,
+    inmueble.ubicacion,
+    inmueble.departamento,
+    'inmuebles Guatemala',
+    'propiedades Guatemala',
+    'bienes raíces Guatemala',
+    `${tipoLabel.toLowerCase()} en venta Guatemala`,
+    `${tipoLabel.toLowerCase()} en alquiler Guatemala`,
+  ].filter(Boolean) as string[]
 
   return {
-    title: `${inmueble.titulo} | ${precioFormateado} | Aloba`,
+    title: tituloSEO,
     description: descripcionSEO,
-    keywords: [tipoLabel, inmueble.operacion, `Zona ${inmueble.zona}`, inmueble.ubicacion, 'Guatemala', 'inmuebles', 'propiedades'].filter(Boolean),
+    keywords: keywordsArray,
+    authors: [{ name: 'Aloba Guatemala' }],
+    creator: 'Aloba - Marketplace Inmobiliario Guatemala',
+    publisher: 'Aloba',
+    alternates: {
+      canonical: canonicalUrl,
+    },
     openGraph: {
       title: `${inmueble.titulo} - ${precioFormateado}`,
       description: descripcionSEO,
-      type: 'website',
+      type: 'article',
+      url: canonicalUrl,
       locale: 'es_GT',
-      siteName: 'Aloba - Marketplace Inmobiliario',
+      siteName: 'Aloba - Marketplace Inmobiliario Guatemala',
       images: [
         {
           url: imageUrl,
           width: 1200,
           height: 630,
-          alt: inmueble.titulo,
+          alt: `${tipoLabel} ${operacionLabel} - ${inmueble.titulo}`,
+          type: 'image/webp',
         },
       ],
+      countryName: 'Guatemala',
     },
     twitter: {
       card: 'summary_large_image',
+      site: '@AlobaGT',
+      creator: '@AlobaGT',
       title: `${inmueble.titulo} - ${precioFormateado}`,
       description: descripcionSEO,
-      images: [imageUrl],
+      images: {
+        url: imageUrl,
+        alt: `${tipoLabel} ${operacionLabel} - ${inmueble.titulo}`,
+      },
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+        'max-video-preview': -1,
+      },
+    },
+    other: {
+      'og:price:amount': inmueble.precio.toString(),
+      'og:price:currency': inmueble.moneda,
+      'product:price:amount': inmueble.precio.toString(),
+      'product:price:currency': inmueble.moneda,
+      'property:type': tipoLabel,
+      'property:location': ubicacionCompleta,
+      'geo.region': 'GT',
+      'geo.placename': inmueble.departamento || 'Guatemala',
+      'geo.position': inmueble.latitud && inmueble.longitud
+        ? `${inmueble.latitud};${inmueble.longitud}`
+        : undefined,
+      'ICBM': inmueble.latitud && inmueble.longitud
+        ? `${inmueble.latitud}, ${inmueble.longitud}`
+        : undefined,
     },
   }
 }
@@ -104,8 +181,112 @@ export default async function InmuebleDetailPage({ params }: Props) {
     bodega: 'Bodega',
   }
 
+  const tipoLabel = tipoLabels[inmueble.tipo] || inmueble.tipo
+  const operacionLabel = inmueble.operacion === 'alquiler' ? 'en Alquiler' : 'en Venta'
+  const ogImageUrl = getOgImageUrl(inmueble.imagen_url)
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateListing",
+    "@id": `${baseUrl}/inmuebles/${inmueble.id}`,
+    name: inmueble.titulo,
+    description: inmueble.descripcion || `${tipoLabel} ${operacionLabel} en Guatemala`,
+    url: `${baseUrl}/inmuebles/${inmueble.id}`,
+    datePosted: inmueble.created_at ? new Date(inmueble.created_at).toISOString() : undefined,
+    image: ogImageUrl,
+    offers: {
+      "@type": "Offer",
+      price: inmueble.precio,
+      priceCurrency: inmueble.moneda,
+      availability: "https://schema.org/InStock",
+      validFrom: inmueble.created_at ? new Date(inmueble.created_at).toISOString() : undefined,
+      businessFunction: inmueble.operacion === 'alquiler'
+        ? "https://schema.org/LeaseOut"
+        : "https://schema.org/Sell",
+    },
+    about: {
+      "@type": inmueble.tipo === 'apartamento' ? "Apartment" :
+              inmueble.tipo === 'casa' ? "House" :
+              inmueble.tipo === 'terreno' ? "LandPlot" :
+              inmueble.tipo === 'oficina' ? "Office" : "RealEstateListing",
+      name: inmueble.titulo,
+      description: inmueble.descripcion,
+      numberOfRooms: inmueble.habitaciones > 0 ? inmueble.habitaciones : undefined,
+      numberOfBathroomsTotal: inmueble.banos > 0 ? inmueble.banos : undefined,
+      floorSize: inmueble.metros_cuadrados > 0 ? {
+        "@type": "QuantitativeValue",
+        value: inmueble.metros_cuadrados,
+        unitCode: "MTK",
+      } : undefined,
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: inmueble.ubicacion || inmueble.departamento,
+        addressRegion: inmueble.departamento,
+        addressCountry: "GT",
+        streetAddress: inmueble.zona ? `Zona ${inmueble.zona}` : undefined,
+      },
+      geo: inmueble.latitud && inmueble.longitud ? {
+        "@type": "GeoCoordinates",
+        latitude: inmueble.latitud,
+        longitude: inmueble.longitud,
+      } : undefined,
+      image: ogImageUrl,
+    },
+    provider: {
+      "@type": "RealEstateAgent",
+      name: "Aloba",
+      url: baseUrl,
+      logo: `${baseUrl}/logo.png`,
+      areaServed: {
+        "@type": "Country",
+        name: "Guatemala",
+      },
+    },
+    areaServed: {
+      "@type": "City",
+      name: inmueble.departamento || "Guatemala City",
+      containedInPlace: {
+        "@type": "Country",
+        name: "Guatemala",
+      },
+    },
+  }
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Inicio",
+        item: baseUrl,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Inmuebles",
+        item: `${baseUrl}/inmuebles`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: inmueble.titulo,
+        item: `${baseUrl}/inmuebles/${inmueble.id}`,
+      },
+    ],
+  }
+
   return (
     <div className="min-h-screen bg-white font-sans text-[#0B1B32] flex flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <Header activePage="inmuebles" />
 
       <main className="flex-1 pt-24 pb-16">
