@@ -264,7 +264,7 @@ OPENAI_API_KEY=sk-...
 ## Development Notes
 
 - **Port**: 1212
-- **Cookie**: `doutopAuth` (httpOnly)
+- **Cookie**: `alobaAuth` (httpOnly)
 - **Toast notifications**: Use `react-hot-toast` (never `alert()`)
 - **Cache invalidation**: Use `revalidatePath()` after mutations
 - **SEO**: Property pages have dynamic metadata with OpenGraph images
