@@ -99,6 +99,16 @@ export function generateProductSlug(title: string, id: string): string {
   return `${slugifiedTitle}-${id}`;
 }
 
+export function generateInmuebleUrl(id: number, titulo: string): string {
+  const slug = slugify(titulo)
+  return `/inmuebles/${id}/${slug}`
+}
+
+export function extractIdFromInmuebleUrl(idOrSlug: string): number | null {
+  const num = parseInt(idOrSlug, 10)
+  return isNaN(num) ? null : num
+}
+
 const countryCodeToNameMap: Record<string, string> = {
   AR: "Argentina",
   BR: "Brasil",
