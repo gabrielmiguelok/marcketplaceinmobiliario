@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { ChevronDown, Check, Search, MapPin, Bed, Loader2, ChevronLeft, ChevronRight, X } from "lucide-react"
+import { generateInmuebleUrl } from "@/lib/utils"
 
 const cn = (...classes: (string | undefined | null | false)[]) => classes.filter(Boolean).join(" ")
 
@@ -494,9 +495,9 @@ export default function HeroSearchBanner() {
     router.push(`/inmuebles${queryString ? `?${queryString}` : ""}`)
   }
 
-  const handleResultClick = (id: number) => {
+  const handleResultClick = (id: number, titulo: string) => {
     if (hasDragged) return
-    router.push(`/inmuebles/${id}`)
+    router.push(generateInmuebleUrl(id, titulo))
   }
 
   const handleClose = () => {
@@ -729,7 +730,7 @@ export default function HeroSearchBanner() {
                     <div key={inmueble.id} className="snap-start flex-shrink-0">
                       <ResultCard
                         inmueble={inmueble}
-                        onClick={() => handleResultClick(inmueble.id)}
+                        onClick={() => handleResultClick(inmueble.id, inmueble.titulo)}
                         isDragging={hasDragged}
                       />
                     </div>

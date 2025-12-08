@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import InmuebleCardMap from '@/components/map/InmuebleCardMap'
 import { ChevronLeft, ChevronRight, MapPin, Loader2, X, ChevronDown, Bed, Bath, Car, Maximize, ExternalLink, ArrowLeft } from 'lucide-react'
+import { generateInmuebleUrl } from '@/lib/utils'
 
 function getImageSrc(url: string | null): string | null {
   if (!url) return null
@@ -301,13 +302,13 @@ export default function MapaInmueblesPage() {
     setHoveredPropertyId(id)
   }, [])
 
-  const handleViewProperty = useCallback((id: number) => {
-    router.push(`/inmuebles/${id}`)
+  const handleViewProperty = useCallback((id: number, titulo: string) => {
+    router.push(generateInmuebleUrl(id, titulo))
   }, [router])
 
-  const handleMobileCardClick = useCallback((id: number) => {
+  const handleMobileCardClick = useCallback((id: number, titulo: string) => {
     if (selectedPropertyId === id) {
-      router.push(`/inmuebles/${id}`)
+      router.push(generateInmuebleUrl(id, titulo))
     } else {
       setSelectedPropertyId(id)
     }
@@ -559,7 +560,7 @@ export default function MapaInmueblesPage() {
                       )}
 
                       <Link
-                        href={`/inmuebles/${selectedInmueble.id}`}
+                        href={generateInmuebleUrl(selectedInmueble.id, selectedInmueble.titulo)}
                         className="flex items-center justify-center gap-2 w-full bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-bold py-3 px-4 rounded-xl transition-colors"
                       >
                         Ver propiedad completa

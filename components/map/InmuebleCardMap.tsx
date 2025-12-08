@@ -4,6 +4,7 @@ import { useState, memo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Heart, Share2, MapPin, Bed, Bath, Car, Maximize, Check } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { generateInmuebleUrl } from '@/lib/utils'
 
 function getImageSrc(url: string | null): string | null {
   if (!url) return null
@@ -43,7 +44,7 @@ interface InmuebleCardMapProps {
   isSelected?: boolean
   isHovered?: boolean
   onHover?: (id: number | null) => void
-  onClick?: (id: number) => void
+  onClick?: (id: number, titulo: string) => void
 }
 
 function formatPrecio(precio: number, moneda: string): string {
@@ -80,7 +81,7 @@ function InmuebleCardMapComponent({
 
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    const url = `${window.location.origin}/inmuebles/${inmueble.id}`
+    const url = `${window.location.origin}${generateInmuebleUrl(inmueble.id, inmueble.titulo)}`
     try {
       await navigator.clipboard.writeText(url)
       setCopied(true)
@@ -99,9 +100,9 @@ function InmuebleCardMapComponent({
 
   const handleClick = () => {
     if (onClick) {
-      onClick(inmueble.id)
+      onClick(inmueble.id, inmueble.titulo)
     } else {
-      router.push(`/inmuebles/${inmueble.id}`)
+      router.push(generateInmuebleUrl(inmueble.id, inmueble.titulo))
     }
   }
 

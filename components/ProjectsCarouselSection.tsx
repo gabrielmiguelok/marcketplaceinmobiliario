@@ -5,6 +5,7 @@ import useEmblaCarousel from "embla-carousel-react"
 import AutoScroll from "embla-carousel-auto-scroll"
 import { Heart, Share2, MapPin, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { generateInmuebleUrl } from "@/lib/utils"
 
 interface Inmueble {
   id: number
@@ -55,7 +56,7 @@ function formatPrecio(precio: number, moneda: string): string {
 
 function ProjectCard({ id, image, title, location, price, tag }: ProjectCardProps) {
   return (
-    <Link href={`/inmuebles/${id}`}>
+    <Link href={generateInmuebleUrl(id, title)}>
       <article
         className="relative group w-[85vw] md:w-[320px] lg:w-[350px] h-[450px] md:h-[480px] rounded-[2rem] overflow-hidden shadow-lg transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer bg-white flex-shrink-0 border border-gray-100"
         role="group"

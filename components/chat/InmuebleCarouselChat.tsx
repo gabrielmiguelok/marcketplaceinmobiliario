@@ -6,6 +6,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { MapPin, Bed, Bath, ChevronLeft, ChevronRight, Heart, Share2, Maximize, Check } from "lucide-react"
 import type { InmuebleResult } from "@/hooks/useChatManager"
+import { generateInmuebleUrl } from "@/lib/utils"
 
 interface InmuebleCarouselChatProps {
   inmuebles: InmuebleResult[]
@@ -47,10 +48,10 @@ function getOperacionLabel(operacion: string): string {
   return operacion === "alquiler" ? "En Alquiler" : "En Venta"
 }
 
-function copyToClipboard(inmuebleId: number, e: React.MouseEvent) {
+function copyToClipboard(inmuebleId: number, titulo: string, e: React.MouseEvent) {
   e.preventDefault()
   e.stopPropagation()
-  const url = `${window.location.origin}/inmuebles/${inmuebleId}`
+  const url = `${window.location.origin}${generateInmuebleUrl(inmuebleId, titulo)}`
   navigator.clipboard.writeText(url).then(() => {
     const btn = e.currentTarget as HTMLButtonElement
     btn.classList.add('bg-green-500')
@@ -65,7 +66,7 @@ function InmuebleCardLarge({ inmueble, index }: { inmueble: InmuebleResult; inde
   const handleShare = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    const url = `${window.location.origin}/inmuebles/${inmueble.id}`
+    const url = `${window.location.origin}${generateInmuebleUrl(inmueble.id, inmueble.titulo)}`
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
@@ -78,7 +79,7 @@ function InmuebleCardLarge({ inmueble, index }: { inmueble: InmuebleResult; inde
     : inmueble.ubicacion || inmueble.departamento || 'Guatemala'
 
   return (
-    <Link href={`/inmuebles/${inmueble.id}`} target="_blank" className="block">
+    <Link href={generateInmuebleUrl(inmueble.id, inmueble.titulo)} target="_blank" className="block">
       <motion.article
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -173,7 +174,7 @@ function InmuebleCardCarousel({ inmueble, index }: { inmueble: InmuebleResult; i
     : inmueble.ubicacion?.split(',')[0] || 'Guatemala'
 
   return (
-    <Link href={`/inmuebles/${inmueble.id}`} target="_blank" className="block flex-shrink-0">
+    <Link href={generateInmuebleUrl(inmueble.id, inmueble.titulo)} target="_blank" className="block flex-shrink-0">
       <motion.article
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}

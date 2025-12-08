@@ -4,6 +4,7 @@ import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { Heart, Share2, MapPin, Bed, Bath, Car, Maximize, Search, X, SlidersHorizontal, ChevronDown, ChevronLeft, ChevronRight, Check } from "lucide-react"
 import toast from "react-hot-toast"
+import { generateInmuebleUrl } from "@/lib/utils"
 
 const ITEMS_PER_PAGE = 12
 
@@ -70,7 +71,7 @@ function InmuebleCard({ inmueble, onClick }: InmuebleCardProps) {
 
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    const url = `${window.location.origin}/inmuebles/${inmueble.id}`
+    const url = `${window.location.origin}${generateInmuebleUrl(inmueble.id, inmueble.titulo)}`
     try {
       await navigator.clipboard.writeText(url)
       setCopied(true)
@@ -594,13 +595,13 @@ export default function InmueblesGrid({ inmuebles, initialFilters }: InmueblesGr
         <>
           <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {paginatedInmuebles.map((inmueble) => (
-              <InmuebleCard key={inmueble.id} inmueble={inmueble} onClick={() => router.push(`/inmuebles/${inmueble.id}`)} />
+              <InmuebleCard key={inmueble.id} inmueble={inmueble} onClick={() => router.push(generateInmuebleUrl(inmueble.id, inmueble.titulo))} />
             ))}
           </div>
 
           <div className="md:hidden grid grid-cols-1 gap-6">
             {mobileInmuebles.map((inmueble) => (
-              <InmuebleCard key={inmueble.id} inmueble={inmueble} onClick={() => router.push(`/inmuebles/${inmueble.id}`)} />
+              <InmuebleCard key={inmueble.id} inmueble={inmueble} onClick={() => router.push(generateInmuebleUrl(inmueble.id, inmueble.titulo))} />
             ))}
           </div>
 
