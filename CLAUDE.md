@@ -28,8 +28,8 @@ sudo mysql -u root -e "SELECT * FROM aloba_db.inmuebles LIMIT 5"
 
 ## Tech Stack
 
-- **Next.js 14.2.16** with App Router
-- **React 18** with TypeScript
+- **Next.js 16.0.8** with App Router
+- **React 19.2.1** with TypeScript
 - **Tailwind CSS 4** with OKLCH color model
 - **Radix UI + Shadcn/ui** (New York style)
 - **Embla Carousel** for infinite scroll carousels
