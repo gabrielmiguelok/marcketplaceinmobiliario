@@ -158,7 +158,7 @@ export default function AdminInmueblesPage() {
       const response = await fetch('/api/inmuebles')
       if (!response.ok) throw new Error('Error al cargar inmuebles')
       const data = await response.json()
-      setInmuebles(data)
+      setInmuebles(data.inmuebles || [])
     } catch (error: any) {
       toast.error(error.message || 'Error al cargar datos')
     } finally {

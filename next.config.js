@@ -101,9 +101,9 @@ const nextConfig = {
     ];
   },
 
-  /* ───── 7) Lint/TS (no rompen la build) ───── */
-  eslint: { ignoreDuringBuilds: true },
+  /* ───── 7) TypeScript ───── */
   typescript: { ignoreBuildErrors: true },
+  turbopack: {},
 
   /* ───── 8) Redirects ───── */
   async redirects() {

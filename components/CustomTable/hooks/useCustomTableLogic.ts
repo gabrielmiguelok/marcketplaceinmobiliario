@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import {
   createColumnHelper,
   useReactTable,
@@ -166,18 +166,19 @@ export function useCustomTableLogic<T extends Record<string, any>>({
   });
 
   // 8) Exportar a Excel
-  const handleDownloadExcel = () => {
+  const handleDownloadExcel = async () => {
     try {
       const exportCols = getExportColumnsDef(finalColumns);
-      const wsData: (string | number)[][] = [
-        exportCols.map((c) => c.header ?? c.accessorKey.toUpperCase()),
-        ...filteredData.map((row) => exportCols.map((col) => String(getExportValue(row, col)))),
-      ];
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
-      XLSX.utils.book_append_sheet(wb, ws, EXPORT_CONFIG.sheetName);
-      const wbArray = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-      const blob = new Blob([wbArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const headers = exportCols.map((c) => c.header ?? c.accessorKey.toUpperCase());
+      const rows = filteredData.map((row) => exportCols.map((col) => String(getExportValue(row, col))));
+
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet(EXPORT_CONFIG.sheetName);
+      worksheet.addRow(headers);
+      rows.forEach((row) => worksheet.addRow(row));
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;

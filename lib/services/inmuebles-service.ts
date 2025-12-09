@@ -123,3 +123,48 @@ export function formatPrecio(precio: number, moneda: string): string {
   }
   return `Q${precio.toLocaleString('es-GT')}`
 }
+
+export interface UserInmobiliaria {
+  id: number
+  usuario: string
+  email: string
+  full_name: string | null
+  first_name: string | null
+  last_name: string | null
+  picture: string | null
+  telefono: string | null
+  role: string
+}
+
+export const getUserByUsuario = cache(async (usuario: string): Promise<UserInmobiliaria | null> => {
+  try {
+    const db = await getConnection()
+    const [rows]: any = await db.query(
+      `SELECT id, usuario, email, full_name, first_name, last_name, picture, telefono, role
+       FROM users
+       WHERE usuario = ? AND role = 'admin'
+       LIMIT 1`,
+      [usuario]
+    )
+    return rows.length > 0 ? rows[0] : null
+  } catch (error) {
+    console.error('Error al obtener usuario:', error)
+    return null
+  }
+})
+
+export const getInmueblesByUserId = cache(async (userId: number): Promise<Inmueble[]> => {
+  try {
+    const db = await getConnection()
+    const [rows] = await db.query(`
+      SELECT * FROM inmuebles
+      WHERE user_id = ? AND estado = 'disponible'
+      ORDER BY destacado DESC, created_at DESC
+    `, [userId])
+
+    return rows as Inmueble[]
+  } catch (error) {
+    console.error('Error al obtener inmuebles por usuario:', error)
+    return []
+  }
+})

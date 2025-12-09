@@ -1,25 +1,13 @@
 "use client"
 
 import { useState, useEffect, useMemo, useCallback } from "react"
-import { useRouter } from "next/navigation"
-import { Users, Building2, RefreshCw, Plus, LogOut, X } from "lucide-react"
+import { useRouter, useParams } from "next/navigation"
+import { Building2, RefreshCw, Plus, LogOut, Home, ExternalLink } from "lucide-react"
 import toast from "react-hot-toast"
 import { verifyAuthentication } from "@/lib/auth-client"
 import CustomTable from "@/components/CustomTable"
 import { buildColumnsFromDefinition, ColumnFieldsDefinition } from "@/components/CustomTable/CustomTableColumnsConfig"
-import Image from "next/image"
-
-interface User {
-  id: string
-  email: string
-  full_name: string | null
-  first_name: string | null
-  last_name: string | null
-  role: string
-  estado: string
-  last_login: string | null
-  created_at: string
-}
+import Link from "next/link"
 
 interface Inmueble {
   id: number
@@ -43,33 +31,6 @@ interface Inmueble {
   longitud: number | null
   created_at: string
   updated_at: string
-}
-
-const usersFields: ColumnFieldsDefinition = {
-  email: { type: 'text', header: 'EMAIL', width: 250, editable: false },
-  full_name: { type: 'text', header: 'NOMBRE COMPLETO', width: 200 },
-  first_name: { type: 'text', header: 'NOMBRE', width: 120 },
-  last_name: { type: 'text', header: 'APELLIDO', width: 120 },
-  role: {
-    type: 'badge',
-    header: 'ROL',
-    width: 120,
-    options: [
-      { value: 'user', label: 'Usuario' },
-      { value: 'admin', label: 'Admin' },
-    ]
-  },
-  estado: {
-    type: 'badge',
-    header: 'ESTADO',
-    width: 130,
-    options: [
-      { value: 'pendiente', label: 'Pendiente' },
-      { value: 'confirmado', label: 'Confirmado' },
-    ]
-  },
-  last_login: { type: 'text', header: 'ÚLTIMO LOGIN', width: 160, editable: false },
-  created_at: { type: 'text', header: 'REGISTRADO', width: 160, editable: false },
 }
 
 const getInmueblesColumns = (onImageUpload?: (rowId: string, file: File) => Promise<void>) => buildColumnsFromDefinition({
@@ -189,27 +150,17 @@ const getInmueblesColumns = (onImageUpload?: (rowId: string, file: File) => Prom
   },
 })
 
-const usersColumns = buildColumnsFromDefinition(usersFields)
-
-type TabType = 'usuarios' | 'inmuebles'
-
-const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
-  { id: 'usuarios', label: 'Usuarios', icon: <Users className="w-4 h-4" /> },
-  { id: 'inmuebles', label: 'Inmuebles', icon: <Building2 className="w-4 h-4" /> },
-]
-
-export default function AdministracionPage() {
+export default function UserInmueblesPage() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<TabType>('usuarios')
+  const params = useParams()
+  const userInmobiliaria = params.userInmobiliaria as string
+
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [authLoading, setAuthLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState<any>(null)
 
-  const [users, setUsers] = useState<User[]>([])
-  const [usersLoading, setUsersLoading] = useState(false)
-
   const [inmuebles, setInmuebles] = useState<Inmueble[]>([])
-  const [inmueblesLoading, setInmueblesLoading] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [addRecordState, setAddRecordState] = useState<'idle' | 'adding' | 'saving'>('idle')
 
   useEffect(() => {
@@ -221,7 +172,9 @@ export default function AdministracionPage() {
         })
 
         if (result?.authenticated && result?.user) {
-          if (result.user.role !== 'admin') {
+          // Verificar que el usuario tiene acceso a esta ruta
+          if (result.user.usuario !== userInmobiliaria && result.user.role !== 'admin') {
+            toast.error("No tienes acceso a este panel")
             router.push("/")
             return
           }
@@ -238,94 +191,27 @@ export default function AdministracionPage() {
     }
 
     checkAuth()
-  }, [router])
-
-  const loadUsers = useCallback(async () => {
-    setUsersLoading(true)
-    try {
-      const response = await fetch("/api/admin/users/list")
-      const data = await response.json()
-
-      if (data.success) {
-        setUsers(
-          data.users.map((u: any) => ({
-            ...u,
-            id: String(u.id),
-            full_name: u.full_name || "",
-            first_name: u.first_name || "",
-            last_name: u.last_name || "",
-            role: u.role || "user",
-            estado: u.estado || "pendiente",
-            last_login: u.last_login ? new Date(u.last_login).toLocaleString('es-GT') : '-',
-            created_at: new Date(u.created_at).toLocaleString('es-GT'),
-          }))
-        )
-      }
-    } catch (error) {
-      toast.error("Error al cargar usuarios")
-    } finally {
-      setUsersLoading(false)
-    }
-  }, [])
+  }, [router, userInmobiliaria])
 
   const loadInmuebles = useCallback(async () => {
-    setInmueblesLoading(true)
+    setLoading(true)
     try {
-      const response = await fetch('/api/inmuebles')
+      const response = await fetch('/api/user/inmuebles')
       if (!response.ok) throw new Error('Error al cargar inmuebles')
       const data = await response.json()
       setInmuebles(data.inmuebles || [])
     } catch (error: any) {
       toast.error(error.message || 'Error al cargar datos')
     } finally {
-      setInmueblesLoading(false)
+      setLoading(false)
     }
   }, [])
 
   useEffect(() => {
     if (isAuthenticated) {
-      if (activeTab === 'usuarios') {
-        loadUsers()
-      } else if (activeTab === 'inmuebles') {
-        loadInmuebles()
-      }
+      loadInmuebles()
     }
-  }, [activeTab, isAuthenticated, loadUsers, loadInmuebles])
-
-  const handleUserCellEdit = useCallback(async (
-    rowId: string,
-    field: string,
-    value: any
-  ): Promise<{ success: boolean; error?: string; data?: any }> => {
-    try {
-      const response = await fetch('/api/admin/users/update-field', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: rowId,
-          field,
-          value
-        })
-      })
-
-      const data = await response.json()
-
-      if (!response.ok || !data.success) {
-        return { success: false, error: data.error || 'Error al actualizar' }
-      }
-
-      setUsers(prev =>
-        prev.map(u =>
-          u.id === rowId ? { ...u, [field]: value } : u
-        )
-      )
-
-      toast.success('Usuario actualizado')
-      return { success: true, data: data.data }
-    } catch (error: any) {
-      return { success: false, error: error.message }
-    }
-  }, [])
+  }, [isAuthenticated, loadInmuebles])
 
   const handleImageUpload = useCallback(async (rowId: string, file: File) => {
     const formData = new FormData()
@@ -356,18 +242,18 @@ export default function AdministracionPage() {
     }
   }, [])
 
-  const inmueblesColumns = useMemo(
+  const columns = useMemo(
     () => getInmueblesColumns(handleImageUpload),
     [handleImageUpload]
   )
 
-  const handleInmuebleCellEdit = useCallback(async (
+  const handleCellEdit = useCallback(async (
     rowId: string,
     field: string,
     value: any
   ): Promise<{ success: boolean; error?: string; data?: any }> => {
     try {
-      const response = await fetch('/api/inmuebles', {
+      const response = await fetch('/api/user/inmuebles', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: Number(rowId), field, value }),
@@ -391,12 +277,12 @@ export default function AdministracionPage() {
     }
   }, [])
 
-  const handleAddInmueble = useCallback(async (
+  const handleAddRecord = useCallback(async (
     newRecord: Record<string, any>
   ): Promise<{ success: boolean; error?: string }> => {
     setAddRecordState('saving')
     try {
-      const response = await fetch('/api/inmuebles', {
+      const response = await fetch('/api/user/inmuebles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newRecord),
@@ -428,21 +314,6 @@ export default function AdministracionPage() {
     }
   }
 
-  const handleRefresh = () => {
-    if (activeTab === 'usuarios') {
-      loadUsers()
-    } else {
-      loadInmuebles()
-    }
-  }
-
-  const getTabStats = () => {
-    if (activeTab === 'usuarios') {
-      return `${users.length} usuarios registrados`
-    }
-    return `${inmuebles.length} inmuebles`
-  }
-
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
@@ -458,7 +329,7 @@ export default function AdministracionPage() {
     return null
   }
 
-  const loading = activeTab === 'usuarios' ? usersLoading : inmueblesLoading
+  const displayName = currentUser?.full_name || currentUser?.first_name || "Usuario"
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col">
@@ -470,17 +341,26 @@ export default function AdministracionPage() {
             </div>
             <div>
               <h1 className="text-lg font-bold text-gray-900 dark:text-white">
-                Administración
+                Mis Inmuebles
               </h1>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Aloba Marketplace
+                {displayName} • {inmuebles.length} propiedades
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
+            <Link
+              href={`/${userInmobiliaria}`}
+              target="_blank"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Ver perfil público
+            </Link>
+
             <button
-              onClick={handleRefresh}
+              onClick={loadInmuebles}
               disabled={loading}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
             >
@@ -488,15 +368,13 @@ export default function AdministracionPage() {
               Refrescar
             </button>
 
-            {activeTab === 'inmuebles' && (
-              <button
-                onClick={() => setAddRecordState('adding')}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#0B1B32] bg-[#00F0D0] rounded-lg hover:bg-[#00dbbe] transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                Nuevo Inmueble
-              </button>
-            )}
+            <button
+              onClick={() => setAddRecordState('adding')}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#0B1B32] bg-[#00F0D0] rounded-lg hover:bg-[#00dbbe] transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Nuevo Inmueble
+            </button>
 
             <button
               onClick={handleLogout}
@@ -509,68 +387,23 @@ export default function AdministracionPage() {
         </div>
       </header>
 
-      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-        <div className="max-w-[1800px] mx-auto px-4">
-          <div className="flex items-center gap-1 overflow-x-auto">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'border-[#00F0D0] text-[#00F0D0]'
-                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                }`}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-2">
-        <div className="max-w-[1800px] mx-auto">
-          <p className="text-sm font-medium text-[#00F0D0]">
-            {getTabStats()}
-          </p>
-        </div>
-      </div>
-
       <main className="flex-1 p-4">
-        <div className="max-w-[1800px] mx-auto h-[calc(100vh-200px)]">
-          {activeTab === 'usuarios' ? (
-            <CustomTable
-              data={users}
-              columnsDef={usersColumns}
-              pageSize={50}
-              loading={usersLoading}
-              showFiltersToolbar={true}
-              onRefresh={loadUsers}
-              onCellEdit={handleUserCellEdit}
-              containerHeight="100%"
-              rowHeight={50}
-              loadingText="Cargando usuarios..."
-              noResultsText="No hay usuarios registrados"
-            />
-          ) : (
-            <CustomTable
-              data={inmuebles}
-              columnsDef={inmueblesColumns}
-              pageSize={50}
-              loading={inmueblesLoading}
-              showFiltersToolbar={true}
-              onRefresh={loadInmuebles}
-              onCellEdit={handleInmuebleCellEdit}
-              onAddRecord={handleAddInmueble}
-              addRecordState={addRecordState}
-              containerHeight="100%"
-              rowHeight={50}
-              loadingText="Cargando inmuebles..."
-              noResultsText="No hay inmuebles registrados"
-            />
-          )}
+        <div className="max-w-[1800px] mx-auto h-[calc(100vh-120px)]">
+          <CustomTable
+            data={inmuebles}
+            columnsDef={columns}
+            pageSize={50}
+            loading={loading}
+            showFiltersToolbar={true}
+            onRefresh={loadInmuebles}
+            onCellEdit={handleCellEdit}
+            onAddRecord={handleAddRecord}
+            addRecordState={addRecordState}
+            containerHeight="100%"
+            rowHeight={50}
+            loadingText="Cargando inmuebles..."
+            noResultsText="No tienes inmuebles registrados. ¡Agrega tu primera propiedad!"
+          />
         </div>
       </main>
     </div>

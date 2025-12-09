@@ -1,6 +1,10 @@
 {
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "es6"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "es6"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -10,7 +14,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
     "plugins": [
       {
@@ -19,25 +23,68 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"],
-      "@components/*": ["./components/*"],
-      "@utils/*": ["./utils/*"],
-      "@config/*": ["./config/*"],
-      "@services/*": ["./services/*"],
-      "@hooks/*": ["./hooks/*"],
-      "@lib/*": ["./lib/*"],
-      "@pages/*": ["./pages/*"],
-      "@repositories/*": ["./repositories/*"],
-      "@constants/*": ["./constants/*"],
-      "@public/*": ["./public/*"],
-      "@styles/*": ["./styles/*"],
-      "@/lib/blog/*": ["./lib/blog/*"],
-      "@/constants/blog/*": ["./constants/blog/*"],
-      "@/app/*": ["./app/*"],
-      "@/data/*": ["./data/*"],
-      "@/scripts/*": ["./scripts/*"]
-    }
+      "@/*": [
+        "./*"
+      ],
+      "@components/*": [
+        "./components/*"
+      ],
+      "@utils/*": [
+        "./utils/*"
+      ],
+      "@config/*": [
+        "./config/*"
+      ],
+      "@services/*": [
+        "./services/*"
+      ],
+      "@hooks/*": [
+        "./hooks/*"
+      ],
+      "@lib/*": [
+        "./lib/*"
+      ],
+      "@pages/*": [
+        "./pages/*"
+      ],
+      "@repositories/*": [
+        "./repositories/*"
+      ],
+      "@constants/*": [
+        "./constants/*"
+      ],
+      "@public/*": [
+        "./public/*"
+      ],
+      "@styles/*": [
+        "./styles/*"
+      ],
+      "@/lib/blog/*": [
+        "./lib/blog/*"
+      ],
+      "@/constants/blog/*": [
+        "./constants/blog/*"
+      ],
+      "@/app/*": [
+        "./app/*"
+      ],
+      "@/data/*": [
+        "./data/*"
+      ],
+      "@/scripts/*": [
+        "./scripts/*"
+      ]
+    },
+    "target": "ES2017"
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

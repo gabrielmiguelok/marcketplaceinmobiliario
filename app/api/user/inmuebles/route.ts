@@ -7,16 +7,17 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const limit = parseInt(searchParams.get('limit') || '100')
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ success: false, error: 'No autenticado' }, { status: 401 })
+    }
 
     const db = await getConnection()
     const [rows] = await db.query(`
       SELECT * FROM inmuebles
-      WHERE estado = 'disponible'
+      WHERE user_id = ?
       ORDER BY destacado DESC, created_at DESC
-      LIMIT ?
-    `, [limit])
+    `, [session.id])
 
     return NextResponse.json({
       success: true,
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
       total: (rows as any[]).length
     }, { status: 200 })
   } catch (error: any) {
-    console.error('Error al obtener inmuebles:', error)
+    console.error('Error al obtener inmuebles del usuario:', error)
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }
@@ -35,8 +36,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession()
-    if (!session || session.role !== 'admin') {
-      return NextResponse.json({ success: false, error: 'No autorizado' }, { status: 403 })
+    if (!session) {
+      return NextResponse.json({ success: false, error: 'No autenticado' }, { status: 401 })
     }
 
     const body = await request.json()
@@ -101,8 +102,8 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const session = await getSession()
-    if (!session || session.role !== 'admin') {
-      return NextResponse.json({ success: false, error: 'No autorizado' }, { status: 403 })
+    if (!session) {
+      return NextResponse.json({ success: false, error: 'No autenticado' }, { status: 401 })
     }
 
     const body = await request.json()
@@ -130,6 +131,27 @@ export async function PUT(request: NextRequest) {
     }
 
     const db = await getConnection()
+
+    // Verificar que el inmueble pertenece al usuario (o es admin)
+    const [existing]: any = await db.query(
+      'SELECT user_id FROM inmuebles WHERE id = ?',
+      [id]
+    )
+
+    if (existing.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Inmueble no encontrado' },
+        { status: 404 }
+      )
+    }
+
+    if (existing[0].user_id !== session.id && session.role !== 'admin') {
+      return NextResponse.json(
+        { success: false, error: 'No tienes permiso para editar este inmueble' },
+        { status: 403 }
+      )
+    }
+
     const [result]: any = await db.query(
       `UPDATE inmuebles SET ${field} = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
       [value, id]
@@ -162,8 +184,8 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const session = await getSession()
-    if (!session || session.role !== 'admin') {
-      return NextResponse.json({ success: false, error: 'No autorizado' }, { status: 403 })
+    if (!session) {
+      return NextResponse.json({ success: false, error: 'No autenticado' }, { status: 401 })
     }
 
     const searchParams = request.nextUrl.searchParams
@@ -177,6 +199,27 @@ export async function DELETE(request: NextRequest) {
     }
 
     const db = await getConnection()
+
+    // Verificar que el inmueble pertenece al usuario (o es admin)
+    const [existing]: any = await db.query(
+      'SELECT user_id FROM inmuebles WHERE id = ?',
+      [id]
+    )
+
+    if (existing.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Inmueble no encontrado' },
+        { status: 404 }
+      )
+    }
+
+    if (existing[0].user_id !== session.id && session.role !== 'admin') {
+      return NextResponse.json(
+        { success: false, error: 'No tienes permiso para eliminar este inmueble' },
+        { status: 403 }
+      )
+    }
+
     const [result]: any = await db.query('DELETE FROM inmuebles WHERE id = ?', [id])
 
     revalidatePath('/inmuebles')

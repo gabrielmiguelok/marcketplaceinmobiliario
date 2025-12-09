@@ -123,6 +123,21 @@ export async function GET(request: NextRequest) {
         )
         userId = result.insertId
         isNew = true
+
+        // Generar usuario automático único (email prefix + id)
+        const emailPrefix = userEmail.split('@')[0]
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-z0-9.-]/g, "")
+          .substring(0, 30)
+        const autoUsername = `${emailPrefix}-${userId}`
+        await db.query(
+          `UPDATE users SET usuario = ? WHERE id = ?`,
+          [autoUsername, userId]
+        )
+        console.log(`[google-auth] Usuario automático asignado: ${autoUsername}`)
+
         console.log(`[google-auth] Nuevo usuario creado: ${userEmail} (ID: ${userId})`)
       }
     } catch (dbInsertError) {
