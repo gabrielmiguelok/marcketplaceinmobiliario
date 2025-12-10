@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Heart, Share2, MapPin, Bed, Bath, Car, Maximize, Search, X, SlidersHorizontal, ChevronDown, ChevronLeft, ChevronRight, Check } from "lucide-react"
 import toast from "react-hot-toast"
 import { generateInmuebleUrl } from "@/lib/utils"
+import { useCurrency } from "@/lib/currency-context"
 
 const ITEMS_PER_PAGE = 12
 
@@ -25,7 +26,8 @@ interface Inmueble {
   descripcion: string
   tipo: 'apartamento' | 'casa' | 'terreno' | 'oficina' | 'local' | 'bodega'
   operacion: 'venta' | 'alquiler'
-  precio: number
+  precio_usd: number
+  precio_gtq: number
   moneda: 'USD' | 'GTQ'
   ubicacion: string
   zona: string
@@ -46,14 +48,8 @@ interface InmuebleCardProps {
   onClick: () => void
 }
 
-function formatPrecio(precio: number, moneda: string): string {
-  if (moneda === 'USD') {
-    return `$${precio.toLocaleString('en-US')}`
-  }
-  return `Q${precio.toLocaleString('es-GT')}`
-}
-
 function InmuebleCard({ inmueble, onClick }: InmuebleCardProps) {
+  const { formatPrice } = useCurrency()
   const [copied, setCopied] = useState(false)
   const [liked, setLiked] = useState(false)
 
@@ -179,7 +175,7 @@ function InmuebleCard({ inmueble, onClick }: InmuebleCardProps) {
         <div className="flex items-center justify-between">
           <div className="text-[#00F0D0] font-bold text-xl" itemProp="price">
             {inmueble.operacion === 'alquiler' ? 'Alquiler: ' : 'Desde: '}
-            {formatPrecio(inmueble.precio, inmueble.moneda)}
+            {formatPrice(inmueble.precio_usd, inmueble.precio_gtq)}
           </div>
           <span className="text-xs text-gray-400 uppercase">
             {inmueble.operacion}
@@ -362,8 +358,8 @@ export default function InmueblesGrid({ inmuebles, initialFilters }: InmueblesGr
       const matchesHabitaciones = habitacionesFilter === '' ||
         (habitacionesFilter === '4' ? inmueble.habitaciones >= 4 : inmueble.habitaciones === parseInt(habitacionesFilter))
 
-      const matchesPrecioMin = precioMinFilter === '' || inmueble.precio >= parseFloat(precioMinFilter)
-      const matchesPrecioMax = precioMaxFilter === '' || inmueble.precio <= parseFloat(precioMaxFilter)
+      const matchesPrecioMin = precioMinFilter === '' || inmueble.precio_usd >= parseFloat(precioMinFilter)
+      const matchesPrecioMax = precioMaxFilter === '' || inmueble.precio_usd <= parseFloat(precioMaxFilter)
 
       return matchesSearch && matchesTipo && matchesOperacion && matchesZona && matchesHabitaciones && matchesPrecioMin && matchesPrecioMax
     })

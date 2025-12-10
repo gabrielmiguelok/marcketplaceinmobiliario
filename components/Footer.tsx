@@ -43,9 +43,9 @@ export default function Footer() {
         <p className="text-sm md:text-xl font-medium opacity-80 mb-5 md:mb-10 text-[#0B1B32]">
           Explora, compara y encuentra tu próximo proyecto
         </p>
-        <button type="button" className="bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-bold text-sm md:text-lg py-2.5 px-6 md:py-4 md:px-10 rounded-full transition-all duration-300 transform hover:scale-105 shadow-md" aria-label="Empezar a explorar propiedades ahora">
+        <Link href="/login" className="inline-block bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-bold text-sm md:text-lg py-2.5 px-6 md:py-4 md:px-10 rounded-full transition-all duration-300 transform hover:scale-105 shadow-md" aria-label="Empezar a explorar propiedades ahora">
           Empezar ahora!
-        </button>
+        </Link>
       </aside>
 
       <div className="w-full h-[1px] bg-gray-200"></div>

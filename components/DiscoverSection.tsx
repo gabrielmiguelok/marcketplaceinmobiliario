@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
+import Link from "next/link"
 
 const cn = (...classes: (string | undefined | null | false)[]) => classes.filter(Boolean).join(' ')
 
@@ -114,7 +115,7 @@ export default function DiscoverSection() {
   }
 
   return (
-    <section className="w-full py-10 md:py-24 bg-white" role="region" aria-label="Descubre más con Aloba">
+    <section id="descubre-mas" className="w-full py-10 md:py-24 bg-white" role="region" aria-label="Descubre más con Aloba">
       <div className="max-w-[1300px] mx-auto px-4 md:px-8">
 
         {/* Header */}
@@ -132,9 +133,9 @@ export default function DiscoverSection() {
             <p className="text-sm md:text-lg font-medium opacity-90 lg:text-right text-[#0B1B32] flex-1">
               Regístrate gratis y desbloquea beneficios exclusivos.
             </p>
-            <button type="button" className="bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-bold text-sm md:text-lg py-2.5 px-6 md:py-3 md:px-8 rounded-full transition-all duration-300 transform hover:scale-105 shadow-sm whitespace-nowrap">
+            <Link href="/login" className="inline-block bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-bold text-sm md:text-lg py-2.5 px-6 md:py-3 md:px-8 rounded-full transition-all duration-300 transform hover:scale-105 shadow-sm whitespace-nowrap">
               Registrarme
-            </button>
+            </Link>
           </div>
         </div>
 

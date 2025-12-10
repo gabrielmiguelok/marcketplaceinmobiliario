@@ -6,6 +6,7 @@ import L from 'leaflet'
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon'
 import { point, polygon } from '@turf/helpers'
 import 'leaflet/dist/leaflet.css'
+import { useCurrency } from '@/lib/currency-context'
 
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -19,7 +20,8 @@ export interface MapInmueble {
   titulo: string
   ubicacion: string
   zona: string
-  precio: number
+  precio_usd: number
+  precio_gtq: number
   moneda: string
   tipo: string
   operacion?: string
@@ -280,14 +282,6 @@ function SelectionHandler({
   ) : null
 }
 
-function formatPrecio(precio: number, moneda: string): string {
-  if (moneda === 'USD') {
-    if (precio >= 1000000) return `$${(precio / 1000000).toFixed(1)}M`
-    if (precio >= 1000) return `$${(precio / 1000).toFixed(0)}k`
-    return `$${precio.toLocaleString('en-US')}`
-  }
-  return `Q${precio.toLocaleString('es-GT')}`
-}
 
 function getImageSrc(url: string | null | undefined): string | null {
   if (!url) return null
@@ -308,6 +302,7 @@ export default function PropertyMapAloba({
   onPropertySelect,
   onMarkerHover
 }: PropertyMapAlobaProps) {
+  const { formatPriceCompact } = useCurrency()
   const [isDrawMode, setIsDrawMode] = useState(false)
   const [isDrawing, setIsDrawing] = useState(false)
   const [currentDrawBounds, setCurrentDrawBounds] = useState<L.LatLngBounds | null>(null)
@@ -456,7 +451,7 @@ export default function PropertyMapAloba({
                 </div>
                 <div className="absolute bottom-2 left-2 right-2">
                   <span className="text-white font-bold text-base drop-shadow-lg">
-                    {formatPrecio(inmueble.precio, inmueble.moneda)}
+                    {formatPriceCompact(inmueble.precio_usd, inmueble.precio_gtq, inmueble.moneda)}
                   </span>
                 </div>
               </div>

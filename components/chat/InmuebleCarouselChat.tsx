@@ -7,6 +7,7 @@ import Link from "next/link"
 import { MapPin, Bed, Bath, ChevronLeft, ChevronRight, Heart, Share2, Maximize, Check } from "lucide-react"
 import type { InmuebleResult } from "@/hooks/useChatManager"
 import { generateInmuebleUrl } from "@/lib/utils"
+import { useCurrency } from "@/lib/currency-context"
 
 interface InmuebleCarouselChatProps {
   inmuebles: InmuebleResult[]
@@ -23,13 +24,6 @@ function getImageSrc(url: string | null): string {
     return `/api/imagen${url}`
   }
   return url
-}
-
-function formatPrecio(precio: number, moneda: string): string {
-  if (moneda === 'USD') {
-    return `$${precio.toLocaleString('en-US')}`
-  }
-  return `Q${precio.toLocaleString('es-GT')}`
 }
 
 function getTipoLabel(tipo: string): string {
@@ -60,6 +54,7 @@ function copyToClipboard(inmuebleId: number, titulo: string, e: React.MouseEvent
 }
 
 function InmuebleCardLarge({ inmueble, index }: { inmueble: InmuebleResult; index: number }) {
+  const { formatPrice } = useCurrency()
   const [imageError, setImageError] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -135,7 +130,7 @@ function InmuebleCardLarge({ inmueble, index }: { inmueble: InmuebleResult; inde
 
           <div className="flex items-center justify-between">
             <div className="text-[#00F0D0] font-bold text-xl">
-              {formatPrecio(inmueble.precio, inmueble.moneda)}
+              {formatPrice(inmueble.precio_usd, inmueble.precio_gtq)}
             </div>
 
             <div className="flex items-center gap-3 text-white/80 text-sm">
@@ -166,6 +161,7 @@ function InmuebleCardLarge({ inmueble, index }: { inmueble: InmuebleResult; inde
 }
 
 function InmuebleCardCarousel({ inmueble, index }: { inmueble: InmuebleResult; index: number }) {
+  const { formatPrice } = useCurrency()
   const [imageError, setImageError] = useState(false)
   const imageUrl = imageError ? "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800" : getImageSrc(inmueble.imagen_url)
 
@@ -218,7 +214,7 @@ function InmuebleCardCarousel({ inmueble, index }: { inmueble: InmuebleResult; i
 
           <div className="flex items-center justify-between">
             <div className="text-[#00F0D0] font-bold text-base">
-              {formatPrecio(inmueble.precio, inmueble.moneda)}
+              {formatPrice(inmueble.precio_usd, inmueble.precio_gtq)}
             </div>
 
             <div className="flex items-center gap-2 text-white/70 text-xs">

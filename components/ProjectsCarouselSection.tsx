@@ -6,13 +6,15 @@ import AutoScroll from "embla-carousel-auto-scroll"
 import { Heart, Share2, MapPin, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { generateInmuebleUrl } from "@/lib/utils"
+import { useCurrency } from "@/lib/currency-context"
 
 interface Inmueble {
   id: number
   titulo: string
   tipo: string
   operacion: string
-  precio: number
+  precio_usd: number
+  precio_gtq: number
   moneda: string
   ubicacion: string
   zona: string
@@ -45,13 +47,6 @@ function getImageSrc(url: string | null): string {
     return `/api/imagen${url}`
   }
   return url
-}
-
-function formatPrecio(precio: number, moneda: string): string {
-  if (moneda === 'USD') {
-    return `$${precio.toLocaleString('en-US')}`
-  }
-  return `Q${precio.toLocaleString('es-GT')}`
 }
 
 function ProjectCard({ id, image, title, location, price, tag }: ProjectCardProps) {
@@ -115,6 +110,7 @@ function ProjectCard({ id, image, title, location, price, tag }: ProjectCardProp
 }
 
 export default function ProjectsCarouselSection() {
+  const { formatPrice } = useCurrency()
   const [inmuebles, setInmuebles] = useState<Inmueble[]>([])
   const [loading, setLoading] = useState(true)
   const autoScrollRef = useRef<ReturnType<typeof AutoScroll> | null>(null)
@@ -211,7 +207,7 @@ export default function ProjectsCarouselSection() {
       <div className="w-full max-w-[1440px] mx-auto px-4 md:px-6 flex flex-col items-center mb-10 md:mb-16">
         <div className="mb-8">
           <Link
-            href="/inmuebles"
+            href="/proyectos"
             className="border border-[#0B1B32] text-[#0B1B32] font-bold py-2.5 px-8 rounded-full text-sm hover:bg-[#0B1B32] hover:text-white transition-all"
           >
             Descubre los proyectos
@@ -248,7 +244,7 @@ export default function ProjectsCarouselSection() {
                   image={getImageSrc(inmueble.imagen_url)}
                   title={inmueble.titulo}
                   location={getLocation(inmueble)}
-                  price={formatPrecio(inmueble.precio, inmueble.moneda)}
+                  price={formatPrice(inmueble.precio_usd, inmueble.precio_gtq)}
                   tag={getTag(inmueble)}
                 />
               </div>
@@ -259,7 +255,7 @@ export default function ProjectsCarouselSection() {
 
       <div className="mt-8 md:mt-10 flex justify-center px-4">
         <Link
-          href="/inmuebles"
+          href="/proyectos"
           className="bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-bold text-lg py-4 px-10 rounded-full transition-all duration-300 transform hover:scale-105 shadow-md flex items-center gap-2"
           aria-label="Ver todos los proyectos inmobiliarios"
         >

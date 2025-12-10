@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Heart, Share2, MapPin, Bed, Bath, Car, Maximize, Check } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { generateInmuebleUrl } from '@/lib/utils'
+import { useCurrency } from '@/lib/currency-context'
 
 function getImageSrc(url: string | null): string | null {
   if (!url) return null
@@ -23,7 +24,8 @@ interface Inmueble {
   descripcion: string
   tipo: 'apartamento' | 'casa' | 'terreno' | 'oficina' | 'local' | 'bodega'
   operacion: 'venta' | 'alquiler'
-  precio: number
+  precio_usd: number
+  precio_gtq: number
   moneda: 'USD' | 'GTQ'
   ubicacion: string
   zona: string
@@ -47,15 +49,6 @@ interface InmuebleCardMapProps {
   onClick?: (id: number, titulo: string) => void
 }
 
-function formatPrecio(precio: number, moneda: string): string {
-  if (moneda === 'USD') {
-    if (precio >= 1000000) return `$${(precio / 1000000).toFixed(1)}M`
-    if (precio >= 1000) return `$${(precio / 1000).toFixed(0)}k`
-    return `$${precio.toLocaleString('en-US')}`
-  }
-  return `Q${precio.toLocaleString('es-GT')}`
-}
-
 const tipoLabels: Record<string, string> = {
   apartamento: 'Apto',
   casa: 'Casa',
@@ -73,6 +66,7 @@ function InmuebleCardMapComponent({
   onClick,
 }: InmuebleCardMapProps) {
   const router = useRouter()
+  const { formatPriceCompact } = useCurrency()
   const [copied, setCopied] = useState(false)
   const [liked, setLiked] = useState(false)
 
@@ -163,7 +157,7 @@ function InmuebleCardMapComponent({
 
         <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-end justify-between">
           <span className="text-white font-bold text-lg drop-shadow-lg">
-            {formatPrecio(inmueble.precio, inmueble.moneda)}
+            {formatPriceCompact(inmueble.precio_usd, inmueble.precio_gtq)}
           </span>
           <span className="text-[10px] text-white/90 bg-black/40 px-2 py-0.5 rounded-full backdrop-blur-sm">
             {inmueble.operacion === 'alquiler' ? 'Alquiler' : 'Venta'}

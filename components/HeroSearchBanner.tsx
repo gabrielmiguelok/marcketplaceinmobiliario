@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { ChevronDown, Check, Search, MapPin, Bed, Loader2, ChevronLeft, ChevronRight, X } from "lucide-react"
 import { generateInmuebleUrl } from "@/lib/utils"
+import { useCurrency } from "@/lib/currency-context"
 
 const cn = (...classes: (string | undefined | null | false)[]) => classes.filter(Boolean).join(" ")
 
@@ -30,7 +31,8 @@ interface SearchResult {
   titulo: string
   tipo: string
   operacion: string
-  precio: number
+  precio_usd: number
+  precio_gtq: number
   moneda: string
   ubicacion: string
   zona: string
@@ -173,13 +175,6 @@ function getImageSrc(url: string | null): string | null {
   return url
 }
 
-function formatPrecio(precio: number, moneda: string): string {
-  if (moneda === 'USD') {
-    return `$${precio.toLocaleString('en-US')}`
-  }
-  return `Q${precio.toLocaleString('es-GT')}`
-}
-
 interface ResultCardProps {
   inmueble: SearchResult
   onClick: () => void
@@ -187,6 +182,7 @@ interface ResultCardProps {
 }
 
 function ResultCard({ inmueble, onClick, isDragging }: ResultCardProps) {
+  const { formatPrice } = useCurrency()
   const fallbackImage = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=400"
   const imageUrl = getImageSrc(inmueble.imagen_url) || fallbackImage
 
@@ -238,7 +234,7 @@ function ResultCard({ inmueble, onClick, isDragging }: ResultCardProps) {
         </p>
         <div className="flex items-center justify-between mt-2">
           <span className="text-sm font-bold text-[#00F0D0]">
-            {formatPrecio(inmueble.precio, inmueble.moneda)}
+            {formatPrice(inmueble.precio_usd, inmueble.precio_gtq)}
           </span>
           {inmueble.habitaciones > 0 && (
             <span className="text-xs text-gray-400 flex items-center gap-1">
@@ -492,7 +488,7 @@ export default function HeroSearchBanner() {
   const handleViewAll = () => {
     const params = buildSearchParams()
     const queryString = params.toString()
-    router.push(`/inmuebles${queryString ? `?${queryString}` : ""}`)
+    router.push(`/proyectos${queryString ? `?${queryString}` : ""}`)
   }
 
   const handleResultClick = (id: number, titulo: string) => {
