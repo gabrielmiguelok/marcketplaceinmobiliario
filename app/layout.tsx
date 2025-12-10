@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next"
 import { Nunito, Cormorant_Garamond } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { CurrencyProvider } from "@/lib/currency-context"
 import { Toaster } from "sonner"
 import { Suspense } from "react"
 import { GoogleAnalytics } from "@/components/analytics/google-analytics"
@@ -173,8 +174,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Saltar al contenido principal
         </a>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <main id="main-content" className="flex-grow" role="main">{children}</main>
-          <Toaster richColors position="top-center" expand={true} duration={4000} closeButton={true} />
+          <CurrencyProvider>
+            <main id="main-content" className="flex-grow" role="main">{children}</main>
+            <Toaster richColors position="top-center" expand={true} duration={4000} closeButton={true} />
+          </CurrencyProvider>
         </ThemeProvider>
 
         {isProd && (

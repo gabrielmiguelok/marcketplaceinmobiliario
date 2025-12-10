@@ -12,23 +12,25 @@ import Link from "next/link"
 import { Menu, Home, Building2, Wrench, Info, ChevronRight, Map } from "lucide-react"
 import { useState, useEffect } from "react"
 import Image from "next/image"
+import { useCurrency } from "@/lib/currency-context"
 
 const navItems = [
-  { name: "Inmuebles", href: "/inmuebles", icon: Building2 },
-  { name: "Conócenos", href: "/conocenos", icon: Info },
+  { name: "Proyectos", href: "/proyectos", icon: Building2 },
+  { name: "Conócenos", href: "/#descubre-mas", icon: Info },
   { name: "Herramientas", href: "/herramientas", icon: Wrench },
+  { name: "Mapa", href: "/proyectos/mapa", icon: Map },
 ]
 
 type ActivePage = "conocenos" | "herramientas" | "inmuebles" | null
 
 interface HeaderProps {
-  userInitials?: string
   activePage?: ActivePage
 }
 
-export default function Header({ userInitials = "SK", activePage = null }: HeaderProps) {
+export default function Header({ activePage = null }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { currency, setCurrency } = useCurrency()
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20)
@@ -85,20 +87,28 @@ export default function Header({ userInitials = "SK", activePage = null }: Heade
 
             <div className="flex items-center gap-3">
               <div className="hidden md:flex items-center gap-3 text-sm font-bold text-[#0B1B32]">
-                <button className="hover:text-[#00F0D0] transition-colors px-2 py-1">
-                  ES
-                </button>
-                <button className="hover:text-[#00F0D0] transition-colors px-2 py-1">
-                  $
-                </button>
                 <button
-                  className="flex items-center justify-center w-10 h-10 rounded-full bg-[#00F0D0] text-[#0B1B32] font-bold text-sm hover:bg-[#00dbbe] transition-colors shadow-md"
+                  onClick={() => setCurrency(currency === "USD" ? "GTQ" : "USD")}
+                  className="hover:text-[#00F0D0] transition-colors px-3 py-1.5 rounded-full hover:bg-[#00F0D0]/10"
                 >
-                  {userInitials}
+                  {currency === "USD" ? "$USD" : "Q GTQ"}
                 </button>
+                <Link
+                  href="/login"
+                  className="flex items-center gap-2 bg-gradient-to-r from-[#00F0D0] to-[#00dbbe] hover:opacity-90 text-[#0B1B32] font-bold text-sm px-5 py-2.5 rounded-full shadow-md transition-all"
+                >
+                  Regístrate Gratis
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
               </div>
 
-              <div className="md:hidden">
+              <div className="md:hidden flex items-center gap-2">
+                <button
+                  onClick={() => setCurrency(currency === "USD" ? "GTQ" : "USD")}
+                  className="text-xs font-bold text-[#0B1B32] hover:text-[#00F0D0] transition-colors px-2.5 py-1.5 rounded-full border border-gray-200 hover:border-[#00F0D0]/50 hover:bg-[#00F0D0]/5"
+                >
+                  {currency === "USD" ? "$USD" : "Q GTQ"}
+                </button>
                 <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                   <SheetTrigger asChild>
                     <Button
@@ -164,47 +174,16 @@ export default function Header({ userInitials = "SK", activePage = null }: Heade
                         })}
                       </nav>
 
-                      <div className="mt-auto border-t border-gray-100 p-4 space-y-3">
-                        <div className="flex items-center justify-between px-2">
-                          <div className="flex gap-4">
-                            <button className="text-sm font-bold text-[#0B1B32] hover:text-[#00F0D0] transition-colors px-3 py-2 rounded-lg hover:bg-gray-50">
-                              ES
-                            </button>
-                            <button className="text-sm font-bold text-[#0B1B32] hover:text-[#00F0D0] transition-colors px-3 py-2 rounded-lg hover:bg-gray-50">
-                              $
-                            </button>
-                          </div>
-                          <button
-                            className="flex items-center justify-center w-11 h-11 rounded-full bg-[#00F0D0] text-[#0B1B32] font-bold text-sm hover:bg-[#00dbbe] transition-colors shadow-md"
+                      <div className="mt-auto border-t border-gray-100 p-4">
+                        <SheetClose asChild>
+                          <Link
+                            href="/login"
+                            className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-[#00F0D0] to-[#00dbbe] hover:opacity-90 text-[#0B1B32] font-bold text-base py-3 rounded-full shadow-md transition-all"
                           >
-                            {userInitials}
-                          </button>
-                        </div>
-
-                        <div className="flex gap-2">
-                          <SheetClose asChild>
-                            <Button
-                              asChild
-                              className="flex-1 bg-[#00F0D0] text-[#0B1B32] hover:bg-[#00dbbe] rounded-full font-semibold shadow-md"
-                            >
-                              <Link href="/inmuebles" className="flex items-center justify-center gap-2">
-                                <Building2 className="w-4 h-4" />
-                                Inmuebles
-                              </Link>
-                            </Button>
-                          </SheetClose>
-                          <SheetClose asChild>
-                            <Button
-                              asChild
-                              className="flex-1 bg-[#0B1B32] text-white hover:bg-[#0B1B32]/90 rounded-full font-semibold shadow-md"
-                            >
-                              <Link href="/inmuebles/mapa" className="flex items-center justify-center gap-2">
-                                <Map className="w-4 h-4" />
-                                Mapa
-                              </Link>
-                            </Button>
-                          </SheetClose>
-                        </div>
+                            Regístrate Gratis
+                            <ChevronRight className="w-4 h-4" />
+                          </Link>
+                        </SheetClose>
                       </div>
                     </div>
                   </SheetContent>
