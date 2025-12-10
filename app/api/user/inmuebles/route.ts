@@ -41,12 +41,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    const TASA_CAMBIO_USD_GTQ = 7.70
+
     const {
       titulo,
       descripcion = '',
       tipo = 'apartamento',
       operacion = 'venta',
-      precio,
+      precio_usd,
+      precio_gtq,
       moneda = 'USD',
       ubicacion = '',
       zona = '',
@@ -68,18 +71,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!precio || precio <= 0) {
+    if (!precio_usd || precio_usd <= 0) {
       return NextResponse.json(
-        { success: false, error: 'El precio es requerido y debe ser mayor a 0' },
+        { success: false, error: 'El precio en USD es requerido y debe ser mayor a 0' },
         { status: 400 }
       )
     }
 
+    const precioUsdFinal = Number(precio_usd)
+    const precioGtqFinal = precio_gtq ? Number(precio_gtq) : Math.round(precioUsdFinal * TASA_CAMBIO_USD_GTQ * 100) / 100
+
     const db = await getConnection()
     const [result]: any = await db.query(
-      `INSERT INTO inmuebles (user_id, titulo, descripcion, tipo, operacion, precio, moneda, ubicacion, zona, departamento, metros_cuadrados, habitaciones, banos, parqueos, destacado, estado, latitud, longitud)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [session.id, titulo, descripcion, tipo, operacion, precio, moneda, ubicacion, zona, departamento, metros_cuadrados, habitaciones, banos, parqueos, destacado, estado, latitud, longitud]
+      `INSERT INTO inmuebles (user_id, titulo, descripcion, tipo, operacion, precio_usd, precio_gtq, moneda, ubicacion, zona, departamento, metros_cuadrados, habitaciones, banos, parqueos, destacado, estado, latitud, longitud)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [session.id, titulo, descripcion, tipo, operacion, precioUsdFinal, precioGtqFinal, moneda, ubicacion, zona, departamento, metros_cuadrados, habitaciones, banos, parqueos, destacado, estado, latitud, longitud]
     )
 
     const [rows] = await db.query('SELECT * FROM inmuebles WHERE id = ?', [result.insertId])
@@ -117,7 +123,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const allowedFields = [
-      'titulo', 'descripcion', 'tipo', 'operacion', 'precio', 'moneda',
+      'titulo', 'descripcion', 'tipo', 'operacion', 'precio_usd', 'precio_gtq', 'moneda',
       'ubicacion', 'zona', 'departamento', 'metros_cuadrados',
       'habitaciones', 'banos', 'parqueos', 'destacado', 'estado', 'imagen_url',
       'latitud', 'longitud'

@@ -101,7 +101,7 @@ export function generateProductSlug(title: string, id: string): string {
 
 export function generateInmuebleUrl(id: number, titulo: string): string {
   const slug = slugify(titulo)
-  return `/inmuebles/${id}/${slug}`
+  return `/proyectos/${id}/${slug}`
 }
 
 export function extractIdFromInmuebleUrl(idOrSlug: string): number | null {

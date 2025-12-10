@@ -35,7 +35,7 @@ export default function PostLoginPage() {
             // Usuario confirmado con usuario asignado → su panel de inmuebles
             if (user.usuario) {
               setStatus("Redirigiendo a tu panel...")
-              router.push(`/${user.usuario}/inmuebles`)
+              router.push(`/${user.usuario}/proyectos`)
               return
             }
 

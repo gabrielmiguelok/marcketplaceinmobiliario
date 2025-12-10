@@ -138,7 +138,7 @@ export default async function InmobiliariaProfilePage({ params, searchParams }: 
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <div className="min-h-screen bg-white font-sans text-[#0B1B32] flex flex-col relative selection:bg-[#00F0D0] selection:text-[#0B1B32]">
-        <Header activePage="inmuebles" />
+        <Header activePage="proyectos" />
 
         <main className="flex-1 pt-24 pb-16">
           <div className="max-w-[1440px] mx-auto px-4 md:px-6">
@@ -168,7 +168,7 @@ export default async function InmobiliariaProfilePage({ params, searchParams }: 
                   Esta inmobiliaria aún no tiene propiedades publicadas.
                 </p>
                 <Link
-                  href="/inmuebles"
+                  href="/proyectos"
                   className="inline-flex items-center gap-2 bg-[#00F0D0] hover:bg-[#00dbbe] text-[#0B1B32] font-bold text-lg py-4 px-8 rounded-full transition-all duration-300"
                 >
                   Ver todas las propiedades

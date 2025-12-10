@@ -75,12 +75,12 @@ function buildBaseConditions(
   }
 
   if (precioMin) {
-    conditions.push("precio >= ?")
+    conditions.push("precio_usd >= ?")
     params.push(parseFloat(precioMin))
   }
 
   if (precioMax) {
-    conditions.push("precio <= ?")
+    conditions.push("precio_usd <= ?")
     params.push(parseFloat(precioMax))
   }
 
@@ -180,11 +180,11 @@ export async function GET(request: NextRequest) {
         let rangoConditions = preciosBase.sql
         const rangoParams = [...preciosBase.params]
 
-        rangoConditions += " AND precio >= ?"
+        rangoConditions += " AND precio_usd >= ?"
         rangoParams.push(rango.min)
 
         if (rango.max !== null) {
-          rangoConditions += " AND precio <= ?"
+          rangoConditions += " AND precio_usd <= ?"
           rangoParams.push(rango.max)
         }
 

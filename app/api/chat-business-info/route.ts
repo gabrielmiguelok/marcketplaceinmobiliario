@@ -11,7 +11,8 @@ interface InmuebleResult {
   titulo: string
   tipo: string
   operacion: string
-  precio: number
+  precio_usd: number
+  precio_gtq: number
   moneda: string
   ubicacion: string | null
   zona: string | null
@@ -366,14 +367,14 @@ async function searchInmuebles(filters: SearchFilters, limit: number = 12): Prom
 
     if (filters.precioMax) {
       const maxWithMargin = Math.round(filters.precioMax * 1.2)
-      conditions.push("precio <= ?")
+      conditions.push("precio_usd <= ?")
       params.push(maxWithMargin)
-      orderParts.push(`(precio <= ${filters.precioMax}) DESC`)
+      orderParts.push(`(precio_usd <= ${filters.precioMax}) DESC`)
     }
 
     if (filters.precioMin) {
       const minWithMargin = Math.round(filters.precioMin * 0.8)
-      conditions.push("precio >= ?")
+      conditions.push("precio_usd >= ?")
       params.push(minWithMargin)
     }
 
@@ -385,7 +386,7 @@ async function searchInmuebles(filters: SearchFilters, limit: number = 12): Prom
     const orderBy = orderParts.length > 0 ? orderParts.join(", ") : "destacado DESC, created_at DESC"
 
     const sql = `
-      SELECT id, titulo, tipo, operacion, precio, moneda, ubicacion, zona,
+      SELECT id, titulo, tipo, operacion, precio_usd, precio_gtq, moneda, ubicacion, zona,
              departamento, metros_cuadrados, habitaciones, banos, parqueos,
              imagen_url, destacado
       FROM inmuebles
@@ -445,9 +446,9 @@ function filterRelevantInmuebles(
     }
 
     // Precio dentro del rango
-    if (filters.precioMax && inmueble.precio <= filters.precioMax) {
+    if (filters.precioMax && inmueble.precio_usd <= filters.precioMax) {
       score += 8
-    } else if (filters.precioMax && inmueble.precio <= filters.precioMax * 1.15) {
+    } else if (filters.precioMax && inmueble.precio_usd <= filters.precioMax * 1.15) {
       score += 4 // Hasta 15% más caro
     }
 
@@ -549,7 +550,7 @@ Sos el Asistente Virtual de Aloba, el marketplace inmobiliario líder en Guatema
 - SIEMPRE usá las URLs EXACTAS sin modificarlas
 - WhatsApp: https://wa.me/50230000000
 - Web: https://marketplaceinmobiliario.com
-- Inmuebles: https://marketplaceinmobiliario.com/inmuebles
+- Proyectos: https://marketplaceinmobiliario.com/proyectos
 
 **Tu estilo:**
 ❌ "Te invito a explorar nuestro catálogo..."
@@ -658,11 +659,11 @@ function getSafeDefault() {
   return "¡Hola! Soy el Asistente Virtual de Aloba. Puedo ayudarte a buscar propiedades en Guatemala, conocer zonas, rangos de precios o responder tus preguntas. ¿En qué puedo ayudarte?"
 }
 
-function formatPrecio(precio: number, moneda: string): string {
+function formatPrecio(precioUsd: number, precioGtq: number, moneda: string): string {
   if (moneda === 'USD') {
-    return `$${precio.toLocaleString('en-US')}`
+    return `$${precioUsd.toLocaleString('en-US')}`
   }
-  return `Q${precio.toLocaleString('es-GT')}`
+  return `Q${precioGtq.toLocaleString('es-GT')}`
 }
 
 export async function POST(request: NextRequest) {
@@ -745,7 +746,7 @@ export async function POST(request: NextRequest) {
         searchContext = `\n\n[RESULTADOS DE BÚSQUEDA]
 Filtros aplicados: ${appliedFilters.join(", ")}
 Se encontraron ${inmuebles.length} propiedad(es):
-${inmuebles.map((i, idx) => `${idx + 1}. ${i.titulo} - ${formatPrecio(i.precio, i.moneda)} - ${i.tipo} - ${i.habitaciones || 0} hab - ${i.zona ? `Zona ${i.zona}` : i.ubicacion || 'Guatemala'}`).join("\n")}
+${inmuebles.map((i, idx) => `${idx + 1}. ${i.titulo} - ${formatPrecio(i.precio_usd, i.precio_gtq, i.moneda)} - ${i.tipo} - ${i.habitaciones || 0} hab - ${i.zona ? `Zona ${i.zona}` : i.ubicacion || 'Guatemala'}`).join("\n")}
 
 IMPORTANTE: ${displayHint} Estas propiedades YA coinciden con los filtros del usuario. NO digas que no hay resultados si ves propiedades listadas arriba.`
       } else {

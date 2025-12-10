@@ -61,12 +61,12 @@ export async function GET(request: NextRequest) {
     }
 
     if (precioMin) {
-      baseWhere += ` AND precio >= ?`
+      baseWhere += ` AND precio_usd >= ?`
       params.push(parseFloat(precioMin))
     }
 
     if (precioMax) {
-      baseWhere += ` AND precio <= ?`
+      baseWhere += ` AND precio_usd <= ?`
       params.push(parseFloat(precioMax))
     }
 
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
     const totalFiltered = countResult[0]?.total || 0
 
     let sql = `
-      SELECT id, titulo, descripcion, tipo, operacion, precio, moneda,
+      SELECT id, titulo, descripcion, tipo, operacion, precio_usd, precio_gtq, moneda,
              ubicacion, zona, departamento, metros_cuadrados, habitaciones,
              banos, parqueos, imagen_url, destacado, estado, latitud, longitud
       FROM inmuebles

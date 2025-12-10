@@ -7,7 +7,8 @@ export interface Inmueble {
   descripcion: string
   tipo: 'apartamento' | 'casa' | 'terreno' | 'oficina' | 'local' | 'bodega'
   operacion: 'venta' | 'alquiler'
-  precio: number
+  precio_usd: number
+  precio_gtq: number
   moneda: 'USD' | 'GTQ'
   ubicacion: string
   zona: string
@@ -117,10 +118,22 @@ export const getTiposDisponibles = cache(async (): Promise<string[]> => {
   }
 })
 
-export function formatPrecio(precio: number, moneda: string): string {
+export function formatPrecioUsd(precioUsd: number | string): string {
+  const precio = Number(precioUsd) || 0
+  return `$${precio.toLocaleString('en-US')}`
+}
+
+export function formatPrecioGtq(precioGtq: number | string): string {
+  const precio = Number(precioGtq) || 0
+  return `Q${precio.toLocaleString('es-GT')}`
+}
+
+export function formatPrecio(precioUsd: number | string, precioGtq: number | string, moneda: string): string {
   if (moneda === 'USD') {
+    const precio = Number(precioUsd) || 0
     return `$${precio.toLocaleString('en-US')}`
   }
+  const precio = Number(precioGtq) || 0
   return `Q${precio.toLocaleString('es-GT')}`
 }
 

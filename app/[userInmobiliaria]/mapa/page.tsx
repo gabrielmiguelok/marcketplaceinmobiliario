@@ -8,6 +8,7 @@ import Header from '@/components/Header'
 import InmuebleCardMap from '@/components/map/InmuebleCardMap'
 import { ChevronLeft, ChevronRight, MapPin, Loader2, X, ChevronDown, Bed, Bath, Car, Maximize, ExternalLink, ArrowLeft, Building2 } from 'lucide-react'
 import { generateInmuebleUrl } from '@/lib/utils'
+import { useCurrency } from '@/lib/currency-context'
 
 function getImageSrc(url: string | null): string | null {
   if (!url) return null
@@ -18,15 +19,6 @@ function getImageSrc(url: string | null): string | null {
     return `/api/imagen${url}`
   }
   return url
-}
-
-function formatPrecio(precio: number, moneda: string): string {
-  if (moneda === 'USD') {
-    if (precio >= 1000000) return `$${(precio / 1000000).toFixed(1)}M`
-    if (precio >= 1000) return `$${Math.round(precio / 1000)}k`
-    return `$${precio.toLocaleString('en-US')}`
-  }
-  return `Q${precio.toLocaleString('es-GT')}`
 }
 
 const tipoLabels: Record<string, string> = {
@@ -72,7 +64,8 @@ interface Inmueble {
   descripcion: string
   tipo: 'apartamento' | 'casa' | 'terreno' | 'oficina' | 'local' | 'bodega'
   operacion: 'venta' | 'alquiler'
-  precio: number
+  precio_usd: number
+  precio_gtq: number
   moneda: 'USD' | 'GTQ'
   ubicacion: string
   zona: string
@@ -217,6 +210,7 @@ export default function UserMapaPage() {
   const router = useRouter()
   const params = useParams()
   const userInmobiliaria = params.userInmobiliaria as string
+  const { formatPriceCompact } = useCurrency()
 
   const gridRef = useRef<HTMLDivElement>(null)
   const [inmuebles, setInmuebles] = useState<Inmueble[]>([])
@@ -374,7 +368,7 @@ export default function UserMapaPage() {
         const [minStr, maxStr] = precioMaxFilter.split('-')
         const min = minStr ? parseFloat(minStr) : 0
         const max = maxStr ? parseFloat(maxStr) : Infinity
-        matchesPrecio = inmueble.precio >= min && inmueble.precio <= max
+        matchesPrecio = inmueble.precio_usd >= min && inmueble.precio_usd <= max
       }
 
       return matchesTipo && matchesOperacion && matchesZona && matchesPrecio
@@ -566,7 +560,7 @@ export default function UserMapaPage() {
 
                       <div className="absolute bottom-3 left-3 right-3">
                         <span className="text-white font-bold text-2xl drop-shadow-lg">
-                          {formatPrecio(selectedInmueble.precio, selectedInmueble.moneda)}
+                          {formatPriceCompact(selectedInmueble.precio_usd, selectedInmueble.precio_gtq)}
                         </span>
                       </div>
                     </div>

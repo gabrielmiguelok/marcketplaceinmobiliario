@@ -8,7 +8,8 @@ export interface InmuebleResult {
   titulo: string
   tipo: string
   operacion: string
-  precio: number
+  precio_usd: number
+  precio_gtq: number
   moneda: string
   ubicacion: string | null
   zona: string | null

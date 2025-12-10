@@ -13,7 +13,8 @@ interface Inmueble {
   descripcion: string
   tipo: string
   operacion: string
-  precio: number
+  precio_usd: number
+  precio_gtq: number
   moneda: string
   ubicacion: string
   zona: string
@@ -70,9 +71,14 @@ const inmueblesFields: ColumnFieldsDefinition = {
       { value: 'alquiler', label: 'Alquiler' },
     ]
   },
-  precio: {
+  precio_usd: {
     type: 'currency',
-    header: 'PRECIO',
+    header: 'USD',
+    width: 120,
+  },
+  precio_gtq: {
+    type: 'currency',
+    header: 'GTQ',
     width: 120,
   },
   moneda: {
