@@ -23,10 +23,10 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: "Googlebot",
         allow: [
           "/",
-          "/inmuebles/",
+          "/proyectos/",
           "/conocenos",
           "/herramientas",
-          "/inmuebles/mapa",
+          "/proyectos/mapa",
         ],
         disallow: [
           "/api/",
@@ -37,7 +37,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "Googlebot-Image",
         allow: [
-          "/inmuebles/",
+          "/proyectos/",
           "/uploads/",
           "/images/",
           "/api/imagen/",

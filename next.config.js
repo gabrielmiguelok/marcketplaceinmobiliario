@@ -107,18 +107,12 @@ const nextConfig = {
 
   /* ───── 8) Redirects ───── */
   async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/conocenos',
-        permanent: false,
-      },
-    ];
+    return [];
   },
 
   /* ───── 9) Rewrites internos ───── */
   async rewrites() {
-    return [{ source: '/no-redirect', destination: '/conocenos' }];
+    return [];
   },
 };
 

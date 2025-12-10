@@ -32,13 +32,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/inmuebles`,
+      url: `${baseUrl}/proyectos`,
       lastModified: now,
       changeFrequency: "daily",
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/inmuebles/mapa`,
+      url: `${baseUrl}/proyectos/mapa`,
       lastModified: now,
       changeFrequency: "daily",
       priority: 0.8,
@@ -68,7 +68,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const slug = slugify(inmueble.titulo)
 
       return {
-        url: `${baseUrl}/inmuebles/${inmueble.id}/${slug}`,
+        url: `${baseUrl}/proyectos/${inmueble.id}/${slug}`,
         lastModified: inmueble.updated_at || inmueble.created_at || now,
         changeFrequency: "weekly" as const,
         priority: Math.min(priority, 0.85),
@@ -82,13 +82,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const operacionRoutes: MetadataRoute.Sitemap = [
     {
-      url: `${baseUrl}/inmuebles?operacion=venta`,
+      url: `${baseUrl}/proyectos?operacion=venta`,
       lastModified: now,
       changeFrequency: "daily",
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/inmuebles?operacion=alquiler`,
+      url: `${baseUrl}/proyectos?operacion=alquiler`,
       lastModified: now,
       changeFrequency: "daily",
       priority: 0.8,
@@ -103,7 +103,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "local",
     "bodega",
   ].map((tipo) => ({
-    url: `${baseUrl}/inmuebles?tipo=${tipo}`,
+    url: `${baseUrl}/proyectos?tipo=${tipo}`,
     lastModified: now,
     changeFrequency: "daily" as const,
     priority: 0.7,
@@ -111,7 +111,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const zonasPopulares = [4, 9, 10, 11, 13, 14, 15, 16]
   const zonaRoutes: MetadataRoute.Sitemap = zonasPopulares.map((zona) => ({
-    url: `${baseUrl}/inmuebles?zona=${zona}`,
+    url: `${baseUrl}/proyectos?zona=${zona}`,
     lastModified: now,
     changeFrequency: "daily" as const,
     priority: 0.7,
