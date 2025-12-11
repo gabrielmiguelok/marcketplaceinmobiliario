@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { Building2, RefreshCw, Plus, LogOut } from "lucide-react"
+import { Building2, LogOut } from "lucide-react"
 import toast from "react-hot-toast"
 import CustomTable from "@/components/CustomTable"
 import { buildColumnsFromDefinition, ColumnFieldsDefinition } from "@/components/CustomTable/CustomTableColumnsConfig"
 
 interface Inmueble {
-  id: number
+  id: number | string
   titulo: string
   descripcion: string
   tipo: string
@@ -30,6 +30,7 @@ interface Inmueble {
   longitud: number | null
   created_at: string
   updated_at: string
+  _isNew?: boolean
 }
 
 const inmueblesFields: ColumnFieldsDefinition = {
@@ -156,7 +157,9 @@ export default function AdminInmueblesPage() {
   const router = useRouter()
   const [inmuebles, setInmuebles] = useState<Inmueble[]>([])
   const [loading, setLoading] = useState(true)
-  const [addRecordState, setAddRecordState] = useState<'idle' | 'adding' | 'saving'>('idle')
+  const [addRecordState, setAddRecordState] = useState<'idle' | 'adding' | 'saving' | 'confirmed'>('idle')
+  const [newRecordData, setNewRecordData] = useState<Inmueble | null>(null)
+  const [isAddingRecord, setIsAddingRecord] = useState(false)
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -177,6 +180,11 @@ export default function AdminInmueblesPage() {
   }, [loadData])
 
   const handleImageUpload = useCallback(async (rowId: string, file: File) => {
+    if (rowId.startsWith('temp_')) {
+      toast.error('Guarda el registro primero antes de subir una imagen')
+      return
+    }
+
     const formData = new FormData()
     formData.append('image', file)
     formData.append('inmuebleId', rowId)
@@ -210,11 +218,55 @@ export default function AdminInmueblesPage() {
     [handleImageUpload]
   )
 
+  const createEmptyInmueble = (): Inmueble => {
+    const tempId = `temp_${Date.now()}`
+    return {
+      id: tempId,
+      titulo: '',
+      descripcion: '',
+      tipo: 'apartamento',
+      operacion: 'venta',
+      precio_usd: 0,
+      precio_gtq: 0,
+      moneda: 'USD',
+      ubicacion: '',
+      zona: '',
+      departamento: 'Guatemala',
+      metros_cuadrados: 0,
+      habitaciones: 0,
+      banos: 0,
+      parqueos: 0,
+      imagen_url: null,
+      destacado: false,
+      estado: 'disponible',
+      latitud: null,
+      longitud: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      _isNew: true,
+    }
+  }
+
   const handleCellEdit = useCallback(async (
     rowId: string,
     field: string,
     value: any
   ): Promise<{ success: boolean; error?: string; data?: any }> => {
+    if (rowId.startsWith('temp_')) {
+      setNewRecordData((prev) => {
+        if (!prev) return prev
+        return { ...prev, [field]: value }
+      })
+
+      setInmuebles((prev) =>
+        prev.map((item) =>
+          item.id === rowId ? { ...item, [field]: value } : item
+        )
+      )
+
+      return { success: true }
+    }
+
     try {
       const response = await fetch('/api/inmuebles', {
         method: 'PUT',
@@ -240,33 +292,67 @@ export default function AdminInmueblesPage() {
     }
   }, [])
 
-  const handleAddRecord = useCallback(async (
-    newRecord: Record<string, any>
-  ): Promise<{ success: boolean; error?: string }> => {
-    setAddRecordState('saving')
-    try {
-      const response = await fetch('/api/inmuebles', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newRecord),
-      })
+  const handleAddRecord = useCallback(async () => {
+    if (addRecordState === 'idle') {
+      setAddRecordState('adding')
+      setIsAddingRecord(true)
 
-      const result = await response.json()
+      const tempRecord = createEmptyInmueble()
+      setNewRecordData(tempRecord)
+      setInmuebles((prev) => [tempRecord, ...prev])
 
-      if (!result.success) {
-        setAddRecordState('idle')
-        return { success: false, error: result.error }
+    } else if (addRecordState === 'adding') {
+      if (!newRecordData) {
+        toast.error('No hay datos para guardar')
+        return
       }
 
-      setInmuebles((prev) => [result.data, ...prev])
-      setAddRecordState('idle')
-      toast.success('Inmueble creado exitosamente')
-      return { success: true }
-    } catch (error: any) {
-      setAddRecordState('idle')
-      return { success: false, error: error.message }
+      if (!newRecordData.titulo || newRecordData.titulo.trim() === '') {
+        toast.error('El título es obligatorio')
+        return
+      }
+
+      setAddRecordState('saving')
+
+      try {
+        const { id, _isNew, created_at, updated_at, ...dataToSend } = newRecordData
+
+        const response = await fetch('/api/inmuebles', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(dataToSend),
+        })
+
+        const result = await response.json()
+
+        if (!result.success) {
+          toast.error(result.error || 'Error al crear inmueble')
+          setAddRecordState('adding')
+          return
+        }
+
+        setAddRecordState('confirmed')
+
+        setInmuebles((prev) =>
+          prev.map((item) =>
+            item.id === newRecordData.id ? result.data : item
+          )
+        )
+
+        toast.success('Inmueble creado exitosamente')
+
+        setTimeout(() => {
+          setAddRecordState('idle')
+          setIsAddingRecord(false)
+          setNewRecordData(null)
+        }, 1000)
+
+      } catch (error: any) {
+        toast.error(error.message || 'Error al crear inmueble')
+        setAddRecordState('adding')
+      }
     }
-  }, [])
+  }, [addRecordState, newRecordData])
 
   const handleLogout = async () => {
     try {
@@ -290,29 +376,12 @@ export default function AdminInmueblesPage() {
                 Gestión de Inmuebles
               </h1>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Aloba Marketplace
+                {inmuebles.length} inmuebles · Aloba Marketplace
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={loadData}
-              disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              Refrescar
-            </button>
-
-            <button
-              onClick={() => setAddRecordState('adding')}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#0B1B32] bg-[#00F0D0] rounded-lg hover:bg-[#00dbbe] transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              Nuevo Inmueble
-            </button>
-
             <button
               onClick={handleLogout}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
