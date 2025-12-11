@@ -90,6 +90,8 @@ export async function POST(request: NextRequest) {
     const [rows] = await db.query('SELECT * FROM inmuebles WHERE id = ?', [result.insertId])
 
     revalidatePath('/inmuebles')
+    revalidatePath('/proyectos')
+    revalidatePath('/proyectos', 'layout')
 
     return NextResponse.json(
       { success: true, data: (rows as any[])[0] },
@@ -151,6 +153,8 @@ export async function PUT(request: NextRequest) {
     const [rows] = await db.query('SELECT * FROM inmuebles WHERE id = ?', [id])
 
     revalidatePath('/inmuebles')
+    revalidatePath('/proyectos')
+    revalidatePath('/proyectos', 'layout')
 
     return NextResponse.json(
       { success: true, data: (rows as any[])[0] },
@@ -186,6 +190,8 @@ export async function DELETE(request: NextRequest) {
     const [result]: any = await db.query('DELETE FROM inmuebles WHERE id = ?', [id])
 
     revalidatePath('/inmuebles')
+    revalidatePath('/proyectos')
+    revalidatePath('/proyectos', 'layout')
 
     return NextResponse.json(
       { success: true, affectedRows: result.affectedRows },
