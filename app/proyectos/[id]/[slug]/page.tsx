@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { getInmuebleById } from "@/lib/services/inmuebles-service"
